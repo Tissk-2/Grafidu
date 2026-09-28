@@ -30,7 +30,7 @@ export function StatCard({
       <b>{label}</b>
       <div className="row">
         <span className={`c c-${tone}`}>{ICONS[tone]}</span>
-        <span className="num">{value}</span>
+        <span className="num">{value} hh</span>
       </div>
       {sub ? (
         <div className={`s-${tone}`} style={{ fontSize: 12.5, marginTop: 6 }}>
