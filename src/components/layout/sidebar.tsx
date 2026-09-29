@@ -182,7 +182,7 @@ export function Sidebar({
         </>
       )}
 
-      <div className="side-user">
+      <div className="side-user pr-6!">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={user.avatar.startsWith("/") ? user.avatar : "/" + user.avatar} alt={user.name} />
         <span>
