@@ -27,3 +27,10 @@ Thumbs.db
 shots/
 .impeccable/
 ab_footer_results.json
+# Local AI/agent tooling (do not commit)
+.agents/
+.claude/
+.commandcode/
+.zcode/
+agent/
+skills-lock.json

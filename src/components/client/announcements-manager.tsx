@@ -7,7 +7,7 @@ import { update, useDB } from "@/lib/store";
 export default function AnnouncementsManager({
   role,
 }: {
-  role: "student" | "teacher";
+  role: "student" | "teacher" | "admin";
 }) {
   const db = useDB();
   const [showModal, setShowModal] = useState(false);
@@ -15,6 +15,7 @@ export default function AnnouncementsManager({
   const [body, setBody] = useState("");
   const [search, setSearch] = useState("");
   const user = getCurrentUser();
+  const canManage = role === "teacher" || role === "admin";
 
   const list = [...(db?.announcements ?? [])]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -37,16 +38,19 @@ export default function AnnouncementsManager({
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !user) {
+    if (!title.trim()) {
       window.gtoast?.("Judul pengumuman wajib diisi.", "error");
       return;
     }
     update((d) => {
+      // Store users have numeric ids; a Supabase session id (UUID) never
+      // matches one, so no creator label is shown in that case.
+      const numericId = Number(user?.id);
       d.announcements.push({
         id: d.nextId++,
         title: title.trim(),
         body: body.trim(),
-        createdBy: user.id,
+        createdBy: user && Number.isFinite(numericId) ? numericId : null,
         createdLabel: "Baru saja",
         createdAt: new Date().toISOString(),
       });
@@ -74,7 +78,7 @@ export default function AnnouncementsManager({
             Informasi penting seputar agenda sekolah, jadwal ujian, dan batas pengumpulan tugas.
           </p>
         </div>
-        {role === "teacher" && (
+        {canManage && (
           <button
             type="button"
             className="btn btn-primary btn-sm"
@@ -129,7 +133,7 @@ export default function AnnouncementsManager({
                 </span>
               </div>
 
-              {role === "teacher" && (
+              {canManage && (
                 <button
                   type="button"
                   onClick={() => handleDelete(a.id)}

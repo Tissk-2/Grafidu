@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 /**
  * In-browser data layer. Everything — demo users, classes, tasks, grades, the
@@ -21,6 +21,9 @@ export type User = {
   avatar: string;
   phone: string;
   prefs: string;
+  /** Admin-account fields: absent means active / no forced password change. */
+  isActive?: boolean;
+  mustChangePassword?: boolean;
 };
 
 export type ClassRoom = { id: number; name: string };
@@ -686,10 +689,14 @@ function subscribe(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
-/** Reacts to store changes. Returns null on the server so pages render empty there. */
+/** Reacts to store changes. Returns null on the server AND until mounted, so
+ *  the first client render matches the SSR output (no hydration mismatch);
+ *  components null-guard and fill in right after mount. */
 export function useDB(): DB | null {
   useSyncExternalStore(subscribe, () => version, () => -1);
-  if (!isBrowser()) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!isBrowser() || !mounted) return null;
   return getDB();
 }
 
