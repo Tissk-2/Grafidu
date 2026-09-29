@@ -25,7 +25,14 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
     <>
       <div className="search-row">
         <div className="search-box">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
@@ -46,7 +53,14 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
             <option value="B. Indonesia">B. Indonesia</option>
             <option value="Seni Budaya">Seni</option>
           </select>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="m6 9 6 6 6-6" />
           </svg>
         </div>
@@ -69,10 +83,17 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
         {filtered.map((c, i) => (
           <div key={i} className="teacher-card" data-subject={c.subject}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={c.avatar.startsWith("/") ? c.avatar : "/" + c.avatar} alt="" width={38} height={38} />
+            <img
+              src={c.avatar.startsWith("/") ? c.avatar : "/" + c.avatar}
+              alt=""
+              width={38}
+              height={38}
+            />
             <span style={{ flex: 1, minWidth: 0 }}>
               <b>{c.teacher}</b>
-              <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+              >
                 <span>{c.subject}</span>
               </span>
             </span>
@@ -90,12 +111,19 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
         style={{ display: filtered.length === 0 ? "block" : "none" }}
       >
         <span className="es-ic">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
         </span>
-        <b>Tidak ada kelas yang cocok</b>
+        <p className="font-medium">Tidak ada kelas yang cocok</p>
         <span>Coba kata kunci lain atau pilih mapel berbeda.</span>
       </div>
     </>

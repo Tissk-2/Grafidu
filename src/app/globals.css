@@ -719,15 +719,15 @@ u,
   margin-top: 2px;
 }
 .c-green {
-  background: var(--green-circle);
+  background: #4fce7d;
   color: #fff;
 }
 .c-blue {
-  background: var(--blue-soft);
+  background: #8996e5;
   color: #fff;
 }
 .c-purple {
-  background: #d7b3ff;
+  background: #a362ec;
   color: #fff;
 }
 .s-green {
@@ -2180,37 +2180,6 @@ u,
 }
 
 /* floating bottom nav */
-.bottom-nav {
-  position: fixed;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  box-shadow: 0 14px 38px rgba(24, 21, 22, 0.14);
-  display: flex;
-  gap: 26px;
-  padding: 11px 22px;
-  z-index: var(--z-nav);
-}
-.bottom-nav a {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--gray-3);
-  min-width: 44px;
-}
-.bottom-nav a.on {
-  color: var(--purple);
-}
-.bottom-nav a:hover {
-  color: var(--ink);
-}
-.bottom-nav a.on:hover {
-  color: var(--purple);
-}
 
 /* page headings inside dashboards */
 .page-title {
@@ -4729,7 +4698,8 @@ body.sheet-open {
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
