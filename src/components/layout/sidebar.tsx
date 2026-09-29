@@ -4,14 +4,19 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { id } from "date-fns/locale";
+import { Add, People } from "iconsax-reactjs";
 import { Calendar } from "@/components/ui/calendar";
 
 export type TodayTask = { id: string; title: string; sub: string; done: boolean };
 
+export type SidebarClass = { id: number; name: string; total: number };
+
 export type SidebarPropsData = {
   user: { name: string; sub: string; avatar: string };
   tasksToday: TodayTask[];
-  classes?: string[];
+  classes?: SidebarClass[];
+  activeClassId?: number;
+  onSelectClass?: (id: number) => void;
 };
 
 const TASK_ICON = (
@@ -46,13 +51,15 @@ export function Sidebar({
   user,
   tasksToday,
   classes,
-  activeClass,
+  activeClassId,
+  onSelectClass,
 }: {
   role: "student" | "teacher";
   user: { name: string; sub: string; avatar: string };
   tasksToday: TodayTask[];
-  classes?: string[];
-  activeClass?: string;
+  classes?: SidebarClass[];
+  activeClassId?: number;
+  onSelectClass?: (id: number) => void;
 }) {
   const settingsHref = role === "student" ? "/student/settings" : "/teacher/settings";
   const [selected, setSelected] = useState<Date | undefined>(() => new Date());
@@ -129,53 +136,30 @@ export function Sidebar({
           <div className="side-list-head">
             <h3>Kelas yang diampu</h3>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Link className="link-underline" href="/teacher/classes">
-                Lihat Semua
-              </Link>
               <button
                 className="class-plus"
                 aria-label="Tambah kelas"
                 data-dialog="dlg-add-class"
                 onClick={openAddClassDialog}
               >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <Add size={15} strokeWidth={2} />
               </button>
             </div>
           </div>
           {(classes ?? []).map((c) => (
             <Link
-              key={c}
-              href={`/teacher/classes/${encodeURIComponent(c)}`}
-              className={"class-card" + (activeClass === c ? " on" : "")}
+              key={c.id}
+              href={`/teacher/home/${c.id}`}
+              className={"class-card" + (activeClassId === c.id ? " on" : "")}
+              onClick={() => onSelectClass?.(c.id)}
               style={{ textDecoration: "none", color: "inherit", display: "flex" }}
             >
               <span className="cic">
-                <svg
-                  width="19"
-                  height="19"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <circle cx="9" cy="7" r="3" />
-                  <circle cx="16" cy="10" r="2.4" />
-                  <path d="M3.5 20c.6-3 2.8-5 5.5-5s4.9 2 5.5 5" />
-                  <path d="M14.5 15.6c.5-.4 1-.6 1.5-.6 1.9 0 3.6 1.6 4.2 4" />
-                </svg>
+                <People size={19} strokeWidth={1.8} />
               </span>
               <span>
-                <b>{c}</b>
-                <span>Kelola Rombel</span>
+                <b>{c.name}</b>
+                <span>{c.total} Murid</span>
               </span>
             </Link>
           ))}

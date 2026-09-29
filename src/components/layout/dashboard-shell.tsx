@@ -9,14 +9,12 @@ export default function DashboardShell({
   rightbar,
   children,
   activeNav,
-  activeClass,
 }: {
   role: "student" | "teacher";
   sidebar: SidebarPropsData;
   rightbar: React.ReactNode;
   children: React.ReactNode;
   activeNav: string;
-  activeClass?: string;
 }) {
   return (
     <div className="app">
@@ -25,7 +23,8 @@ export default function DashboardShell({
         user={sidebar.user}
         tasksToday={sidebar.tasksToday}
         classes={sidebar.classes}
-        activeClass={activeClass}
+        activeClassId={sidebar.activeClassId}
+        onSelectClass={sidebar.onSelectClass}
       />
       <main className="main">{children}</main>
       {rightbar}

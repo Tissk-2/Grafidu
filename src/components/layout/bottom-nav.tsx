@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Home, TaskSquare, Chart1, Star, Book, MessageQuestion, Graph } from "iconsax-reactjs";
-import { Sparkle, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 type Item = { label: string; href: string; icon: React.ReactNode };
 
