@@ -6,7 +6,7 @@ import Link from "next/link";
 import { id } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 
-export type TodayTask = { id: number; title: string; sub: string; done: boolean };
+export type TodayTask = { id: string; title: string; sub: string; done: boolean };
 
 export type SidebarPropsData = {
   user: { name: string; sub: string; avatar: string };

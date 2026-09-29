@@ -1,5 +1,5 @@
 import { getDB, update } from "@/lib/store";
-import type { SessionUser } from "@/lib/auth";
+import type { SessionUser, Role } from "@/lib/auth";
 
 /**
  * Whitelist of actions the AI agent may perform, tiered by risk.
@@ -14,7 +14,7 @@ export type ToolDecl = {
   name: ToolName;
   description: string;
   required: string[];
-  allowedRoles: Array<"student" | "teacher">;
+  allowedRoles: Role[];
   risk: RiskTier;
 };
 

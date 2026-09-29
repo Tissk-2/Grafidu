@@ -20,11 +20,10 @@ export type SessionUser = {
 
 type ProfileRow = {
   role: Role | string | null;
-  full_name: string | null;
+  name: string | null;
+  email: string | null;
   class_name: string | null;
-  subject: string | null;
-  avatar_url: string | null;
-  phone: string | null;
+  avatar: string | null;
 };
 
 /**
@@ -38,7 +37,7 @@ async function fetchProfile(
 ): Promise<ProfileRow | null> {
   const full = await supabase
     .from("profiles")
-    .select("role, full_name, class_name, subject, avatar_url, phone")
+    .select("role, name, email, class_name, avatar")
     .eq("id", userId)
     .single();
   if (!full.error) return (full.data as ProfileRow | null) ?? null;
@@ -74,12 +73,12 @@ async function fetchSessionUser(): Promise<SessionUser | null> {
   return {
     id: authUser.id,
     role,
-    name: p?.full_name || authUser.email || "User",
-    email: authUser.email || "",
+    name: p?.name || p?.email || authUser.email || "User",
+    email: p?.email || authUser.email || "",
     className: p?.class_name ?? null,
-    subject: p?.subject ?? null,
-    avatar: p?.avatar_url || "/assets/logo.png",
-    phone: p?.phone || "",
+    subject: null,
+    avatar: p?.avatar || "/assets/logo.png",
+    phone: "",
     prefs: "{}",
   };
 }

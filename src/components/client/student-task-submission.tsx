@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { update } from "@/lib/store";
+import { submitTask } from "@/lib/supabase/queries";
 
 export type StudentSubmissionProps = {
-  taskId: number;
+  taskId: string;
+  userId: string;
   isSubmitted: boolean;
   submittedAtStr?: string;
   grade?: number | null;
@@ -14,6 +14,7 @@ export type StudentSubmissionProps = {
 
 export default function StudentTaskSubmission({
   taskId,
+  userId,
   isSubmitted,
   submittedAtStr,
   grade,
@@ -21,35 +22,28 @@ export default function StudentTaskSubmission({
 }: StudentSubmissionProps) {
   const [answer, setAnswer] = useState("");
   const [isEditing, setIsEditing] = useState(!isSubmitted);
+  const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(isSubmitted);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const u = getCurrentUser();
-    if (!u) return;
-    if (!answer.trim() && isEditing && !isSubmitted) {
+    if (saving) return;
+    if (!answer.trim() && !submitted) {
       window.gtoast?.("Tuliskan jawaban atau tautan berkas tugas kamu.", "error");
       return;
     }
-    update((db) => {
-      const st = db.taskStatuses.find((s) => s.taskId === taskId && s.studentId === u.id);
-      if (st) {
-        st.done = true;
-        st.submittedAt = new Date().toISOString();
-      } else {
-        db.taskStatuses.push({
-          id: db.nextId++,
-          taskId,
-          studentId: u.id,
-          done: true,
-          submittedAt: new Date().toISOString(),
-          grade: null,
-          feedback: "",
-        });
-      }
-    });
-    setIsEditing(false);
-    setAnswer("");
-    window.gtoast?.("Tugas berhasil dikumpulkan ke gurumu!");
+    setSaving(true);
+    try {
+      await submitTask(taskId, userId);
+      setSubmitted(true);
+      setIsEditing(false);
+      setAnswer("");
+      window.gtoast?.("Tugas berhasil dikumpulkan ke gurumu!");
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -60,7 +54,7 @@ export default function StudentTaskSubmission({
           <span className="pill pill-green" style={{ fontSize: 13, padding: "4px 12px" }}>
             Nilai: {grade} / 100
           </span>
-        ) : isSubmitted ? (
+        ) : submitted ? (
           <span className="pill pill-green-plain" style={{ fontSize: 13, padding: "4px 12px" }}>
             Sudah Dikumpulkan
           </span>
@@ -91,7 +85,7 @@ export default function StudentTaskSubmission({
         </div>
       )}
 
-      {isSubmitted && !isEditing ? (
+      {submitted && !isEditing ? (
         <div style={{ background: "#F9FAFB", border: "1px solid var(--line)", borderRadius: 10, padding: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <span
@@ -154,10 +148,11 @@ export default function StudentTaskSubmission({
             <button
               type="submit"
               className="btn btn-primary"
+              disabled={saving}
             >
-              {isSubmitted ? "Simpan Pembaruan" : "Kumpulkan Tugas Sekarang"}
+              {saving ? "Mengirim..." : submitted ? "Simpan Pembaruan" : "Kumpulkan Tugas Sekarang"}
             </button>
-            {isSubmitted && (
+            {submitted && (
               <button
                 type="button"
                 className="btn btn-outline"

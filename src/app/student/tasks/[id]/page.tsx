@@ -1,50 +1,104 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useRequireUser } from "@/lib/auth";
-import { useDB } from "@/lib/store";
-import { getStudentSidebarData, getStudentRightbarData } from "@/lib/student-layout-data";
+import { useRequireUser, type SessionUser } from "@/lib/auth";
+import {
+  fetchTasksToday,
+  fetchSubjectScores,
+  fetchTaskDetail,
+  fetchTaskStatus,
+  aiNoteFromScores,
+  type SidebarTask,
+  type TaskDetail,
+  type TaskStatus,
+} from "@/lib/supabase/queries";
 import { fmtDate } from "@/lib/format";
 import { useTitle } from "@/lib/hooks";
 import DashboardShell from "@/components/layout/dashboard-shell";
-import { StudentRightbar } from "@/components/layout/rightbar";
+import { StudentRightbar, type GradeRow } from "@/components/layout/rightbar";
 import StudentTaskSubmission from "@/components/client/student-task-submission";
 import BodySync from "@/components/body-sync";
 
+type DetailData = {
+  tasksToday: SidebarTask[];
+  grades: GradeRow[];
+  aiNote: string;
+  task: TaskDetail;
+  status: TaskStatus | null;
+};
+
+async function loadDetail(u: SessionUser, taskId: string): Promise<DetailData | null> {
+  const [tasksToday, scores, task, status] = await Promise.all([
+    fetchTasksToday(u),
+    fetchSubjectScores(u.id),
+    fetchTaskDetail(taskId),
+    fetchTaskStatus(taskId, u.id),
+  ]);
+  if (!task) return null;
+  return {
+    tasksToday,
+    grades: scores.map((s) => ({ subject: s.subject, score: s.score, status: s.status })),
+    aiNote: aiNoteFromScores(scores),
+    task,
+    status,
+  };
+}
+
 export default function StudentTaskDetailPage() {
   const params = useParams<{ id: string }>();
-  const taskId = Number(params.id);
+  const taskId = params.id;
   const u = useRequireUser("student");
-  const db = useDB();
+  const [data, setData] = useState<DetailData | null>(null);
+  const [notFound, setNotFound] = useState(false);
   useTitle("Detail Tugas — Grafidu");
-  if (!u || !db || isNaN(taskId)) return null;
 
-  const task = db.tasks.find((t) => t.id === taskId);
-  if (!task) return null;
+  useEffect(() => {
+    if (!u || !taskId) return;
+    let cancelled = false;
+    loadDetail(u, taskId).then((d) => {
+      if (cancelled) return;
+      if (!d) setNotFound(true);
+      else setData(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [u, taskId]);
 
-  const sidebarData = getStudentSidebarData(db, u);
-  const rightbarData = getStudentRightbarData(db, u);
+  if (!u) return null;
+  if (notFound) {
+    return (
+      <div style={{ padding: 48, textAlign: "center" }}>
+        <b>Tugas tidak ditemukan di database.</b>
+        <div style={{ marginTop: 12 }}>
+          <Link href="/student/tasks" className="link-underline">Kembali ke Daftar Tugas</Link>
+        </div>
+      </div>
+    );
+  }
+  if (!data) return null;
 
-  const status = db.taskStatuses.find(
-    (s) => s.taskId === taskId && s.studentId === u.id
-  );
-
-  const isSubmitted = Boolean(status?.submittedAt);
-  const submittedAtStr = status?.submittedAt ? fmtDate(status.submittedAt) : undefined;
-  const creator = db.users.find((x) => x.id === task.createdBy);
+  const isSubmitted = Boolean(data.status?.submittedAt);
+  const submittedAtStr = data.status?.submittedAt
+    ? fmtDate(data.status.submittedAt)
+    : undefined;
 
   return (
     <>
       <BodySync dataPage="student-task-detail" />
       <DashboardShell
         role="student"
-        sidebar={sidebarData}
+        sidebar={{
+          user: { name: u.name, sub: u.className ?? "Siswa", avatar: u.avatar },
+          tasksToday: data.tasksToday,
+        }}
         activeNav="Tasks"
         rightbar={
           <StudentRightbar
-            grades={rightbarData.grades}
-            aiNote={rightbarData.aiNote}
+            grades={data.grades}
+            aiNote={data.aiNote}
             ctaHref="/student/todo"
             ctaLabel="Buat To-Do List"
           />
@@ -58,7 +112,7 @@ export default function StudentTaskDetailPage() {
             Daftar Tugas
           </Link>
           <span className="sep">/</span>
-          <b>{task.title}</b>
+          <b>{data.task.title}</b>
         </div>
 
         <div className="detail-card">
@@ -71,9 +125,9 @@ export default function StudentTaskDetailPage() {
               </svg>
             </span>
             <div>
-              <h2 style={{ fontSize: 24, marginBottom: 4 }}>{task.title}</h2>
+              <h2 style={{ fontSize: 24, marginBottom: 4 }}>{data.task.title}</h2>
               <span style={{ fontSize: 13, color: "var(--purple)", fontWeight: 500 }}>
-                {task.subject} • {creator?.name ?? "Guru"}
+                {data.task.subject} • {data.task.creatorName}
               </span>
             </div>
           </div>
@@ -84,7 +138,7 @@ export default function StudentTaskDetailPage() {
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <path d="M16 2v4M8 2v4M3 10h18" />
               </svg>
-              Ditugaskan {fmtDate(task.assignedAt)}
+              Ditugaskan {fmtDate(data.task.assignedAt)}
             </span>
             <span>•</span>
             <span>
@@ -92,22 +146,23 @@ export default function StudentTaskDetailPage() {
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 7v5l3 2" />
               </svg>
-              Tenggat: {fmtDate(task.dueAt)}
+              Tenggat: {fmtDate(data.task.dueAt)}
             </span>
           </div>
 
           <div className="desc-label">Deskripsi &amp; Petunjuk Tugas</div>
           <p className="desc-text" style={{ whiteSpace: "pre-line" }}>
-            {task.description || "Tidak ada instruksi tambahan untuk tugas ini."}
+            {data.task.description || "Tidak ada instruksi tambahan untuk tugas ini."}
           </p>
         </div>
 
         <StudentTaskSubmission
-          taskId={taskId}
+          taskId={data.task.id}
+          userId={u.id}
           isSubmitted={isSubmitted}
           submittedAtStr={submittedAtStr}
-          grade={status?.grade}
-          feedback={status?.feedback}
+          grade={data.status?.grade}
+          feedback={data.status?.feedback}
         />
 
       </DashboardShell>

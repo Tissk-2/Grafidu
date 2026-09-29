@@ -2,70 +2,61 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, logout } from "@/lib/auth";
-import { getDB, update } from "@/lib/store";
+import { logout, type SessionUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/client";
 
-export type UserProfile = {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  avatar: string;
-  prefs: string;
-};
-
-export default function SettingsForm({ initialUser }: { initialUser: UserProfile }) {
+export default function SettingsForm({ initialUser }: { initialUser: SessionUser }) {
   const router = useRouter();
   const [name, setName] = useState(initialUser.name);
   const [email, setEmail] = useState(initialUser.email);
-  const [phone, setPhone] = useState(initialUser.phone);
 
-  const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
 
-  let parsedPrefs: Record<string, boolean> = {};
-  try {
-    parsedPrefs = JSON.parse(initialUser.prefs || "{}");
-  } catch {}
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPw, setSavingPw] = useState(false);
 
+  // Preferensi notifikasi hanya berlaku di sesi ini (belum ada kolomnya di database).
   const [prefs, setPrefs] = useState({
-    task: parsedPrefs.task ?? true,
-    deadline: parsedPrefs.deadline ?? true,
-    ai: parsedPrefs.ai ?? false,
-    email: parsedPrefs.email ?? false,
+    task: true,
+    deadline: true,
+    ai: false,
+    email: false,
   });
 
-  function handleSaveProfile() {
+  async function handleSaveProfile() {
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
     if (!cleanName || !cleanEmail) {
       window.gtoast?.("Nama dan email wajib diisi.", "error");
       return;
     }
-    const me = getCurrentUser();
-    if (!me) return;
-    if (getDB().users.some((x) => x.email === cleanEmail && x.id !== me.id)) {
-      window.gtoast?.("Email sudah dipakai akun lain.", "error");
-      return;
-    }
-    update((db) => {
-      const u = db.users.find((x) => x.id === me.id);
-      if (u) {
-        u.name = cleanName;
-        u.email = cleanEmail;
-        u.phone = cleanPhone;
+    setSavingProfile(true);
+    try {
+      const supabase = createClient();
+      const { error: profErr } = await supabase
+        .from("profiles")
+        .update({ name: cleanName })
+        .eq("id", initialUser.id);
+      if (profErr) throw new Error(profErr.message);
+
+      if (cleanEmail !== initialUser.email) {
+        const { error: emailErr } = await supabase.auth.updateUser({ email: cleanEmail });
+        if (emailErr) throw new Error(emailErr.message);
+        await supabase.from("profiles").update({ email: cleanEmail }).eq("id", initialUser.id);
+        window.gtoast?.("Profil diperbarui. Cek email barumu untuk konfirmasi penggantian email.");
+      } else {
+        window.gtoast?.("Profil berhasil diperbarui.");
       }
-    });
-    window.gtoast?.("Profil berhasil diperbarui.");
+      router.refresh();
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    } finally {
+      setSavingProfile(false);
+    }
   }
 
-  function handleSavePassword() {
-    if (!currentPw) {
-      window.gtoast?.("Isi kata sandi saat ini dulu.", "error");
-      return;
-    }
+  async function handleSavePassword() {
     if (newPw.length < 8) {
       window.gtoast?.("Kata sandi baru minimal 8 karakter.", "error");
       return;
@@ -74,37 +65,29 @@ export default function SettingsForm({ initialUser }: { initialUser: UserProfile
       window.gtoast?.("Konfirmasi kata sandi tidak sama.", "error");
       return;
     }
-    const me = getCurrentUser();
-    const row = me ? getDB().users.find((x) => x.id === me.id) : null;
-    if (!me || !row) return;
-    if (row.password !== currentPw) {
-      window.gtoast?.("Kata sandi saat ini salah.", "error");
-      return;
+    setSavingPw(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) throw new Error(error.message);
+      setNewPw("");
+      setConfirmPw("");
+      window.gtoast?.("Kata sandi berhasil diperbarui.");
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    } finally {
+      setSavingPw(false);
     }
-    update((db) => {
-      const u = db.users.find((x) => x.id === me.id);
-      if (u) u.password = newPw;
-    });
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
-    window.gtoast?.("Kata sandi berhasil diperbarui.");
   }
 
   function togglePref(key: keyof typeof prefs) {
-    const next = { ...prefs, [key]: !prefs[key] };
-    setPrefs(next);
-    const me = getCurrentUser();
-    if (!me) return;
-    update((db) => {
-      const u = db.users.find((x) => x.id === me.id);
-      if (u) u.prefs = JSON.stringify(next);
-    });
+    setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     router.push("/login");
+    router.refresh();
   }
 
   return (
@@ -118,24 +101,26 @@ export default function SettingsForm({ initialUser }: { initialUser: UserProfile
           <div className="field">
             <label>Nama Lengkap</label>
             <div className="control">
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
             </div>
           </div>
           <div className="field">
             <label>Email</label>
             <div className="control">
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
             </div>
           </div>
-          <div className="field">
-            <label>Nomor Telepon</label>
-            <div className="control">
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          {initialUser.className && (
+            <div className="field">
+              <label>Kelas (dari database, tidak bisa diubah)</label>
+              <div className="control">
+                <input type="text" value={initialUser.className} disabled readOnly />
+              </div>
             </div>
-          </div>
+          )}
           <div className="set-save" style={{ marginTop: 22 }}>
-            <button type="button" className="btn btn-primary" id="save-profile" onClick={handleSaveProfile}>
-              Simpan Perubahan
+            <button type="button" className="btn btn-primary" id="save-profile" onClick={handleSaveProfile} disabled={savingProfile}>
+              {savingProfile ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
             <button type="button" className="btn btn-outline" id="logout-btn" onClick={handleLogout}>
               Keluar
@@ -147,18 +132,6 @@ export default function SettingsForm({ initialUser }: { initialUser: UserProfile
       <div className="set-card">
         <h3>Ubah Kata Sandi</h3>
         <p className="sub">Gunakan kata sandi yang kuat dan belum pernah dipakai sebelumnya.</p>
-        <div className="field">
-          <label>Kata Sandi Saat Ini</label>
-          <div className="control">
-            <input
-              type="password"
-              placeholder="Kata sandi saat ini"
-              value={currentPw}
-              onChange={(e) => setCurrentPw(e.target.value)}
-              style={{ letterSpacing: 3 }}
-            />
-          </div>
-        </div>
         <div className="pw-grid">
           <div className="field">
             <label>Kata Sandi Baru</label>
@@ -168,6 +141,7 @@ export default function SettingsForm({ initialUser }: { initialUser: UserProfile
                 placeholder="••••••••"
                 value={newPw}
                 onChange={(e) => setNewPw(e.target.value)}
+                autoComplete="new-password"
                 style={{ letterSpacing: 3 }}
               />
             </div>
@@ -180,21 +154,22 @@ export default function SettingsForm({ initialUser }: { initialUser: UserProfile
                 placeholder="••••••••"
                 value={confirmPw}
                 onChange={(e) => setConfirmPw(e.target.value)}
+                autoComplete="new-password"
                 style={{ letterSpacing: 3 }}
               />
             </div>
           </div>
         </div>
         <div className="set-save">
-          <button className="btn btn-primary" type="button" onClick={handleSavePassword}>
-            Perbarui Kata Sandi
+          <button className="btn btn-primary" type="button" onClick={handleSavePassword} disabled={savingPw}>
+            {savingPw ? "Memperbarui..." : "Perbarui Kata Sandi"}
           </button>
         </div>
       </div>
 
       <div className="set-card">
         <h3>Preferensi Notifikasi</h3>
-        <p className="sub">Atur notifikasi apa saja yang ingin Anda terima.</p>
+        <p className="sub">Atur notifikasi apa saja yang ingin Anda terima. Berlaku di sesi ini.</p>
         <div style={{ marginTop: 8 }}>
           <div className="toggle-row">
             <span>

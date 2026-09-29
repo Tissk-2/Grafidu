@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { update, useDB } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { fetchTodos, addTodo, toggleTodo, type TodoItem } from "@/lib/supabase/queries";
 
 const CHECK = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
@@ -10,39 +9,43 @@ const CHECK = (
   </svg>
 );
 
-export default function StudentTodoManager() {
-  const db = useDB();
+export default function StudentTodoManager({ userId }: { userId: string }) {
+  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [input, setInput] = useState("");
-  const user = getCurrentUser();
 
-  const todos = (db?.todos ?? [])
-    .filter((t) => t.userId === user?.id)
-    .sort((a, b) => a.id - b.id);
+  useEffect(() => {
+    let cancelled = false;
+    fetchTodos(userId).then((rows) => {
+      if (!cancelled) setTodos(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const doneCount = todos.filter((t) => t.done).length;
   const pct = todos.length ? Math.round((doneCount / todos.length) * 100) : 0;
 
-  function toggle(id: number) {
-    update((d) => {
-      const t = d.todos.find((x) => x.id === id && x.userId === user?.id);
-      if (t) t.done = !t.done;
-    });
+  async function toggle(id: string, done: boolean) {
+    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !done } : t)));
+    try {
+      await toggleTodo(id, !done);
+    } catch (err) {
+      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: done } : t)));
+      window.gtoast?.((err as Error).message, "error");
+    }
   }
 
-  function addTodo() {
+  async function handleAdd() {
     const v = input.trim();
-    if (!v || !user) return;
-    update((d) => {
-      d.todos.push({
-        id: d.nextId++,
-        userId: user.id,
-        title: v,
-        subtitle: "Kegiatan pribadi",
-        done: false,
-        createdAt: new Date().toISOString(),
-      });
-    });
+    if (!v) return;
     setInput("");
+    try {
+      const row = await addTodo(userId, v);
+      if (row) setTodos((prev) => [...prev, row]);
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    }
   }
 
   return (
@@ -69,7 +72,7 @@ export default function StudentTodoManager() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") addTodo();
+              if (e.key === "Enter") handleAdd();
             }}
           />
         </div>
@@ -78,7 +81,7 @@ export default function StudentTodoManager() {
           style={{ width: 44, height: 44, borderRadius: 10, flex: "none" }}
           id="todo-add"
           aria-label="Tambah"
-          onClick={addTodo}
+          onClick={handleAdd}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
             <path d="M12 5v14M5 12h14" />
@@ -93,14 +96,14 @@ export default function StudentTodoManager() {
             className={"task-card" + (t.done ? " done" : "")}
             data-check
             data-todo-id={t.id}
-            onClick={() => toggle(t.id)}
+            onClick={() => toggle(t.id, t.done)}
             role="checkbox"
             aria-checked={t.done}
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                toggle(t.id);
+                toggle(t.id, t.done);
               }
             }}
           >
@@ -124,8 +127,8 @@ export default function StudentTodoManager() {
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
           </svg>
         </span>
-        <b>Semua beres!</b>
-        <span>Tidak ada kegiatan. Tambahkan target baru atau minta bantuan AI.</span>
+        <b>Belum ada kegiatan</b>
+        <span>Tambahkan target barumu di atas — tersimpan di database.</span>
       </div>
     </>
   );
