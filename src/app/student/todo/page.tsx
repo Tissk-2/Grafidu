@@ -2,7 +2,7 @@
 
 import { useTitle } from "@/lib/hooks";
 import { useRequireUser } from "@/lib/auth";
-import MainSkeleton from "@/components/ui/main-skeleton";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import StudentTodoManager from "@/components/client/student-todo-manager";
 import BodySync from "@/components/body-sync";
 
@@ -14,7 +14,7 @@ export default function StudentTodoPage() {
   // The shell (sidebar + rightbar) comes from the student layout and is already
   // rendered, so waiting on the session only ever affects the middle column —
   // and even that shows a skeleton rather than nothing.
-  if (!u) return <MainSkeleton />;
+  if (!u) return <PageSkeleton />;
 
   return (
     <>

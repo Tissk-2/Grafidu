@@ -31,7 +31,6 @@ export function taskStatus(muridSelesai: number, total: number, completed: boole
  * line vs. two, no link at all on the dashboard).
  */
 export function TaskCard({ task, total }: { task: TaskCardTask; total: number }) {
-  const pct = total ? Math.round((task.muridSelesai / total) * 100) : 0;
   const s = taskStatus(task.muridSelesai, total, task.completed);
 
   return (

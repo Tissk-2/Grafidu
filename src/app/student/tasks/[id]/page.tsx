@@ -12,7 +12,7 @@ import {
 } from "@/lib/supabase/queries";
 import { fmtDate } from "@/lib/format";
 import { useTitle } from "@/lib/hooks";
-import MainSkeleton from "@/components/ui/main-skeleton";
+import StudentTaskDetailSkeleton from "@/components/ui/student-task-detail-skeleton";
 import StudentTaskSubmission from "@/components/client/student-task-submission";
 import BodySync from "@/components/body-sync";
 
@@ -55,7 +55,7 @@ export default function StudentTaskDetailPage() {
   // The shell (sidebar + rightbar) comes from the student layout and is already
   // rendered, so this wait only affects the middle column — and even that shows
   // a skeleton rather than nothing.
-  if (!u) return <MainSkeleton />;
+  if (!u) return <StudentTaskDetailSkeleton />;
   if (notFound) {
     return (
       <div style={{ padding: 48, textAlign: "center" }}>
@@ -66,7 +66,7 @@ export default function StudentTaskDetailPage() {
       </div>
     );
   }
-  if (!data) return <MainSkeleton />;
+  if (!data) return <StudentTaskDetailSkeleton />;
 
   const isSubmitted = Boolean(data.status?.submittedAt);
   const submittedAtStr = data.status?.submittedAt

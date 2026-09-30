@@ -10,7 +10,7 @@ import {
 } from "@/lib/supabase/queries";
 import { useTitle } from "@/lib/hooks";
 import type { GradeRow } from "@/components/layout/rightbar";
-import MainSkeleton from "@/components/ui/main-skeleton";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import SettingsForm from "@/components/client/settings-form";
 import BodySync from "@/components/body-sync";
 
@@ -53,7 +53,7 @@ export default function StudentSettingsPage() {
   // The shell (sidebar + rightbar) comes from the teacher layout, so waiting on
   // the session and the Supabase query only blanks the middle column — and even
   // that shows a skeleton rather than nothing.
-  if (!u || !data) return <MainSkeleton />;
+  if (!u || !data) return <PageSkeleton />;
 
   return (
     <>

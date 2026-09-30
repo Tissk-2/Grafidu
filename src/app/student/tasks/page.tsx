@@ -12,7 +12,7 @@ import {
 } from "@/lib/supabase/queries";
 import { fmtDate } from "@/lib/format";
 import { useTitle } from "@/lib/hooks";
-import MainSkeleton from "@/components/ui/main-skeleton";
+import StudentTasksSkeleton from "@/components/ui/student-tasks-skeleton";
 import StudentClassSearch from "@/components/client/student-class-search";
 import BodySync from "@/components/body-sync";
 
@@ -54,7 +54,7 @@ export default function StudentTasksPage() {
   // The shell (sidebar + rightbar) comes from the student layout and is already
   // rendered, so this wait only affects the middle column — and even that shows
   // a skeleton rather than nothing.
-  if (!u || !data) return <MainSkeleton />;
+  if (!u || !data) return <StudentTasksSkeleton />;
 
   return (
     <>

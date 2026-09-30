@@ -5,7 +5,7 @@ import { ChevronDown, ClipboardCheck, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { parseIdDate, useRoutedClass } from "@/lib/guru";
-import MainSkeleton from "@/components/ui/main-skeleton";
+import TasksSkeleton from "@/components/ui/tasks-skeleton";
 import TaskCard from "@/components/ui/task-card";
 import BodySync from "@/components/body-sync";
 
@@ -40,7 +40,7 @@ export default function TeacherTasksPage() {
       });
   }, [active, query, sort]);
 
-  if (!u) return <MainSkeleton />;
+  if (!u) return <TasksSkeleton />;
 
   const all = active.tugas;
   const submitted = all.reduce((sum, t) => sum + t.muridSelesai, 0);

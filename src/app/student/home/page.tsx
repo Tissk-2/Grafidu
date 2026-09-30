@@ -6,7 +6,7 @@ import { useRequireUser } from "@/lib/auth";
 import { fetchClassTeachers, type ClassTeacher } from "@/lib/supabase/queries";
 import { useTitle } from "@/lib/hooks";
 import { StatCard } from "@/components/ui/stat-card";
-import MainSkeleton from "@/components/ui/main-skeleton";
+import StudentHomeSkeleton from "@/components/ui/student-home-skeleton";
 import StudentClassSearch from "@/components/client/student-class-search";
 import BodySync from "@/components/body-sync";
 import { useStudentShellData } from "../student-shell-data";
@@ -34,7 +34,7 @@ export default function StudentHomePage() {
   // The shell (sidebar + rightbar) comes from the student layout and is already
   // rendered, so these waits only affect the middle column — and even that shows
   // a skeleton rather than nothing.
-  if (!u || !shell || !classes) return <MainSkeleton />;
+  if (!u || !shell || !classes) return <StudentHomeSkeleton />;
 
   const total = shell.tasksToday.length;
   const done = shell.tasksToday.filter((t) => t.done).length;
