@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ClipboardCheck } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { parseIdDate, useRoutedClass } from "@/lib/guru";
@@ -76,20 +78,16 @@ export default function TeacherTasksPage() {
       ) : (
         <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
           {tasks.map((t) => (
-            <div key={t.id} className="task-row">
+            <Link
+              key={t.id}
+              href={`/teacher/tasks/${t.id}`}
+              className="task-row hover-lift"
+              // No inline `display` here: .task-row is already display:flex, and
+              // an inline block would collapse the icon / info / right columns.
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
               <span className="task-ic">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <rect x="5" y="3" width="14" height="18" rx="2.5" />
-                  <path d="M9 3.5V2h6v1.5" />
-                  <path d="m8.6 12.4 2 2 4-4" />
-                </svg>
+                <ClipboardCheck size={20} aria-hidden />
               </span>
               <span className="info">
                 <b>{t.name}</b>
@@ -116,7 +114,7 @@ export default function TeacherTasksPage() {
                   {t.completed ? "Selesai" : "Belum Selesai"}
                 </span>
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       )}

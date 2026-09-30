@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 /**
  * Teacher tasks page: class cards (left sidebar) + search + task list.
@@ -42,7 +43,7 @@ export function TeacherTaskFilter({
 
       <div id="task-list" style={{ marginTop: 22, maxWidth: 600 }}>
         {filtered.map((t) => (
-          <a key={t.id} className="task-row" href={`/teacher/tasks/${t.id}`}>
+          <Link key={t.id} className="task-row" href={`/teacher/tasks/${t.id}`}>
             <span className="task-ic">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <rect x="5" y="3" width="14" height="18" rx="2.5" />
@@ -58,7 +59,7 @@ export function TeacherTaskFilter({
               <span className="cnt">{t.submitted}/{t.total}</span>
               <span className={"st " + (t.status === "Selesai" ? "st-green" : "st-orange")}>{t.status}</span>
             </span>
-          </a>
+          </Link>
         ))}
       </div>
     </>

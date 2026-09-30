@@ -13,7 +13,10 @@ const nextConfig: NextConfig = {
   // layout renders the shell immediately, which flushes a 200 before a
   // page-level redirect() could turn into a 307.
   async redirects() {
-    return [{ source: "/teacher/home", destination: "/teacher/home/1", permanent: false }];
+    return [
+      { source: "/teacher/home", destination: "/teacher/home/1", permanent: false },
+      { source: "/student", destination: "/student/home", permanent: false },
+    ];
   },
 };
 

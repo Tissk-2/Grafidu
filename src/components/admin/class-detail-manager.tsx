@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { update, useDB } from "@/lib/store";
+import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /**
  * Manages one class: rename (syncs legacy class names), move students in
@@ -38,7 +39,9 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
     if (loadedId !== null && loadedName !== null) setNewName(loadedName);
   }, [loadedId, loadedName]);
 
-  if (!db) return null;
+  // The store fills in after mount. The admin shell lives in the route layout,
+  // so showing a skeleton here only affects the main column.
+  if (!db) return <AdminSkeleton />;
 
   if (!clsFound) {
     return (

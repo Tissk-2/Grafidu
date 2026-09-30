@@ -77,6 +77,18 @@
   --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
+/* ------------------------------------------------------------------
+   Everything from here down is Grafidu's own design system.
+
+   It MUST live in `@layer components`. Tailwind v4 emits its utilities
+   inside `@layer utilities`, and per the CSS cascade, UNLAYERED styles
+   beat every layered style regardless of specificity. Left unlayered,
+   the `*` reset below (specificity 0,0,0) silently overrode every
+   `p-*` / `m-*` utility in the app, which is why they needed `!important`
+   to work. In `components` they sit below `utilities`, so Tailwind wins
+   and the `!important` suffixes become unnecessary.
+   ------------------------------------------------------------------ */
+@layer components {
 * {
   margin: 0;
   padding: 0;
@@ -4689,6 +4701,8 @@ body.sheet-open {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
 }
 
 @layer base {

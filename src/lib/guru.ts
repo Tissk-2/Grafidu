@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { dummyGuruData, type GuruClass } from "@/lib/guru-demo";
 
 export type { GuruClass };
@@ -79,8 +79,12 @@ export function useActiveClass() {
  */
 export function useRoutedClass() {
   const params = useParams<{ id?: string }>();
+  const pathname = usePathname();
   const { classes, active, select } = useActiveClass();
-  const routeId = Number(params?.id);
+  // Only /teacher/home/[id] is class-scoped. Other dynamic routes reuse the
+  // `id` segment for something else (e.g. /teacher/tasks/[id] is a task id), so
+  // honouring it there would silently switch the active class.
+  const routeId = pathname.startsWith("/teacher/home/") ? Number(params?.id) : Number.NaN;
   const fromRoute = classes.some((c) => c.id === routeId);
 
   useEffect(() => {

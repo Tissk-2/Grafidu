@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { update, useDB, type User as StoreUser } from "@/lib/store";
 import { generateTemporaryPassword } from "@/lib/admin-demo";
 import AccountForm, { emptyAccountValues, type AccountFormValues } from "./account-form";
+import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 export type ManagedAccount = {
   id: number;
@@ -267,6 +268,11 @@ export default function AccountManager() {
 
   const startItem = ((list?.page ?? 1) - 1) * PAGE_SIZE + 1;
   const endItem = list ? Math.min(list.total, list.page * PAGE_SIZE) : 0;
+
+  // The store fills in after mount; without this the table renders empty and
+  // then pops in. The admin shell lives in the route layout, so a skeleton
+  // here only affects the main column.
+  if (!db) return <AdminSkeleton />;
 
   return (
     <>
