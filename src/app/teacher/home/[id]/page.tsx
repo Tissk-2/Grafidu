@@ -1,18 +1,22 @@
-import { notFound } from "next/navigation";
-import { findClass } from "@/lib/guru-demo";
-import TeacherClassHome from "./teacher-class-home";
+import { dummyGuruData } from "@/lib/guru-demo";
+import TeacherClassHome from "@/app/teacher/teacher-class-home";
 
 /**
- * Resolves the class before rendering so an unknown id returns a real 404.
- * (`notFound()` inside the client component below would still stream a 200.)
+ * Only the demo classes are valid routes — anything else 404s here, which is
+ * what lets this page stay synchronous (see below).
  */
-export default async function TeacherClassHomePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const kelas = findClass(Number(id));
-  if (!kelas) notFound();
-  return <TeacherClassHome kelas={kelas} />;
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return dummyGuruData.dataKelas.map((c) => ({ id: String(c.id) }));
+}
+
+/**
+ * Deliberately NOT async. An `async` page awaits `params`, so every class
+ * switch suspends the segment and blanks the page. The class data lives in a
+ * static module, so there is nothing to fetch — the client reads the id off
+ * the URL and swaps the data in place instead.
+ */
+export default function TeacherClassHomePage() {
+  return <TeacherClassHome />;
 }

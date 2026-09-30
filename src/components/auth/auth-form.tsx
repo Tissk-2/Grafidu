@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -158,7 +159,7 @@ export default function AuthForm() {
             Remember me
           </label>
           <span className="spacer"></span>
-          <a href="/forgot-password">Forgot password?</a>
+          <Link href="/forgot-password">Forgot password?</Link>
         </div>
         <button className="btn-auth" type="submit" disabled={loading} aria-busy={loading}>
           {loading ? "Memproses..." : "Sign in"}

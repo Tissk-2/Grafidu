@@ -1,12 +1,27 @@
 import Link from "next/link";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { dummyGuruData } from "@/lib/guru-demo";
 
 export type GradeRow = { subject: string; score: number; status: string };
 export type StudentRow = { name: string; avg: number };
 export type Announcement = { title: string; body: string; when: string; hl: boolean };
 
-function Pill({ score, text }: { score: number; text: string }) {
-  const cls = score >= 70 ? "pill-green" : "pill-red";
-  return <span className={`pill ${cls}`}>{text}</span>;
+/**
+ * Marks a score against the class average: green with an up chevron once it
+ * reaches the KKM (Kriteria Ketuntasan Minimal, `dummyGuruData.kkm`), red with
+ * a down chevron when it falls short. The label is fixed — the score alone
+ * decides the tone, so callers no longer pass their own text.
+ */
+function PillMean({ score }: { score: number }) {
+  const meets = score >= dummyGuruData.kkm;
+  return (
+    <span
+      className={`pill inline-flex items-center gap-1 ${meets ? "pill-green" : "pill-red"}`}
+    >
+      {meets ? <ChevronUp size={12} aria-hidden /> : <ChevronDown size={12} aria-hidden />}
+      Rata Rata
+    </span>
+  );
 }
 
 export function StudentRightbar({
@@ -44,7 +59,7 @@ export function StudentRightbar({
               <td>{g.subject}</td>
               <td className="num">{g.score}</td>
               <td className="st">
-                <Pill score={g.score} text={g.status} />
+                <PillMean score={g.score} />
               </td>
             </tr>
           ))}
@@ -116,7 +131,7 @@ export function TeacherRightbar({
               <td>{s.name}</td>
               <td className="num">{s.avg}</td>
               <td className="st">
-                <Pill score={s.avg} text={s.avg >= 70 ? "Atas Rata Rata" : "Bawah Rata Rata"} />
+                <PillMean score={s.avg} />
               </td>
             </tr>
           ))}

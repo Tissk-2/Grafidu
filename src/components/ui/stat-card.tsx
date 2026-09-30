@@ -21,13 +21,13 @@ export function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="border border-stone-300 aspect-[1/1] p-5! relative overflow-hidden rounded-md">
+    <div className="border border-stone-300 aspect-[1/1] p-5 relative overflow-hidden rounded-md">
       <p className="text-xl">{label}</p>
       <div className="absolute right-6 bottom-6 z-10">
         <span className="text-7xl font-light">{value}</span>
       </div>
       <span
-        className={`c c-${tone} rounded-full flex z-0 justify-center items-center aspect-square w-35! absolute -bottom-6 -left-6`}
+        className={`c c-${tone} rounded-full flex z-0 justify-center items-center aspect-square w-35 absolute -bottom-6 -left-6`}
       >
         {ICONS[tone]}
       </span>
