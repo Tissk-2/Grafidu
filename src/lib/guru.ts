@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { dummyGuruData, type GuruClass } from "@/lib/guru-demo";
 
 export type { GuruClass };
@@ -65,4 +66,30 @@ export function useActiveClass() {
   };
 
   return { classes, active: classes.find((c) => c.id === id) ?? classes[0], select };
+}
+
+/**
+ * The class the teacher shell should render: the `:id` route param wins, and
+ * otherwise we fall back to the class last picked on /teacher/home. Because
+ * this lives in the layout's shell, the sidebar, the rightbar and the page all
+ * read the same source and can never disagree.
+ *
+ * The route is also mirrored back to localStorage so the pages that only read
+ * the stored id (/teacher/tasks and friends) follow the URL.
+ */
+export function useRoutedClass() {
+  const params = useParams<{ id?: string }>();
+  const { classes, active, select } = useActiveClass();
+  const routeId = Number(params?.id);
+  const fromRoute = classes.some((c) => c.id === routeId);
+
+  useEffect(() => {
+    if (!fromRoute || routeId === active.id) return;
+    try {
+      localStorage.setItem("guru-class", String(routeId));
+    } catch {}
+  }, [fromRoute, routeId, active.id]);
+
+  const kelas = (fromRoute ? classes.find((c) => c.id === routeId) : undefined) ?? active;
+  return { kelas, classes, select };
 }

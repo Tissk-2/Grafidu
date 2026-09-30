@@ -9,8 +9,8 @@ import {
   type SidebarTask,
 } from "@/lib/supabase/queries";
 import { useTitle } from "@/lib/hooks";
-import DashboardShell from "@/components/layout/dashboard-shell";
-import { StudentRightbar, type GradeRow } from "@/components/layout/rightbar";
+import type { GradeRow } from "@/components/layout/rightbar";
+import MainSkeleton from "@/components/ui/main-skeleton";
 import SettingsForm from "@/components/client/settings-form";
 import BodySync from "@/components/body-sync";
 
@@ -50,31 +50,17 @@ export default function StudentSettingsPage() {
     };
   }, [u]);
 
-  if (!u || !data) return null;
+  // The shell (sidebar + rightbar) comes from the teacher layout, so waiting on
+  // the session and the Supabase query only blanks the middle column — and even
+  // that shows a skeleton rather than nothing.
+  if (!u || !data) return <MainSkeleton />;
 
   return (
     <>
       <BodySync dataPage="student-settings" />
-      <DashboardShell
-        role="student"
-        sidebar={{
-          user: { name: u.name, sub: u.className ?? "Siswa", avatar: u.avatar },
-          tasksToday: data.tasksToday,
-        }}
-        activeNav="Home"
-        rightbar={
-          <StudentRightbar
-            grades={data.grades}
-            aiNote={data.aiNote}
-            ctaHref="/student/todo"
-            ctaLabel="Buat To-Do List"
-          />
-        }
-      >
-        <h1 className="page-title">Pengaturan Profil</h1>
-        <p className="page-sub">Kelola informasi akun, keamanan, dan preferensi notifikasi Anda.</p>
-        <SettingsForm initialUser={u} />
-      </DashboardShell>
+      <h1 className="page-title">Pengaturan Profil</h1>
+      <p className="page-sub">Kelola informasi akun, keamanan, dan preferensi notifikasi Anda.</p>
+      <SettingsForm initialUser={u} />
     </>
   );
 }
