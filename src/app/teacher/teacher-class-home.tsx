@@ -8,6 +8,8 @@ import { dummyGuruData } from "@/lib/guru-demo";
 import { classAvg, parseIdDate, useRoutedClass } from "@/lib/guru";
 import { StatCard } from "@/components/ui/stat-card";
 import MainSkeleton from "@/components/ui/main-skeleton";
+import TaskCard from "@/components/ui/task-card";
+import BottomCards from "./teacher-bottom-cards";
 import BodySync from "@/components/body-sync";
 
 /**
@@ -67,83 +69,16 @@ export default function TeacherClassHome() {
           Lihat Semua
         </Link>
       </div>
-      <div style={{ display: "grid", gap: 12 }}>
+      <ul className="grid gap-2.5">
         {byDeadline.slice(0, 3).map((t) => (
-          <div key={t.id} className="task-row">
-            <span className="task-ic">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <rect x="5" y="3" width="14" height="18" rx="2.5" />
-                <path d="M9 3.5V2h6v1.5" />
-                <path d="m8.6 12.4 2 2 4-4" />
-              </svg>
-            </span>
-            <span className="info">
-              <b>{t.name}</b>
-              <span>Tenggat: {t.deadline}</span>
-            </span>
-            <span
-              className="right"
-              style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}
-            >
-              <b>
-                {t.muridSelesai}/{kelas.totalMurid}
-              </b>
-              <span className={t.completed ? "pill pill-green-plain" : "pill pill-red"}>
-                {t.completed ? "Selesai" : "Belum Selesai"}
-              </span>
-            </span>
-          </div>
+          <li key={t.id}>
+            <TaskCard task={t} total={kelas.totalMurid} />
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* Aktivitas & Perlu Dinilai */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 28 }}>
-        <section>
-          <div className="sec-row" style={{ marginBottom: 12 }}>
-            <h2 className="h2" style={{ margin: 0 }}>
-              Aktivitas Terbaru
-            </h2>
-          </div>
-          <div style={{ display: "grid", gap: 10 }}>
-            {kelas.pengumuman.map((p) => (
-              <div key={p.id} className="task-row">
-                <span className="info">
-                  <b>{p.nama}</b>
-                  <span>{p.date}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <div className="sec-row" style={{ marginBottom: 12 }}>
-            <h2 className="h2" style={{ margin: 0 }}>
-              Tugas Perlu Dinilai
-            </h2>
-            <Link href="/teacher/tasks" style={{ fontSize: 13, color: "var(--purple)" }}>
-              Lihat Semua
-            </Link>
-          </div>
-          <div style={{ display: "grid", gap: 10 }}>
-            {perluDinilai.map((t) => (
-              <div key={t.id} className="task-row">
-                <span className="info">
-                  <b>{t.name}</b>
-                  <span>{t.muridSelesai} pengumpulan</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+      <BottomCards pengumuman={kelas.pengumuman} perluDinilai={perluDinilai} />
     </>
   );
 }

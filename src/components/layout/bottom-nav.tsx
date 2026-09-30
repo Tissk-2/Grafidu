@@ -23,12 +23,12 @@ export function BottomNav({ role, active }: { role: "student" | "teacher"; activ
         ];
 
   return (
-    <nav className="z-50 fixed bottom-8 left-[50%] flex !p-4 rounded border border-[#DDD] -translate-x-[50%] gap-8 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+    <nav className="z-50 fixed bottom-8 left-[50%] flex p-4 rounded border border-[#DDD] -translate-x-[50%] gap-8 bg-white">
       {items.map((it) => (
         <Link
           key={it.href}
           href={it.href}
-          className={`flex flex-col items-center justify-between gap-1 min-w-[44px] text-[11px] text-gray-600! hover:text-gray-900! ${active === it.label ? "text-purple-600! hover:text-purple-600!" : ""}`}
+          className={`flex flex-col items-center justify-between gap-1 min-w-[44px] text-[11px] text-gray-600 hover:text-gray-900 ${active === it.label ? "text-purple-600 hover:text-purple-600" : ""}`}
         >
           {it.icon}
           {it.label}

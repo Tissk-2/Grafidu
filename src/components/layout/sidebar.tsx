@@ -99,7 +99,7 @@ export function Sidebar({
         locale={id}
         weekStartsOn={1}
         showOutsideDays
-        className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-black [&_button[data-range-start=true]]:text-black [&_button[data-range-end=true]]:text-black"
+        className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-white [&_button[data-range-start=true]]:text-white [&_button[data-range-end=true]]:text-white "
         modifiers={{ sunday: { dayOfWeek: [0] } }}
         modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
         classNames={{
@@ -166,7 +166,7 @@ export function Sidebar({
         </>
       )}
 
-      <div className="side-user pr-6!">
+      <div className="side-user pr-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={user.avatar.startsWith("/") ? user.avatar : "/" + user.avatar} alt={user.name} />
         <span>

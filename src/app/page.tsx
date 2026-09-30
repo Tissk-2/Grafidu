@@ -20,8 +20,8 @@ export default function LandingPage() {
       <NavHeader />
 
       {/* ============ HERO ============ */}
-      <section className="hero overflow-hidden pt-24 lg:pt-24 !pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 max-w-[1200px] !mx-auto px-6 lg:px-10 items-center">
+      <section className="hero overflow-hidden pt-24 lg:pt-24 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 max-w-[1200px] mx-auto px-6 lg:px-10 items-center">
           <div>
             <div className="eyebrow">A clearer way to learn</div>
             <h1>

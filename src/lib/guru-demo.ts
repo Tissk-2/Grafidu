@@ -48,7 +48,8 @@ export const dummyGuruData = {
           name: "Menulis Teks Eksposisi",
           ditugaskan: "20 Agustus 2026",
           deadline: "10 September 2026",
-          deskripsi: "Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.",
+          deskripsi:
+            "Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.",
           completed: false,
           muridSelesai: 16,
           pengumpulan: [
@@ -67,7 +68,7 @@ export const dummyGuruData = {
             { muridId: 13, tanggal: "4 September 2026" },
             { muridId: 14, tanggal: "6 September 2026" },
             { muridId: 15, tanggal: "7 September 2026" },
-            { muridId: 16, tanggal: "8 September 2026" }
+            { muridId: 16, tanggal: "8 September 2026" },
           ],
         },
         {
@@ -75,7 +76,8 @@ export const dummyGuruData = {
           name: "Analisis Unsur Intrinsik Cerpen",
           ditugaskan: "22 Juli 2026",
           deadline: "12 Agustus 2026",
-          deskripsi: "Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.",
+          deskripsi:
+            "Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.",
           completed: true,
           muridSelesai: 32,
           pengumpulan: [
@@ -110,7 +112,7 @@ export const dummyGuruData = {
             { muridId: 4, tanggal: "9 Agustus 2026" },
             { muridId: 5, tanggal: "10 Agustus 2026" },
             { muridId: 6, tanggal: "10 Agustus 2026" },
-            { muridId: 7, tanggal: "11 Agustus 2026" }
+            { muridId: 7, tanggal: "11 Agustus 2026" },
           ],
         },
         {
@@ -118,7 +120,8 @@ export const dummyGuruData = {
           name: "Membuat Teks Pidato Persuasif",
           ditugaskan: "20 Agustus 2026",
           deadline: "10 September 2026",
-          deskripsi: "Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.",
+          deskripsi:
+            "Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.",
           completed: true,
           muridSelesai: 27,
           pengumpulan: [
@@ -148,7 +151,7 @@ export const dummyGuruData = {
             { muridId: 24, tanggal: "6 September 2026" },
             { muridId: 25, tanggal: "7 September 2026" },
             { muridId: 26, tanggal: "8 September 2026" },
-            { muridId: 27, tanggal: "9 September 2026" }
+            { muridId: 27, tanggal: "9 September 2026" },
           ],
         },
         {
@@ -156,7 +159,8 @@ export const dummyGuruData = {
           name: "Membuat Resensi Buku",
           ditugaskan: "18 Agustus 2026",
           deadline: "1 September 2026",
-          deskripsi: "Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.",
+          deskripsi:
+            "Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.",
           completed: true,
           muridSelesai: 31,
           pengumpulan: [
@@ -190,7 +194,7 @@ export const dummyGuruData = {
             { muridId: 17, tanggal: "30 Agustus 2026" },
             { muridId: 18, tanggal: "30 Agustus 2026" },
             { muridId: 19, tanggal: "31 Agustus 2026" },
-            { muridId: 20, tanggal: "31 Agustus 2026" }
+            { muridId: 20, tanggal: "31 Agustus 2026" },
           ],
         },
       ],
@@ -286,7 +290,8 @@ export const dummyGuruData = {
           name: "Caption Poster",
           ditugaskan: "20 Agustus 2026",
           deadline: "10 September 2026",
-          deskripsi: "Buat tiga variasi caption untuk poster kegiatan sekolah. Setiap caption harus memiliki panjang maksimal 60 karakter, menggunakan kalimat ajakan, dan memuat satu kata kunci yang relevan. Jelaskan alasan pemilihan kata pada setiap variasi. Kumpulkan dalam format dokumen (.pdf), minimal 150 kata.",
+          deskripsi:
+            "Buat tiga variasi caption untuk poster kegiatan sekolah. Setiap caption harus memiliki panjang maksimal 60 karakter, menggunakan kalimat ajakan, dan memuat satu kata kunci yang relevan. Jelaskan alasan pemilihan kata pada setiap variasi. Kumpulkan dalam format dokumen (.pdf), minimal 150 kata.",
           completed: false,
           muridSelesai: 14,
           pengumpulan: [
@@ -303,7 +308,7 @@ export const dummyGuruData = {
             { muridId: 14, tanggal: "4 September 2026" },
             { muridId: 15, tanggal: "5 September 2026" },
             { muridId: 16, tanggal: "7 September 2026" },
-            { muridId: 17, tanggal: "8 September 2026" }
+            { muridId: 17, tanggal: "8 September 2026" },
           ],
         },
         {
@@ -311,7 +316,8 @@ export const dummyGuruData = {
           name: "Analisis Unsur Intrinsik Cerpen",
           ditugaskan: "22 Juli 2026",
           deadline: "12 Agustus 2026",
-          deskripsi: "Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.",
+          deskripsi:
+            "Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.",
           completed: true,
           muridSelesai: 28,
           pengumpulan: [
@@ -342,7 +348,7 @@ export const dummyGuruData = {
             { muridId: 7, tanggal: "9 Agustus 2026" },
             { muridId: 8, tanggal: "9 Agustus 2026" },
             { muridId: 9, tanggal: "10 Agustus 2026" },
-            { muridId: 10, tanggal: "11 Agustus 2026" }
+            { muridId: 10, tanggal: "11 Agustus 2026" },
           ],
         },
         {
@@ -350,7 +356,8 @@ export const dummyGuruData = {
           name: "Copywriting Poster",
           ditugaskan: "20 Agustus 2026",
           deadline: "24 Agustus 2026",
-          deskripsi: "Tulis naskah copy untuk poster kegiatan sekolah. Naskah terdiri dari headline, sub-headline, dan body copy yang memuat ajakan bertindak. Gunakan gaya bahasa yang jelas dan jangan membuat klaim yang tidak terbukti. Kumpulkan dalam format dokumen (.pdf), minimal 250 kata.",
+          deskripsi:
+            "Tulis naskah copy untuk poster kegiatan sekolah. Naskah terdiri dari headline, sub-headline, dan body copy yang memuat ajakan bertindak. Gunakan gaya bahasa yang jelas dan jangan membuat klaim yang tidak terbukti. Kumpulkan dalam format dokumen (.pdf), minimal 250 kata.",
           completed: true,
           muridSelesai: 22,
           pengumpulan: [
@@ -375,7 +382,7 @@ export const dummyGuruData = {
             { muridId: 8, tanggal: "23 Agustus 2026" },
             { muridId: 9, tanggal: "23 Agustus 2026" },
             { muridId: 10, tanggal: "23 Agustus 2026" },
-            { muridId: 11, tanggal: "23 Agustus 2026" }
+            { muridId: 11, tanggal: "23 Agustus 2026" },
           ],
         },
         {
@@ -383,7 +390,8 @@ export const dummyGuruData = {
           name: "Laporan Proyek Desain",
           ditugaskan: "18 Agustus 2026",
           deadline: "1 September 2026",
-          deskripsi: "Tulis laporan hasil proyek desain yang kamu kerjakan. Laporan memuat latar belakang, tujuan, proses pengerjaan yang dilakukan, hasil akhir, dan evaluasi diri. Sertakan dokumentasi berupa foto atau tangkapan layar dari proses pengerjaan. Minimal 400 kata.",
+          deskripsi:
+            "Tulis laporan hasil proyek desain yang kamu kerjakan. Laporan memuat latar belakang, tujuan, proses pengerjaan yang dilakukan, hasil akhir, dan evaluasi diri. Sertakan dokumentasi berupa foto atau tangkapan layar dari proses pengerjaan. Minimal 400 kata.",
           completed: true,
           muridSelesai: 26,
           pengumpulan: [
@@ -412,7 +420,7 @@ export const dummyGuruData = {
             { muridId: 19, tanggal: "29 Agustus 2026" },
             { muridId: 20, tanggal: "30 Agustus 2026" },
             { muridId: 21, tanggal: "30 Agustus 2026" },
-            { muridId: 22, tanggal: "31 Agustus 2026" }
+            { muridId: 22, tanggal: "31 Agustus 2026" },
           ],
         },
       ],
@@ -504,7 +512,8 @@ export const dummyGuruData = {
           name: "Menulis Teks Eksposisi",
           ditugaskan: "20 Agustus 2026",
           deadline: "10 September 2026",
-          deskripsi: "Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.",
+          deskripsi:
+            "Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.",
           completed: false,
           muridSelesai: 19,
           pengumpulan: [
@@ -526,7 +535,7 @@ export const dummyGuruData = {
             { muridId: 22, tanggal: "5 September 2026" },
             { muridId: 23, tanggal: "6 September 2026" },
             { muridId: 24, tanggal: "7 September 2026" },
-            { muridId: 25, tanggal: "8 September 2026" }
+            { muridId: 25, tanggal: "8 September 2026" },
           ],
         },
         {
@@ -534,7 +543,8 @@ export const dummyGuruData = {
           name: "Analisis Unsur Intrinsik Cerpen",
           ditugaskan: "22 Juli 2026",
           deadline: "12 Agustus 2026",
-          deskripsi: "Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.",
+          deskripsi:
+            "Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.",
           completed: true,
           muridSelesai: 30,
           pengumpulan: [
@@ -567,7 +577,7 @@ export const dummyGuruData = {
             { muridId: 10, tanggal: "9 Agustus 2026" },
             { muridId: 11, tanggal: "9 Agustus 2026" },
             { muridId: 12, tanggal: "10 Agustus 2026" },
-            { muridId: 13, tanggal: "11 Agustus 2026" }
+            { muridId: 13, tanggal: "11 Agustus 2026" },
           ],
         },
         {
@@ -575,7 +585,8 @@ export const dummyGuruData = {
           name: "Membuat Teks Pidato Persuasif",
           ditugaskan: "20 Agustus 2026",
           deadline: "10 September 2026",
-          deskripsi: "Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.",
+          deskripsi:
+            "Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.",
           completed: true,
           muridSelesai: 25,
           pengumpulan: [
@@ -603,7 +614,7 @@ export const dummyGuruData = {
             { muridId: 12, tanggal: "6 September 2026" },
             { muridId: 13, tanggal: "7 September 2026" },
             { muridId: 14, tanggal: "8 September 2026" },
-            { muridId: 15, tanggal: "9 September 2026" }
+            { muridId: 15, tanggal: "9 September 2026" },
           ],
         },
         {
@@ -611,7 +622,8 @@ export const dummyGuruData = {
           name: "Membuat Resensi Buku",
           ditugaskan: "18 Agustus 2026",
           deadline: "1 September 2026",
-          deskripsi: "Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.",
+          deskripsi:
+            "Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.",
           completed: true,
           muridSelesai: 29,
           pengumpulan: [
@@ -643,7 +655,7 @@ export const dummyGuruData = {
             { muridId: 23, tanggal: "30 Agustus 2026" },
             { muridId: 24, tanggal: "30 Agustus 2026" },
             { muridId: 25, tanggal: "31 Agustus 2026" },
-            { muridId: 26, tanggal: "31 Agustus 2026" }
+            { muridId: 26, tanggal: "31 Agustus 2026" },
           ],
         },
       ],
@@ -689,7 +701,8 @@ export const dummyGuruData = {
         {
           id: 2,
           nama: "Jadwal remedial",
-          description: "Remedial bagi siswa dengan nilai di bawah KKM 80 dilaksanakan Sabtu, 05.00 WIB.",
+          description:
+            "Remedial bagi siswa dengan nilai di bawah KKM 80 dilaksanakan Sabtu, 05.00 WIB.",
           date: "25 September 2026",
         },
         {

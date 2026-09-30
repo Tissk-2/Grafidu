@@ -110,7 +110,7 @@ export default function TeacherTaskDetailPage() {
       </nav>
 
       {/* 3.2 header */}
-      <header className="mt-4.5! flex items-center gap-3.5">
+      <header className="mt-4.5 flex items-center gap-3.5">
         <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#E9DDFB] text-[#5B3FD6]">
           <ClipboardCheck size={22} aria-hidden />
         </span>
@@ -120,7 +120,7 @@ export default function TeacherTaskDetailPage() {
       </header>
 
       {/* 3.3 meta row */}
-      <p className="mt-2.5! flex flex-wrap items-center gap-2 text-[14px] text-[#666]">
+      <p className="mt-2.5 flex flex-wrap items-center gap-2 text-[14px] text-[#666]">
         <span className="flex items-center gap-2">
           <Calendar size={16} aria-hidden className="text-[#888]" />
           Ditugaskan {task.ditugaskan}
@@ -133,7 +133,7 @@ export default function TeacherTaskDetailPage() {
       </p>
 
       {/* 3.4 progress + divider */}
-      <section className="mt-8!">
+      <section className="mt-8">
         <div className="text-[14px] font-medium text-[#222]">Progres Pengumpulan</div>
         <div className="flex items-center gap-5">
           <div className="flex-1">
@@ -149,7 +149,7 @@ export default function TeacherTaskDetailPage() {
       </section>
 
       {/* 3.5 description */}
-      <section className="mt-6!">
+      <section className="mt-6">
         <h2 className="text-[12px] font-medium tracking-[0.05em] text-[#888] uppercase">
           Deskripsi Tugas
         </h2>
@@ -157,7 +157,7 @@ export default function TeacherTaskDetailPage() {
       </section>
 
       {/* 3.6 submitted */}
-      <section className="mt-10.5!">
+      <section className="mt-10.5">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2.5 text-[17px] font-medium text-[#222]">
             <span className="size-2.5 rounded-full bg-[#16A34A]" />
@@ -168,7 +168,7 @@ export default function TeacherTaskDetailPage() {
 
         <SearchField value={qDone} onChange={setQDone} placeholder="Cari Siswa…" />
 
-        <table className="mt-3.5! w-full table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
+        <table className="mt-3.5 w-full table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
