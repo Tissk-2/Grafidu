@@ -33,6 +33,7 @@ export function StudentRightbar({
   ctaLabel,
   announcements,
   gradesHref = "/student/grades",
+  announcementsHref = "/student/announcements",
 }: {
   grades: GradeRow[];
   aiNote: string;
@@ -41,6 +42,7 @@ export function StudentRightbar({
   announcements?: Announcement[];
   /** Where "Lihat Semua" points; the teacher slot overrides it. */
   gradesHref?: string;
+  announcementsHref?: string;
 }) {
   return (
     <aside className="rightbar">
@@ -75,7 +77,7 @@ export function StudentRightbar({
         <div className="ann-card">
           <div className="rb-head" style={{ marginBottom: 4 }}>
             <h3>Pengumuman</h3>
-            <Link className="link-underline" href="/student/announcements">
+            <Link className="link-underline" href={announcementsHref}>
               Lihat Semua
             </Link>
           </div>
