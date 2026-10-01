@@ -1,0 +1,237 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
+import { useRequireUser } from "@/lib/auth";
+import { useTitle } from "@/lib/hooks";
+import {
+  fetchSchoolTasks,
+  fetchSubjectScores,
+  avgOf,
+  type SchoolTask,
+  type SubjectScore,
+} from "@/lib/supabase/queries";
+import { fmtDate } from "@/lib/format";
+import { StatCard } from "@/components/ui/stat-card";
+import PageSkeleton from "@/components/ui/page-skeleton";
+import BodySync from "@/components/body-sync";
+
+type Filter = "semua" | "dinilai" | "belum";
+
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: "semua", label: "Semua Tugas" },
+  { value: "dinilai", label: "Sudah Dinilai" },
+  { value: "belum", label: "Belum Dinilai" },
+];
+
+type PageData = { tasks: SchoolTask[]; subjects: SubjectScore[] };
+
+/** Pill per task grade. Threshold 70 follows the rest of the student side. */
+function gradePill(grade: number | null): { cls: string; label: string } {
+  if (grade == null) return { cls: "pill-gray", label: "Belum Dinilai" };
+  if (grade < 70) return { cls: "pill-red", label: "Perlu Fokus" };
+  return { cls: "pill-green", label: "Bagus" };
+}
+
+/** Middle column only — the sidebar and rightbar come from the student layout. */
+export default function StudentGradesPage() {
+  const u = useRequireUser("student");
+  const [data, setData] = useState<PageData | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>("semua");
+  useTitle("Grades — Grafidu");
+
+  useEffect(() => {
+    if (!u) return;
+    let cancelled = false;
+    Promise.all([fetchSchoolTasks(u), fetchSubjectScores(u.id)]).then(([tasks, subjects]) => {
+      if (!cancelled) setData({ tasks, subjects });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [u]);
+
+  const rows = useMemo(() => {
+    if (!data) return [];
+    const q = query.trim().toLowerCase();
+    return data.tasks
+      .filter((t) => {
+        if (filter === "dinilai" && t.grade == null) return false;
+        if (filter === "belum" && t.grade != null) return false;
+        return !q || t.title.toLowerCase().includes(q) || t.subject.toLowerCase().includes(q);
+      })
+      .sort((a, b) => new Date(b.dueAt).getTime() - new Date(a.dueAt).getTime());
+  }, [data, query, filter]);
+
+  if (!u || !data) return <PageSkeleton />;
+
+  const graded = data.tasks.filter((t) => t.grade != null);
+  const taskAvg = graded.length
+    ? Math.round(graded.reduce((acc, t) => acc + (t.grade ?? 0), 0) / graded.length)
+    : null;
+  const avgSubject = avgOf(data.subjects);
+  const filtering = query.trim().length > 0 || filter !== "semua";
+
+  return (
+    <>
+      <BodySync dataPage="student-grades" />
+
+      <header>
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+          Grades
+        </h1>
+        <p className="mt-1 text-[14px] text-[#8A8A8A]">
+          Rekap nilai tiap tugasmu{u.className ? ` di ${u.className}` : ""}.
+        </p>
+      </header>
+
+      <div className="stat-grid">
+        <StatCard label="Rata-rata Tugas" value={taskAvg ?? "-"} tone="blue" />
+        <StatCard label="Tugas Dinilai" value={graded.length} tone="green" />
+        <StatCard label="Rata-rata Mapel" value={avgSubject || "-"} tone="purple" />
+      </div>
+
+      {/* toolbar */}
+      <div className="mt-6 flex flex-wrap items-center gap-2.5">
+        <div className="relative min-w-[200px] flex-1">
+          <Search
+            size={16}
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF]"
+          />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cari tugas…"
+            aria-label="Cari tugas"
+            className="h-11 w-full rounded-sm border border-[#E5E5E5] bg-white pr-4 pl-10 text-[14px] text-[#1A1A1A] transition outline-none placeholder:text-[#AFAFAF] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+          />
+        </div>
+
+        <div className="relative">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as Filter)}
+            aria-label="Filter nilai"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+          >
+            {FILTERS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={15}
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+          />
+        </div>
+      </div>
+
+      {/* table */}
+      {data.tasks.length === 0 ? (
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222]">Belum ada tugas</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+            Nilai per tugas akan muncul di sini begitu gurumu membagikan tugas.
+          </p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222]">Tugas tidak ditemukan</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A]">Coba kata kunci atau filter lain.</p>
+        </div>
+      ) : (
+        <>
+          {filtering && (
+            <p className="mt-5 text-[13px] text-[#8A8A8A]">
+              Menampilkan <span className="font-medium tabular-nums text-[#222]">{rows.length}</span>{" "}
+              dari <span className="tabular-nums">{data.tasks.length}</span> tugas
+            </p>
+          )}
+          <div className="grade-table-wrap" style={{ marginTop: filtering ? 12 : 20 }}>
+            <table className="sub-table">
+              <thead>
+                <tr>
+                  <th className="c">No</th>
+                  <th>Tugas</th>
+                  <th>Mapel</th>
+                  <th>Tenggat</th>
+                  <th className="c">Nilai</th>
+                  <th className="act">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((t, i) => {
+                  const pill = gradePill(t.grade);
+                  return (
+                    <tr key={t.id}>
+                      <td className="c">{i + 1}</td>
+                      <td className="font-medium">{t.title}</td>
+                      <td>{t.subject || "Umum"}</td>
+                      <td>{fmtDate(t.dueAt)}</td>
+                      <td className="c">
+                        {t.grade != null ? (
+                          <span className="inline-flex items-center gap-2">
+                            <b className="tabular-nums">{t.grade}</b>
+                            <span className="score-bar" aria-hidden>
+                              <span style={{ width: `${Math.min(100, t.grade)}%` }} />
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-[var(--gray-4)]">—</span>
+                        )}
+                      </td>
+                      <td className="act">
+                        <span className={"pill " + pill.cls}>{pill.label}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              {taskAvg != null && (
+                <tfoot>
+                  <tr>
+                    <td className="c"></td>
+                    <td
+                      colSpan={4}
+                      className="text-[12.5px] font-medium tracking-wide text-[var(--gray-3)] uppercase"
+                    >
+                      Rata-rata Nilai Tugas
+                    </td>
+                    <td className="act">
+                      <b className="tabular-nums text-[var(--purple)]">{taskAvg}</b>
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* subject averages */}
+      {data.subjects.length > 0 && (
+        <div className="set-card" style={{ marginTop: 26 }}>
+          <h3>Rata-rata per Mapel</h3>
+          <p className="sub">Gabungan semua nilai yang sudah dinilai gurumu.</p>
+          <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
+            {data.subjects.map((s) => (
+              <div key={s.subject} className="flex items-center gap-4">
+                <span className="w-40 shrink-0 truncate text-[14px] font-medium text-[#222]">
+                  {s.subject}
+                </span>
+                <span className="score-bar" style={{ width: 140 }} aria-hidden>
+                  <span style={{ width: `${Math.min(100, s.score)}%` }} />
+                </span>
+                <b className="tabular-nums text-[15px]">{s.score}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

@@ -2808,10 +2808,12 @@
     border-radius: 50%;
     background: #2fb566;
   }
-  /* AI Agent page: the main column itself becomes a fixed-height flex column
-     (scoped via the body[data-page] hook from BodySync), so .chat-area can
-     fill it and .chat-foot stays pinned at the bottom — no magic offsets. */
-  body[data-page="teacher-ai"] .main {
+  /* AI Agent pages (guru & siswa): the main column itself becomes a
+     fixed-height flex column (scoped via the body[data-page] hook from
+     BodySync), so .chat-area can fill it and .chat-foot stays pinned at the
+     bottom — no magic offsets. */
+  body[data-page="teacher-ai"] .main,
+  body[data-page="student-ai"] .main {
     display: flex;
     flex-direction: column;
     height: 100dvh;
