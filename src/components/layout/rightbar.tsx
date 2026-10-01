@@ -57,8 +57,8 @@ export function StudentRightbar({
           </tr>
         </thead>
         <tbody>
-          {grades.map((g) => (
-            <tr key={g.subject}>
+          {grades.map((g, i) => (
+            <tr key={`${g.subject}-${i}`}>
               <td>{g.subject}</td>
               <td className="num">{g.score}</td>
               <td className="st">
@@ -77,8 +77,8 @@ export function StudentRightbar({
               Lihat Semua
             </Link>
           </div>
-          {announcements.map((a) => (
-            <div key={a.title} className={"ann-item " + (a.hl ? "hl" : "gy")}>
+          {announcements.map((a, i) => (
+            <div key={`${a.title}-${i}`} className={"ann-item " + (a.hl ? "hl" : "gy")}>
               <b>{a.title}</b>
               <p>{a.body}</p>
               <time>{a.when}</time>
@@ -129,8 +129,8 @@ export function TeacherRightbar({
           </tr>
         </thead>
         <tbody>
-          {students.map((s) => (
-            <tr key={s.name}>
+          {students.map((s, i) => (
+            <tr key={`${s.name}-${i}`}>
               <td>{s.name}</td>
               <td className="num">{s.avg}</td>
               <td className="st">
