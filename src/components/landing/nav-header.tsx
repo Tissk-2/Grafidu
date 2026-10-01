@@ -3,10 +3,18 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+
+function dashboardPath(role?: string | null): string {
+  if (role === "teacher") return "/teacher/home";
+  if (role === "admin") return "/admin";
+  return "/student/home";
+}
 
 export default function NavHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeHash, setActiveHash] = useState("");
+  const [dashboardHref, setDashboardHref] = useState<string | null>(null);
 
   useEffect(() => {
     const sections = ["platform", "students", "teachers", "ai"];
@@ -26,6 +34,32 @@ export default function NavHeader() {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Kalau sudah login, nav kanan jadi tombol Dashboard (auto auth UX).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user || cancelled) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        const role = (profile as { role?: string } | null)?.role;
+        if (role && !cancelled) setDashboardHref(dashboardPath(role));
+      } catch {
+        // Abaikan — tetap tampil Sign in.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -51,12 +85,20 @@ export default function NavHeader() {
             </a>
           </nav>
           <div className="nav-right">
-            <Link className="signin" href="/login">
-              Sign in
-            </Link>
-            <Link className="btn btn-primary btn-sm" href="/signup">
-              Try Grafidu
-            </Link>
+            {dashboardHref ? (
+              <Link className="btn btn-primary btn-sm" href={dashboardHref}>
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link className="signin" href="/login">
+                  Sign in
+                </Link>
+                <Link className="btn btn-primary btn-sm" href="/signup">
+                  Try Grafidu
+                </Link>
+              </>
+            )}
             <button
               className="nav-burger"
               aria-label="Open menu"
@@ -92,12 +134,20 @@ export default function NavHeader() {
           <a href="#ai" onClick={() => setMobileOpen(false)}>AI</a>
         </nav>
         <div className="nav-sheet-ctas">
-          <Link className="btn btn-outline" href="/login" onClick={() => setMobileOpen(false)}>
-            Sign in
-          </Link>
-          <Link className="btn btn-primary" href="/signup" onClick={() => setMobileOpen(false)}>
-            Try Grafidu
-          </Link>
+          {dashboardHref ? (
+            <Link className="btn btn-primary" href={dashboardHref} onClick={() => setMobileOpen(false)}>
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link className="btn btn-outline" href="/login" onClick={() => setMobileOpen(false)}>
+                Sign in
+              </Link>
+              <Link className="btn btn-primary" href="/signup" onClick={() => setMobileOpen(false)}>
+                Try Grafidu
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </>

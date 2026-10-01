@@ -1,15 +1,47 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import BodySync from "@/components/body-sync";
 import NavHeader from "@/components/landing/nav-header";
 import ViewTabs from "@/components/landing/view-tabs";
 import SiteFooter from "@/components/landing/footer";
 import ScrollReveal from "@/components/landing/scroll-reveal";
-import { transform } from "next/dist/build/swc";
+import AutoRedirect from "@/components/auth/auto-redirect";
+import { createClient } from "@/lib/supabase/server";
 
-export default function LandingPage() {
+// Pastikan redirect server jalan tiap request, bukan hasil prerender statis.
+export const dynamic = "force-dynamic";
+
+function dashboardPath(role?: string | null): string {
+  if (role === "teacher") return "/teacher/home";
+  if (role === "admin") return "/admin";
+  return "/student/home";
+}
+
+export default async function LandingPage() {
+  // Auto auth (server): user yang sudah login tidak perlu lihat landing.
+  // Kalau gagal di sini, <AutoRedirect/> di bawah tetap coba via client.
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      const role = (profile as { role?: string } | null)?.role;
+      if (role) redirect(dashboardPath(role));
+    }
+  } catch {
+    // Abaikan — tampilkan landing seperti biasa.
+  }
+
   return (
     <>
+      <AutoRedirect />
       <BodySync className="landing" />
       <ScrollReveal />
       <a className="skip-link" href="#main">
