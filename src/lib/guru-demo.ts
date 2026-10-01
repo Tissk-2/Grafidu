@@ -774,6 +774,7 @@ export const dummyGuruData = {
 };
 
 export type GuruClass = (typeof dummyGuruData.dataKelas)[number];
+export type GuruMateri = GuruClass["materi"][number];
 export type GuruQuiz = (typeof dummyGuruData.kuis)[number];
 
 /** Look up one class by id — routes are `/teacher/home/[id]`. */

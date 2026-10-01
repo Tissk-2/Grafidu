@@ -30,18 +30,21 @@ export function StudentRightbar({
   ctaHref,
   ctaLabel,
   announcements,
+  gradesHref = "/student/grades",
 }: {
   grades: GradeRow[];
   aiNote: string;
   ctaHref: string;
   ctaLabel: string;
   announcements?: Announcement[];
+  /** Where "Lihat Semua" points; the teacher slot overrides it. */
+  gradesHref?: string;
 }) {
   return (
     <aside className="rightbar">
       <div className="rb-head">
         <h3>Nilai Terbaru</h3>
-        <Link className="link-underline" href="/student/grades">
+        <Link className="link-underline" href={gradesHref}>
           Lihat Semua
         </Link>
       </div>

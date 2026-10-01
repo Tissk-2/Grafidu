@@ -2432,6 +2432,37 @@
     padding: 7px 16px;
   }
 
+  /* grades page */
+  .grade-table-wrap {
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .grade-table-wrap .sub-table {
+    border: none;
+  }
+  .grade-table-wrap .sub-table tfoot td {
+    background: #faf9fc;
+    border-top: 1px solid var(--line);
+  }
+  .sub-table td.score-below {
+    color: #c0504d;
+  }
+  .score-bar {
+    width: 56px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--line-soft);
+    overflow: hidden;
+    display: inline-block;
+  }
+  .score-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--purple);
+  }
+
   /* quiz maker */
   .quiz-grid {
     display: grid;
