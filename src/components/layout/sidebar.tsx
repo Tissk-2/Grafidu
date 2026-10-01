@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { id } from "date-fns/locale";
 import { Add, People } from "iconsax-reactjs";
+import { LogOut } from "lucide-react";
+import { logout } from "@/lib/auth";
 import { Calendar } from "@/components/ui/calendar";
 
 export type TodayTask = { id: string; title: string; sub: string; done: boolean };
@@ -46,6 +49,21 @@ const GEAR_ICON = (
   </svg>
 );
 
+const CHEVRON_UP = (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className="side-user-chev"
+    aria-hidden
+  >
+    <path d="m18 15-6-6-6 6" />
+  </svg>
+);
+
 export function Sidebar({
   role,
   user,
@@ -62,7 +80,39 @@ export function Sidebar({
   onSelectClass?: (id: number) => void;
 }) {
   const settingsHref = role === "student" ? "/student/settings" : "/teacher/settings";
+  const router = useRouter();
   const [selected, setSelected] = useState<Date | undefined>(() => new Date());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const userWrapRef = useRef<HTMLDivElement>(null);
+
+  // Close the account menu on outside click or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (userWrapRef.current && !userWrapRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  async function handleLogout() {
+    setMenuOpen(false);
+    try {
+      await logout();
+    } catch {
+      // Session already gone — still leave the dashboard.
+    }
+    router.replace("/login");
+  }
 
   function openAddClassDialog() {
     const dlg = document.getElementById("dlg-add-class") as HTMLDialogElement | null;
@@ -166,16 +216,34 @@ export function Sidebar({
         </>
       )}
 
-      <div className="side-user pr-6">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={user.avatar.startsWith("/") ? user.avatar : "/" + user.avatar} alt={user.name} />
-        <span>
-          <b>{user.name}</b>
-          <span>{user.sub}</span>
-        </span>
-        <Link href={settingsHref} aria-label="Pengaturan">
-          {GEAR_ICON}
-        </Link>
+      <div className="side-user-wrap" ref={userWrapRef}>
+        {menuOpen && (
+          <div className="side-user-menu" role="menu" aria-label="Menu akun">
+            <Link role="menuitem" href={settingsHref} onClick={() => setMenuOpen(false)}>
+              {GEAR_ICON}
+              Pengaturan
+            </Link>
+            <button role="menuitem" type="button" className="menu-danger" onClick={handleLogout}>
+              <LogOut size={18} strokeWidth={1.7} aria-hidden />
+              Keluar
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          className="side-user pr-6"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={user.avatar.startsWith("/") ? user.avatar : "/" + user.avatar} alt={user.name} />
+          <span>
+            <b>{user.name}</b>
+            <span>{user.sub}</span>
+          </span>
+          {CHEVRON_UP}
+        </button>
       </div>
     </aside>
   );

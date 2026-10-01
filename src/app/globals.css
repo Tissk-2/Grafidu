@@ -1797,14 +1797,35 @@
     font-size: 12px;
     color: var(--gray-4);
   }
-  .side-user {
+  .side-user-wrap {
+    position: relative;
     margin-top: auto;
+  }
+  .side-user {
     display: flex;
     align-items: center;
     gap: 11px;
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 11px 13px;
+  }
+  button.side-user {
+    width: 100%;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  button.side-user:hover {
+    border-color: #d5d2d8;
+  }
+  button.side-user:focus-visible {
+    outline: 2px solid var(--purple);
+    outline-offset: 2px;
+  }
+  .side-user > span {
+    flex: 1;
+    min-width: 0;
   }
   .side-user img {
     width: 38px;
@@ -1820,11 +1841,50 @@
     font-size: 11.5px;
     color: var(--gray-4);
   }
-  .side-user a {
+  .side-user-chev {
+    flex: none;
     margin-left: auto;
+    color: var(--gray-3);
+    transition: transform 0.2s var(--ease-out);
+  }
+  .side-user[aria-expanded="true"] .side-user-chev {
+    transform: rotate(180deg);
+  }
+  .side-user-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 60;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 6px;
+  }
+  .side-user-menu a,
+  .side-user-menu button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    text-align: left;
+  }
+  .side-user-menu a:hover,
+  .side-user-menu button:hover {
+    background: #f4f3f5;
     color: var(--ink);
-    display: grid;
-    place-items: center;
+  }
+  .side-user-menu .menu-danger {
+    color: #c0504d;
+  }
+  .side-user-menu .menu-danger:hover {
+    background: var(--red-soft);
+    color: #c0504d;
   }
 
   /* teacher class cards */
@@ -3638,8 +3698,8 @@
       justify-content: center;
       padding: 9px;
     }
-    .side-user a {
-      margin-left: 0;
+    .side-user-chev {
+      display: none;
     }
     .main {
       padding: 22px 20px 130px;
