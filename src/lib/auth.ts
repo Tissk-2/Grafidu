@@ -16,6 +16,8 @@ export type SessionUser = {
   avatar: string;
   phone: string;
   prefs: string;
+  /** Akun dengan sandi sementara wajib ganti sandi sebelum lanjut. */
+  mustChangePassword?: boolean;
 };
 
 type ProfileRow = {
@@ -24,6 +26,7 @@ type ProfileRow = {
   email: string | null;
   class_name: string | null;
   avatar: string | null;
+  must_change_password?: boolean | null;
 };
 
 /**
@@ -37,7 +40,7 @@ async function fetchProfile(
 ): Promise<ProfileRow | null> {
   const full = await supabase
     .from("profiles")
-    .select("role, name, email, class_name, avatar")
+    .select("role, name, email, class_name, avatar, must_change_password")
     .eq("id", userId)
     .single();
   if (!full.error) return (full.data as ProfileRow | null) ?? null;
@@ -80,6 +83,7 @@ async function fetchSessionUser(): Promise<SessionUser | null> {
     avatar: p?.avatar || "/assets/logo.png",
     phone: "",
     prefs: "{}",
+    mustChangePassword: p?.must_change_password === true,
   };
 }
 

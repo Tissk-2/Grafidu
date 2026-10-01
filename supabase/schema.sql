@@ -3,12 +3,29 @@
 -- Cara pakai: Supabase Dashboard → SQL Editor → New query →
 -- tempel seluruh file ini → Run.
 -- Aman dijalankan ulang (idempoten).
--- Catatan: tabel `profiles` diasumsikan SUDAH ADA dengan kolom:
---   id uuid PK, email text, name text, role text,
---   class_name text, avatar text, created_at timestamptz
+-- Tabel `profiles` dibuat otomatis bila belum ada (terhubung ke auth.users);
+-- pada proyek yang sudah punya profiles, statement ini dilewati.
+--
+-- Admin pertama dibuat manual lewat Dashboard:
+--   1. Authentication → Add user (email + password, auto confirm).
+--   2. Table Editor → profiles → set role = 'admin' untuk user tersebut,
+--      atau jalankan:
+--      update profiles set role = 'admin' where email = 'admin@sekolah.sch.id';
 -- ============================================================
 
 -- ---------- tabel inti ----------
+
+-- Tabel profiles terhubung ke auth.users (Supabase Auth). Dibuat bila belum
+-- ada; pada proyek lama statement ini dilewati.
+create table if not exists profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text,
+  name text,
+  role text,
+  class_name text,
+  avatar text,
+  created_at timestamptz not null default now()
+);
 
 create table if not exists classes (
   id uuid primary key default gen_random_uuid(),
@@ -123,6 +140,25 @@ create table if not exists chat_messages (
   created_at timestamptz not null default now()
 );
 
+-- ---------- kolom tambahan profiles (aman dijalankan ulang) ----------
+
+alter table profiles add column if not exists phone text;
+alter table profiles add column if not exists subject text;
+alter table profiles add column if not exists is_active boolean not null default true;
+alter table profiles add column if not exists must_change_password boolean not null default false;
+
+-- Helper peran untuk RLS. Security definer agar policy tidak membaca
+-- tabel profiles secara rekursif (RLS recursion).
+create or replace function public.app_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from profiles where id = auth.uid()
+$$;
+
 -- ---------- index ----------
 
 create index if not exists enrollments_class_id_idx on enrollments (class_id);
@@ -151,38 +187,53 @@ alter table announcements enable row level security;
 alter table todos enable row level security;
 alter table chat_messages enable row level security;
 
--- profiles: baca + ubah baris sendiri (login aplikasi bergantung pada ini)
+-- profiles: semua user login boleh baca (dashboard butuh nama teman satu
+-- kelas / guru pengampu), ubah baris sendiri, dan admin boleh mengubah semua.
 drop policy if exists "read own profile" on profiles;
 create policy "read own profile" on profiles
   for select using (auth.uid() = id);
+drop policy if exists "authenticated read profiles" on profiles;
+create policy "authenticated read profiles" on profiles
+  for select using (auth.role() = 'authenticated');
 drop policy if exists "update own profile" on profiles;
 create policy "update own profile" on profiles
-  for update using (auth.uid() = id);
+  for update using (auth.uid() = id)
+  with check (auth.uid() = id);
+drop policy if exists "admin update profiles" on profiles;
+create policy "admin update profiles" on profiles
+  for update using (public.app_role() = 'admin')
+  with check (public.app_role() = 'admin');
+drop policy if exists "admin insert profiles" on profiles;
+create policy "admin insert profiles" on profiles
+  for insert with check (public.app_role() = 'admin');
 
--- Data sekolah: semua user login boleh baca; tulis untuk peran login.
--- (Kencangkan nanti bila perlu, mis. hanya guru yang boleh insert tasks.)
+-- Data sekolah: semua user login boleh baca; tulis hanya admin.
 drop policy if exists "authenticated read" on classes;
 create policy "authenticated read" on classes
   for select using (auth.role() = 'authenticated');
 drop policy if exists "authenticated write" on classes;
-create policy "authenticated write" on classes
-  for insert with check (auth.role() = 'authenticated');
+drop policy if exists "admin write" on classes;
+create policy "admin write" on classes
+  for all using (public.app_role() = 'admin')
+  with check (public.app_role() = 'admin');
 
 drop policy if exists "authenticated read" on enrollments;
 create policy "authenticated read" on enrollments
   for select using (auth.role() = 'authenticated');
 drop policy if exists "authenticated write" on enrollments;
-create policy "authenticated write" on enrollments
-  for all using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+drop policy if exists "admin write" on enrollments;
+create policy "admin write" on enrollments
+  for all using (public.app_role() = 'admin')
+  with check (public.app_role() = 'admin');
 
 drop policy if exists "authenticated read" on teachings;
 create policy "authenticated read" on teachings
   for select using (auth.role() = 'authenticated');
 drop policy if exists "authenticated write" on teachings;
-create policy "authenticated write" on teachings
-  for all using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+drop policy if exists "admin write" on teachings;
+create policy "admin write" on teachings
+  for all using (public.app_role() = 'admin')
+  with check (public.app_role() = 'admin');
 
 drop policy if exists "authenticated read" on tasks;
 create policy "authenticated read" on tasks
@@ -240,9 +291,10 @@ drop policy if exists "authenticated read" on announcements;
 create policy "authenticated read" on announcements
   for select using (auth.role() = 'authenticated');
 drop policy if exists "authenticated write" on announcements;
-create policy "authenticated write" on announcements
-  for all using (auth.role() = 'authenticated')
-  with check (auth.role() = 'authenticated');
+drop policy if exists "staff write" on announcements;
+create policy "staff write" on announcements
+  for all using (public.app_role() in ('admin', 'teacher'))
+  with check (public.app_role() in ('admin', 'teacher'));
 
 -- To-do & chat: hanya milik sendiri.
 drop policy if exists "own todos" on todos;

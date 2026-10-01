@@ -52,13 +52,34 @@ export async function updateSession(request: NextRequest) {
   // Sudah login: cek role dari tabel profiles untuk cegah salah kamar.
   // Kalau tabel profiles belum ada / RLS ketat, gagal cek = lewatkan saja.
   if (user && isProtected) {
-    const { data: profile } = await supabase
+    // Akun dengan sandi sementara wajib ganti sandi dulu (kecuali di
+    // halaman ganti sandi itu sendiri).
+    let mustChangePw = false;
+    const { data: fullProfile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, must_change_password")
       .eq("id", user.id)
       .single();
+    let profile = fullProfile as { role?: string; must_change_password?: boolean | null } | null;
+    if (profile?.must_change_password === true) {
+      mustChangePw = true;
+    } else if (!fullProfile) {
+      // Skema lama tanpa kolom must_change_password: coba kolom role saja.
+      const { data: minimal } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      profile = minimal as { role?: string } | null;
+    }
 
-    const role = (profile as { role?: string } | null)?.role;
+    if (mustChangePw && !path.startsWith("/change-password")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/change-password";
+      return NextResponse.redirect(url);
+    }
+
+    const role = profile?.role;
     if (role) {
       const wantStudent = path.startsWith("/student");
       const wantTeacher = path.startsWith("/teacher");

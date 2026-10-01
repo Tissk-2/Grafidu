@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { href: "/admin/home", label: "Ringkasan", icon: <HomeIcon /> },
@@ -25,7 +26,7 @@ export default function AdminNav({ name, email }: { name: string; email: string 
   async function logout() {
     if (busy) return;
     setBusy(true);
-    // Frontend-only: session clearing happens server-side in the real flow.
+    await createClient().auth.signOut();
     router.push("/login");
   }
 

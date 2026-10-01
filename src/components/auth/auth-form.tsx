@@ -50,7 +50,7 @@ export default function AuthForm() {
       // kalau skema tabel belum lengkap.
       const { data: profile, error: profErr } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, must_change_password")
         .eq("id", data.user.id)
         .single();
 
@@ -70,10 +70,17 @@ export default function AuthForm() {
       }
 
       const role = (profile as { role: string }).role;
+      const mustChangePassword =
+        (profile as { must_change_password?: boolean | null }).must_change_password === true;
       // Satu refresh setelah navigasi agar cookie sesi terbaca middleware.
-      if (role === "teacher") router.push("/teacher/home");
-      else if (role === "admin") router.push("/admin");
-      else router.push("/student/home");
+      const target = mustChangePassword
+        ? "/change-password"
+        : role === "teacher"
+          ? "/teacher/home"
+          : role === "admin"
+            ? "/admin"
+            : "/student/home";
+      router.push(target);
       router.refresh();
     } catch (err) {
       setError((err as Error).message);

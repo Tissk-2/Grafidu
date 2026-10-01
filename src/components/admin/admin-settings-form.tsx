@@ -1,25 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { demoAdmin } from "@/lib/admin-demo";
+import { createClient } from "@/lib/supabase/client";
+import { useRequireUser } from "@/lib/auth";
 
 /**
- * Admin "Pengaturan" page: own profile and password controls. Frontend-only —
- * saves show success feedback without persisting; the real implementation
- * posts to the profile/password endpoints.
+ * Admin "Pengaturan" page: real profile (profiles row) and password controls.
+ * Password change re-authenticates with the current password first, then
+ * updates via Supabase Auth.
  */
 export default function AdminSettingsForm() {
   const router = useRouter();
-  const [name, setName] = useState(demoAdmin.name);
-  const [email, setEmail] = useState(demoAdmin.email);
+  const user = useRequireUser("admin");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPw, setSavingPw] = useState(false);
 
-  function handleSaveProfile() {
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setPhone(user.phone);
+    }
+  }, [user]);
+
+  async function handleSaveProfile() {
+    if (!user || savingProfile) return;
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanName || !cleanEmail) {
@@ -30,10 +43,36 @@ export default function AdminSettingsForm() {
       window.gtoast?.("Format email tidak valid.", "error");
       return;
     }
-    window.gtoast?.("Profil berhasil diperbarui.");
+    setSavingProfile(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("profiles")
+        .update({ name: cleanName, email: cleanEmail, phone: phone.trim() || null })
+        .eq("id", user.id);
+      if (error) throw error;
+      // Email juga hidup di auth.users; perbarui bila berubah. Bila proyek
+      // mengaktifkan konfirmasi email, perubahan berlaku setelah konfirmasi.
+      if (cleanEmail !== user.email) {
+        const { error: authErr } = await supabase.auth.updateUser({ email: cleanEmail });
+        if (authErr) {
+          window.gtoast?.(`Profil tersimpan, tetapi email login gagal diperbarui: ${authErr.message}`, "error");
+          return;
+        }
+        window.gtoast?.("Profil diperbarui. Cek email baru untuk konfirmasi bila diminta.");
+      } else {
+        window.gtoast?.("Profil berhasil diperbarui.");
+      }
+      router.refresh();
+    } catch (err) {
+      window.gtoast?.((err as Error).message || "Gagal memperbarui profil.", "error");
+    } finally {
+      setSavingProfile(false);
+    }
   }
 
-  function handleSavePassword() {
+  async function handleSavePassword() {
+    if (!user || savingPw) return;
     if (!currentPw) {
       window.gtoast?.("Isi kata sandi saat ini dulu.", "error");
       return;
@@ -46,16 +85,39 @@ export default function AdminSettingsForm() {
       window.gtoast?.("Konfirmasi kata sandi tidak sama.", "error");
       return;
     }
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
-    window.gtoast?.("Kata sandi berhasil diperbarui.");
+    setSavingPw(true);
+    try {
+      const supabase = createClient();
+      // Verifikasi sandi lama lewat sign-in ulang (Supabase tidak memverifikasi
+      // sandi lama pada updateUser).
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPw,
+      });
+      if (verifyErr) {
+        window.gtoast?.("Kata sandi saat ini salah.", "error");
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) throw error;
+      setCurrentPw("");
+      setNewPw("");
+      setConfirmPw("");
+      window.gtoast?.("Kata sandi berhasil diperbarui.");
+    } catch (err) {
+      window.gtoast?.((err as Error).message || "Gagal memperbarui kata sandi.", "error");
+    } finally {
+      setSavingPw(false);
+    }
   }
 
-  function handleLogout() {
-    // Frontend-only: session clearing happens server-side in the real flow.
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     router.push("/login");
   }
+
+  if (!user) return null;
 
   return (
     <div className="settings-grid">
@@ -75,7 +137,7 @@ export default function AdminSettingsForm() {
             flex: "none",
           }}
         >
-          {demoAdmin.name.trim().charAt(0).toUpperCase()}
+          {(name || "A").trim().charAt(0).toUpperCase()}
         </span>
         <div className="set-fields">
           <div className="field">
@@ -97,7 +159,13 @@ export default function AdminSettingsForm() {
             </div>
           </div>
           <div className="set-save" style={{ marginTop: 22 }}>
-            <button type="button" className="btn btn-primary" id="save-profile" onClick={handleSaveProfile}>
+            <button
+              type="button"
+              className={"btn btn-primary" + (savingProfile ? " is-loading" : "")}
+              id="save-profile"
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+            >
               Simpan Perubahan
             </button>
             <button type="button" className="btn btn-outline" id="logout-btn" onClick={handleLogout}>
@@ -116,7 +184,6 @@ export default function AdminSettingsForm() {
             <input
               id="settings-current-pw"
               type="password"
-              placeholder="Kata sandi saat ini"
               value={currentPw}
               onChange={(e) => setCurrentPw(e.target.value)}
               style={{ letterSpacing: 3 }}
@@ -152,7 +219,12 @@ export default function AdminSettingsForm() {
           </div>
         </div>
         <div className="set-save">
-          <button className="btn btn-primary" type="button" onClick={handleSavePassword}>
+          <button
+            className={"btn btn-primary" + (savingPw ? " is-loading" : "")}
+            type="button"
+            onClick={handleSavePassword}
+            disabled={savingPw}
+          >
             Perbarui Kata Sandi
           </button>
         </div>

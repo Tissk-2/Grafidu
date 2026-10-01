@@ -1,55 +1,41 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { update, useDB, type User as StoreUser } from "@/lib/store";
-import { generateTemporaryPassword } from "@/lib/admin-demo";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { listAccounts, type AdminAccount } from "@/lib/admin";
+import { generateTemporaryPassword } from "@/lib/password";
 import AccountForm, { emptyAccountValues, type AccountFormValues } from "./account-form";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
-export type ManagedAccount = {
-  id: number;
-  role: "student" | "teacher";
-  name: string;
-  email: string;
-  phone: string;
-  subject: string | null;
-  className: string | null;
-  isActive: boolean;
-  mustChangePassword: boolean;
-};
-
 type ListState = {
-  users: ManagedAccount[];
+  accounts: AdminAccount[];
   page: number;
   pageSize: number;
   total: number;
 };
 
 const PAGE_SIZE = 20;
-const DEFAULT_PREFS = '{"task":true,"deadline":true,"ai":false,"email":false}';
 
-function toManaged(u: StoreUser): ManagedAccount {
-  return {
-    id: u.id,
-    role: u.role,
-    name: u.name,
-    email: u.email,
-    phone: u.phone,
-    subject: u.subject,
-    className: u.className,
-    isActive: u.isActive !== false,
-    mustChangePassword: u.mustChangePassword === true,
-  };
+async function callAdminApi(input: string, init: RequestInit): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(input, init);
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) return { ok: false, error: body.error ?? `Gagal (${res.status}).` };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Tidak bisa menghubungi server." };
+  }
 }
 
 /**
  * Search, filter and paginate school accounts; create, edit, deactivate and
- * reset them. Frontend-only: every mutation runs against the in-browser store,
- * and the one-time temporary password is shown only inside a panel that
- * requires explicit dismissal and is never persisted.
+ * reset them. Data comes from Supabase (profiles/enrollments); creating an
+ * account also registers the auth user via /api/admin/users, and the one-time
+ * temporary password is shown only inside a panel that requires explicit
+ * dismissal and is never persisted.
  */
 export default function AccountManager() {
-  const db = useDB();
+  const [data, setData] = useState<Awaited<ReturnType<typeof listAccounts>> | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [role, setRole] = useState<"" | "student" | "teacher">("");
   const [classId, setClassId] = useState("");
@@ -64,7 +50,7 @@ export default function AccountManager() {
   const [credential, setCredential] = useState<{ name: string; email: string; role: string; temporaryPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [editTarget, setEditTarget] = useState<ManagedAccount | null>(null);
+  const [editTarget, setEditTarget] = useState<AdminAccount | null>(null);
   const [editValues, setEditValues] = useState<AccountFormValues>(emptyAccountValues);
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -73,31 +59,35 @@ export default function AccountManager() {
   const editDialogRef = useRef<HTMLDialogElement>(null);
   const lastActiveRef = useRef<HTMLElement | null>(null);
 
-  const classes = (db?.classes ?? [])
-    .map((c) => ({ id: c.id, name: c.name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const reload = useCallback(async () => {
+    try {
+      const next = await listAccounts();
+      setData(next);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError((err as Error).message);
+    }
+  }, []);
 
-  // Computed inline (not memoized on the db object): the store mutates in
-  // place, so the object identity never changes after mutations.
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const classes = data?.classes ?? [];
+
   const list: ListState | null = (() => {
-    if (!db) return null;
+    if (!data) return null;
     const needle = q.trim().toLowerCase();
-    const filtered = db.users
-      .map(toManaged)
-      .filter((u) => {
-        if (role && u.role !== role) return false;
-        if (active && u.isActive !== (active === "true")) return false;
-        if (needle && !u.name.toLowerCase().includes(needle) && !u.email.toLowerCase().includes(needle)) return false;
-        if (classId) {
-          const cid = Number(classId);
-          const enrolled = db.enrollments.some((e) => e.classId === cid && e.studentId === u.id);
-          if (!enrolled) return false;
-        }
-        return true;
-      });
+    const filtered = data.accounts.filter((u) => {
+      if (role && u.role !== role) return false;
+      if (active && u.isActive !== (active === "true")) return false;
+      if (needle && !u.name.toLowerCase().includes(needle) && !u.email.toLowerCase().includes(needle)) return false;
+      if (classId && data.classByStudent.get(u.id) !== classId) return false;
+      return true;
+    });
     const total = filtered.length;
     const start = (page - 1) * PAGE_SIZE;
-    return { users: filtered.slice(start, start + PAGE_SIZE), page, pageSize: PAGE_SIZE, total };
+    return { accounts: filtered.slice(start, start + PAGE_SIZE), page, pageSize: PAGE_SIZE, total };
   })();
 
   const totalPages = list ? Math.max(1, Math.ceil(list.total / PAGE_SIZE)) : 1;
@@ -121,58 +111,40 @@ export default function AccountManager() {
     lastActiveRef.current?.focus();
   }
 
-  function handleCreate() {
+  async function handleCreate() {
     setCreateBusy(true);
     setCreateError(null);
-    try {
-      const email = createValues.email.trim().toLowerCase();
-      const temporaryPassword = generateTemporaryPassword();
-      const created = update((d) => {
-        if (d.users.some((u) => u.email.toLowerCase() === email)) {
-          throw new Error("Email sudah terdaftar.");
-        }
-        const cls =
-          createValues.role === "student"
-            ? d.classes.find((c) => c.id === Number(createValues.classId))
-            : undefined;
-        if (createValues.role === "student" && !cls) {
-          throw new Error("Pilih kelas yang valid untuk siswa.");
-        }
-        const user: StoreUser = {
-          id: d.nextId++,
-          role: createValues.role,
-          name: createValues.name.trim(),
-          email,
-          phone: createValues.phone.trim(),
-          password: temporaryPassword,
-          className: cls?.name ?? null,
-          subject: createValues.role === "teacher" ? createValues.subject.trim() : null,
-          avatar: "",
-          prefs: DEFAULT_PREFS,
-          isActive: true,
-          mustChangePassword: true,
-        };
-        d.users.push(user);
-        if (cls) d.enrollments.push({ classId: cls.id, studentId: user.id });
-        return user;
-      });
-      setCredential({
-        name: created.name,
-        email: created.email,
-        role: created.role,
-        temporaryPassword,
-      });
-      setCopied(false);
-      announce(`Akun ${created.name} berhasil dibuat.`);
-    } catch (err) {
-      // Inline error inside the dialog; a global notice would sit behind the overlay.
-      setCreateError((err as Error).message);
-    } finally {
-      setCreateBusy(false);
+    const temporaryPassword = generateTemporaryPassword();
+    const res = await callAdminApi("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role: createValues.role,
+        name: createValues.name.trim(),
+        email: createValues.email.trim().toLowerCase(),
+        phone: createValues.phone.trim(),
+        classId: createValues.role === "student" ? createValues.classId : undefined,
+        subject: createValues.role === "teacher" ? createValues.subject.trim() : undefined,
+        password: temporaryPassword,
+      }),
+    });
+    setCreateBusy(false);
+    if (!res.ok) {
+      setCreateError(res.error ?? "Gagal membuat akun.");
+      return;
     }
+    setCredential({
+      name: createValues.name.trim(),
+      email: createValues.email.trim().toLowerCase(),
+      role: createValues.role,
+      temporaryPassword,
+    });
+    setCopied(false);
+    announce(`Akun ${createValues.name.trim()} berhasil dibuat.`);
+    reload();
   }
 
-  function openEdit(u: ManagedAccount) {
+  function openEdit(u: AdminAccount) {
     lastActiveRef.current = document.activeElement as HTMLElement | null;
     setEditTarget(u);
     setEditValues({
@@ -193,67 +165,64 @@ export default function AccountManager() {
     lastActiveRef.current?.focus();
   }
 
-  function handleEdit() {
+  async function handleEdit() {
     if (!editTarget) return;
     setEditBusy(true);
     setEditError(null);
-    try {
-      const email = editValues.email.trim().toLowerCase();
-      const updated = update((d) => {
-        if (d.users.some((u) => u.id !== editTarget.id && u.email.toLowerCase() === email)) {
-          throw new Error("Email sudah dipakai akun lain.");
-        }
-        const u = d.users.find((row) => row.id === editTarget.id);
-        if (!u) throw new Error("Pengguna tidak ditemukan.");
-        u.name = editValues.name.trim();
-        u.email = email;
-        u.phone = editValues.phone.trim();
-        if (editTarget.role === "teacher") u.subject = editValues.subject.trim();
-        return u;
-      });
-      setNotice({ kind: "ok", text: `Profil ${updated.name} diperbarui.` });
-      announce(`Profil ${updated.name} diperbarui.`);
-      closeEdit();
-    } catch (err) {
-      setEditError((err as Error).message);
-    } finally {
-      setEditBusy(false);
+    const res = await callAdminApi(`/api/admin/users/${editTarget.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: editValues.name.trim(),
+        email: editValues.email.trim().toLowerCase(),
+        phone: editValues.phone.trim(),
+        subject: editTarget.role === "teacher" ? editValues.subject.trim() : undefined,
+      }),
+    });
+    setEditBusy(false);
+    if (!res.ok) {
+      setEditError(res.error ?? "Gagal menyimpan perubahan.");
+      return;
     }
+    setNotice({ kind: "ok", text: `Profil ${editValues.name.trim()} diperbarui.` });
+    announce(`Profil ${editValues.name.trim()} diperbarui.`);
+    closeEdit();
+    reload();
   }
 
-  function toggleActive(u: ManagedAccount) {
+  async function toggleActive(u: AdminAccount) {
     const verb = u.isActive ? "menonaktifkan" : "mengaktifkan kembali";
     if (!confirm(`Yakin ${verb} akun ${u.name}?${u.isActive ? " Sesi yang sedang berjalan akan ditutup." : ""}`)) return;
-    try {
-      update((d) => {
-        const target = d.users.find((row) => row.id === u.id);
-        if (!target) throw new Error("Pengguna tidak ditemukan.");
-        target.isActive = !u.isActive;
-      });
-      setNotice({ kind: "ok", text: u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.` });
-      announce(u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.`);
-    } catch (err) {
-      setNotice({ kind: "error", text: (err as Error).message });
+    const res = await callAdminApi(`/api/admin/users/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !u.isActive }),
+    });
+    if (!res.ok) {
+      setNotice({ kind: "error", text: res.error ?? "Gagal mengubah status akun." });
+      return;
     }
+    setNotice({ kind: "ok", text: u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.` });
+    announce(u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.`);
+    reload();
   }
 
-  function resetPassword(u: ManagedAccount) {
+  async function resetPassword(u: AdminAccount) {
     if (!confirm(`Terbitkan kata sandi sementara baru untuk ${u.name}? Sesi lama akan ditutup dan akun wajib mengganti sandi saat login berikutnya.`)) return;
-    try {
-      const temporaryPassword = generateTemporaryPassword();
-      update((d) => {
-        const target = d.users.find((row) => row.id === u.id);
-        if (!target) throw new Error("Pengguna tidak ditemukan.");
-        target.password = temporaryPassword;
-        target.mustChangePassword = true;
-      });
-      setCredential({ name: u.name, email: u.email, role: u.role, temporaryPassword });
-      setCopied(false);
-      requestAnimationFrame(() => createDialogRef.current?.showModal());
-      announce(`Kata sandi sementara baru diterbitkan untuk ${u.name}.`);
-    } catch (err) {
-      setNotice({ kind: "error", text: (err as Error).message });
+    const temporaryPassword = generateTemporaryPassword();
+    const res = await callAdminApi(`/api/admin/users/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: temporaryPassword }),
+    });
+    if (!res.ok) {
+      setNotice({ kind: "error", text: res.error ?? "Gagal menerbitkan kata sandi baru." });
+      return;
     }
+    setCredential({ name: u.name, email: u.email, role: u.role, temporaryPassword });
+    setCopied(false);
+    requestAnimationFrame(() => createDialogRef.current?.showModal());
+    announce(`Kata sandi sementara baru diterbitkan untuk ${u.name}.`);
   }
 
   async function copyCredential() {
@@ -269,10 +238,29 @@ export default function AccountManager() {
   const startItem = ((list?.page ?? 1) - 1) * PAGE_SIZE + 1;
   const endItem = list ? Math.min(list.total, list.page * PAGE_SIZE) : 0;
 
-  // The store fills in after mount; without this the table renders empty and
-  // then pops in. The admin shell lives in the route layout, so a skeleton
-  // here only affects the main column.
-  if (!db) return <AdminSkeleton />;
+  // Data diambil dari Supabase setelah mount; tanpa ini tabel render kosong
+  // lalu muncul mendadak. Shell admin ada di layout route, jadi skeleton di
+  // sini hanya memengaruhi kolom utama.
+  if (!data) {
+    return loadError ? (
+      <p
+        role="alert"
+        style={{
+          marginTop: 16,
+          fontSize: 13.5,
+          padding: "10px 14px",
+          borderRadius: 10,
+          background: "var(--red-soft)",
+          color: "#B0504C",
+        }}
+      >
+        Gagal memuat akun: {loadError}. Pastikan skema supabase/schema.sql sudah dijalankan
+        (kolom is_active pada profiles dan policy admin).
+      </p>
+    ) : (
+      <AdminSkeleton />
+    );
+  }
 
   return (
     <>
@@ -319,7 +307,7 @@ export default function AccountManager() {
         >
           <option value="">Semua kelas</option>
           {classes.map((c) => (
-            <option key={c.id} value={String(c.id)}>
+            <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
@@ -372,7 +360,7 @@ export default function AccountManager() {
             </tr>
           </thead>
           <tbody>
-            {list?.users.map((u) => (
+            {list?.accounts.map((u) => (
               <tr key={u.id}>
                 <td className="cell-main">
                   <b>{u.name}</b>
@@ -407,7 +395,7 @@ export default function AccountManager() {
           </tbody>
         </table>
 
-        {list && list.users.length === 0 ? (
+        {list && list.accounts.length === 0 ? (
           <div className="adm-empty">
             <span className="ic" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -488,27 +476,25 @@ export default function AccountManager() {
             </div>
           </div>
         ) : (
-          <>
-            <div className="gdialog-body" style={{ paddingBottom: 0 }}>
-              <AccountForm
-                mode="create"
-                formId="form-create-account"
-                values={createValues}
-                onChange={setCreateValues}
-                classes={classes}
-                busy={createBusy}
-                serverError={createError}
-                onSubmit={handleCreate}
-                submitLabel={createBusy ? "Membuat…" : "Buat akun"}
-                onCancel={closeCreate}
-              />
-            </div>
-          </>
+          <div className="gdialog-body" style={{ paddingBottom: 0 }}>
+            <AccountForm
+              mode="create"
+              formId="form-create-account"
+              values={createValues}
+              onChange={setCreateValues}
+              classes={classes}
+              busy={createBusy}
+              serverError={createError}
+              onSubmit={handleCreate}
+              submitLabel={createBusy ? "Membuat…" : "Buat akun"}
+              onCancel={closeCreate}
+            />
+          </div>
         )}
       </dialog>
 
       {/* edit dialog */}
-      <dialog className="gdialog" ref={editDialogRef} onClose={() => setEditTarget(null)}>
+      <dialog className="gdialog" ref={editDialogRef} onClose={closeEdit}>
         <div className="gdialog-head">
           <div>
             <h3>Ubah Akun</h3>

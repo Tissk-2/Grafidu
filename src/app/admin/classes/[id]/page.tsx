@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import ClassDetailManager from "@/components/admin/class-detail-manager";
 
 export const metadata = {
@@ -8,8 +7,6 @@ export const metadata = {
 
 export default async function AdminClassDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const classId = Number(id);
-  if (!Number.isSafeInteger(classId) || classId <= 0) notFound();
 
   return (
     <>
@@ -25,7 +22,7 @@ export default async function AdminClassDetailPage({ params }: { params: Promise
         </div>
       </div>
 
-      <ClassDetailManager classId={classId} />
+      <ClassDetailManager classId={id} />
     </>
   );
 }
