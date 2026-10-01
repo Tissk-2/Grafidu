@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight, Manrope } from "next/font/google";
 import "./globals.css";
 import "react-loading-skeleton/dist/skeleton.css";
-import BodySync from "@/components/body-sync";
 import ToastProvider from "@/components/ui/toast-provider";
 import { cn } from "@/lib/utils";
 

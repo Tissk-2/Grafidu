@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { update } from "@/lib/store";
@@ -29,7 +29,6 @@ type QuizResult = {
 };
 
 export default function StudentQuizRunner({
-  quizId,
   title,
   topic,
   durationMin,
@@ -43,30 +42,10 @@ export default function StudentQuizRunner({
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
 
-  // Timer countdown
-  useEffect(() => {
+  function selectOption(optIdx: number) {
     if (submitted) return;
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleSubmitQuiz();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [submitted]);
-
-  const mins = Math.floor(secondsLeft / 60);
-  const secs = secondsLeft % 60;
-  const timerStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-
-  const currentQ = questions[currentIdx] || { n: 1, text: "Pertanyaan kuis" };
-  const totalQ = questions.length;
-  const answeredCount = Object.keys(answers).length;
-  const progressPct = totalQ ? Math.round((answeredCount / totalQ) * 100) : 0;
+    setAnswers((prev) => ({ ...prev, [currentIdx]: optIdx }));
+  }
 
   // Generate realistic options for each question
   function getOptionsForQuestion(idx: number, text: string) {
@@ -95,14 +74,7 @@ export default function StudentQuizRunner({
     return defaultOptions;
   }
 
-  const options = getOptionsForQuestion(currentIdx, currentQ.text);
-
-  function selectOption(optIdx: number) {
-    if (submitted) return;
-    setAnswers((prev) => ({ ...prev, [currentIdx]: optIdx }));
-  }
-
-  function handleSubmitQuiz() {
+  const handleSubmitQuiz = useCallback(() => {
     if (submitted) return;
     const u = getCurrentUser();
     if (!u) return;
@@ -148,7 +120,33 @@ export default function StudentQuizRunner({
     });
     setSubmitted(true);
     window.gtoast?.("Kuis berhasil diserahkan! Skor telah dicatat ke rapor nilaimu.");
-  }
+  }, [answers, creatorSubject, questions, submitted, title, topic]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (submitted) return;
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleSubmitQuiz();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [submitted, handleSubmitQuiz]);
+
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
+  const timerStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+  const currentQ = questions[currentIdx] || { n: 1, text: "Pertanyaan kuis" };
+  const totalQ = questions.length;
+  const answeredCount = Object.keys(answers).length;
+  const progressPct = totalQ ? Math.round((answeredCount / totalQ) * 100) : 0;
+  const options = getOptionsForQuestion(currentIdx, currentQ.text);
 
   if (submitted && result) {
     return (
