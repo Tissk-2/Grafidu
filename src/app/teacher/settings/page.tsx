@@ -33,9 +33,7 @@ async function loadSettingsPage(u: SessionUser): Promise<SettingsPageData> {
 }
 
 export default function StudentSettingsPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const [data, setData] = useState<SettingsPageData | null>(null);
   useTitle("Pengaturan Profil — Grafidu");
 

@@ -18,9 +18,7 @@ import BodySync from "@/components/body-sync";
  * this component — the shell stays mounted and the data just swaps in place.
  */
 export default function TeacherClassHome() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
 
   useTitle(`Dashboard ${kelas.kelas} — Grafidu`);
