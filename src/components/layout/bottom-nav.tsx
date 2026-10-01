@@ -23,7 +23,7 @@ export function BottomNav({ role, active }: { role: "student" | "teacher"; activ
         ];
 
   return (
-    <nav className="z-50 fixed bottom-8 left-[50%] flex p-4 rounded border border-[#DDD] -translate-x-[50%] gap-8 bg-white">
+    <nav className="z-50 fixed bottom-0 left-0 right-0 lg:bottom-8 lg:left-[50%] flex px-2 py-3 lg:p-4 rounded-none lg:rounded-xl border-t lg:border border-[#DDD] translate-x-0 lg:-translate-x-[50%] gap-2 sm:gap-4 lg:gap-8 bg-white justify-around overflow-x-auto shadow-lg lg:shadow-none">
       {items.map((it) => (
         <Link
           key={it.href}

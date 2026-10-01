@@ -47,11 +47,10 @@ export default function LandingPage() {
               For students, teachers, and the people who support them.
             </div>
           </div>
-          <div className="" aria-hidden="true">
+          <div className="flex justify-center" aria-hidden="true">
             <Image
-              className="max-w-full h-auto"
+              className="max-w-full h-auto lg:scale-[1.6] lg:translate-x-[60px]"
               src="/assets/hero-left.png"
-              style={{ transform: "scale(1.6) translateX(60px)" }}
               width={2704}
               height={1806}
               alt="Preview dashboard"

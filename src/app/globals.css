@@ -1330,6 +1330,8 @@ u,
   width: 51%;
   border-right: 1px solid #eeecef;
   background: url("/assets/LoginIll.png"), rgba(255, 255, 255, 0.3);
+  background-size: cover;
+  background-position: center;
   background-blend-mode: lighten;
   padding: 44px 56px 40px;
   position: relative;
