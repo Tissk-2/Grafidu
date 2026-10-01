@@ -85,13 +85,30 @@ export default function AuthForm() {
       }
 
       // Sumber kebenaran tunggal: tabel `profiles` di Supabase.
-      // Login hanya butuh `role`; kolom lain opsional agar tidak 400
-      // kalau skema tabel belum lengkap.
-      const { data: profile, error: profErr } = await supabase
+      // Coba kolom lengkap dulu; kalau skema belum punya
+      // `must_change_password` (PostgREST 400), mundur ke `role` saja
+      // agar login tetap jalan — pola yang sama seperti fetchProfile().
+      const fullProfile = await supabase
         .from("profiles")
         .select("role, must_change_password")
         .eq("id", data.user.id)
         .single();
+
+      let profile = fullProfile.data as {
+        role: string;
+        must_change_password?: boolean | null;
+      } | null;
+      let profErr = fullProfile.error;
+
+      if (profErr) {
+        const minimal = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+        profile = minimal.data as { role: string } | null;
+        profErr = minimal.error;
+      }
 
       if (profErr || !profile) {
         await supabase.auth.signOut();

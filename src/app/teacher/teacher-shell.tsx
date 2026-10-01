@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useRequireUser } from "@/lib/auth";
 import { dummyGuruData } from "@/lib/guru-demo";
@@ -32,28 +33,38 @@ export default function TeacherShell({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const { kelas, classes, select } = useRoutedClass();
 
-  const sidebarClasses: SidebarClass[] = classes.map((c) => ({
-    id: c.id,
-    name: c.kelas,
-    total: c.totalMurid,
-  }));
+  // Stabil agar Sidebar yang di-memo tidak ikut re-render tiap navigasi.
+  const sidebarClasses: SidebarClass[] = useMemo(
+    () =>
+      classes.map((c) => ({
+        id: c.id,
+        name: c.kelas,
+        total: c.totalMurid,
+      })),
+    [classes],
+  );
+
+  const sidebar = useMemo(
+    () => ({
+      // The shell has to stay mounted before the session resolves, so fall
+      // back to the logo rather than blanking the sidebar.
+      user: {
+        name: dummyGuruData.name,
+        sub: dummyGuruData.mapel,
+        avatar: u?.avatar ?? "/assets/logo.png",
+      },
+      tasksToday: [],
+      classes: sidebarClasses,
+      activeClassId: kelas.id,
+      onSelectClass: select,
+    }),
+    [u?.avatar, sidebarClasses, kelas.id, select],
+  );
 
   return (
     <DashboardShell
       role="teacher"
-      sidebar={{
-        // The shell has to stay mounted before the session resolves, so fall
-        // back to the logo rather than blanking the sidebar.
-        user: {
-          name: dummyGuruData.name,
-          sub: dummyGuruData.mapel,
-          avatar: u?.avatar ?? "/assets/logo.png",
-        },
-        tasksToday: [],
-        classes: sidebarClasses,
-        activeClassId: kelas.id,
-        onSelectClass: select,
-      }}
+      sidebar={sidebar}
       activeNav={NAV_LABEL[pathname.split("/")[2] ?? ""] ?? ""}
       rightbar={<TeacherRightbar />}
     >

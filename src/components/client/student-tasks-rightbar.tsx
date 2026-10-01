@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { fetchTodos, addTodo, toggleTodo, type TodoItem } from "@/lib/supabase/queries";
+import { addTodo, toggleTodo, type TodoItem } from "@/lib/supabase/queries";
 
 const CHECK = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
@@ -13,29 +13,24 @@ const CHECK = (
 export default function StudentTasksRightbar({
   userId,
   aiNote,
+  todos: initialTodos,
 }: {
   userId: string;
   aiNote: string;
+  /** From the shell's shared data — avoids a second todos query on this screen. */
+  todos?: TodoItem[];
 }) {
-  const [todos, setTodos] = useState<TodoItem[]>([]);
+  // null = belum ada editan lokal → tampilkan data dari shell context.
+  const [localTodos, setLocalTodos] = useState<TodoItem[] | null>(null);
   const [input, setInput] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchTodos(userId).then((rows) => {
-      if (!cancelled) setTodos(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+  const rows = localTodos ?? initialTodos ?? [];
 
   async function toggle(id: string, done: boolean) {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !done } : t)));
+    setLocalTodos(rows.map((t) => (t.id === id ? { ...t, done: !done } : t)));
     try {
       await toggleTodo(id, !done);
     } catch (err) {
-      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: done } : t)));
+      setLocalTodos(rows.map((t) => (t.id === id ? { ...t, done } : t)));
       window.gtoast?.((err as Error).message, "error");
     }
   }
@@ -46,7 +41,7 @@ export default function StudentTasksRightbar({
     setInput("");
     try {
       const row = await addTodo(userId, v);
-      if (row) setTodos((prev) => [...prev, row]);
+      if (row) setLocalTodos([...rows, row]);
     } catch (err) {
       window.gtoast?.((err as Error).message, "error");
     }
@@ -83,7 +78,7 @@ export default function StudentTasksRightbar({
         </button>
       </div>
       <div id="todo-list">
-        {todos.map((t) => (
+        {rows.map((t) => (
           <div
             key={t.id}
             className={"task-card" + (t.done ? " done" : "")}

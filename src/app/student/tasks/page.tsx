@@ -2,49 +2,31 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRequireUser, type SessionUser } from "@/lib/auth";
-import {
-  fetchTodos,
-  fetchSchoolTasks,
-  fetchClassTeachers,
-  type SchoolTask,
-  type ClassTeacher,
-} from "@/lib/supabase/queries";
+import { useRequireUser } from "@/lib/auth";
+import { fetchClassTeachers, type ClassTeacher } from "@/lib/supabase/queries";
 import { fmtDate } from "@/lib/format";
 import { useTitle } from "@/lib/hooks";
 import StudentTasksSkeleton from "@/components/ui/student-tasks-skeleton";
 import StudentClassSearch from "@/components/client/student-class-search";
 import BodySync from "@/components/body-sync";
+import { useStudentShellData } from "../student-shell-data";
 
-type TasksData = {
-  todoPct: number;
-  schoolTasks: SchoolTask[];
-  classes: ClassTeacher[];
-};
-
-async function loadTasks(u: SessionUser): Promise<TasksData> {
-  const [todos, schoolTasks, classes] = await Promise.all([
-    fetchTodos(u.id),
-    fetchSchoolTasks(u),
-    fetchClassTeachers(u.className),
-  ]);
-  const todoPct = todos.length
-    ? Math.round((todos.filter((t) => t.done).length / todos.length) * 100)
-    : 0;
-  return { todoPct, schoolTasks, classes };
-}
-
-/** Middle column only — the sidebar and rightbar come from the student layout. */
+/**
+ * Middle column only — the sidebar and rightbar come from the student layout.
+ * Todos + school tasks come from the shell's shared context (fetched once per
+ * load); only the teaching roster is page-specific.
+ */
 export default function StudentTasksPage() {
   const u = useRequireUser("student");
-  const [data, setData] = useState<TasksData | null>(null);
+  const shell = useStudentShellData();
+  const [classes, setClasses] = useState<ClassTeacher[] | null>(null);
   useTitle("Daftar Tugas — Grafidu");
 
   useEffect(() => {
     if (!u) return;
     let cancelled = false;
-    loadTasks(u).then((d) => {
-      if (!cancelled) setData(d);
+    fetchClassTeachers(u.className).then((c) => {
+      if (!cancelled) setClasses(c);
     });
     return () => {
       cancelled = true;
@@ -54,7 +36,12 @@ export default function StudentTasksPage() {
   // The shell (sidebar + rightbar) comes from the student layout and is already
   // rendered, so this wait only affects the middle column — and even that shows
   // a skeleton rather than nothing.
-  if (!u || !data) return <StudentTasksSkeleton />;
+  if (!u || !shell || !classes) return <StudentTasksSkeleton />;
+
+  const todoPct = shell.todos.length
+    ? Math.round((shell.todos.filter((t) => t.done).length / shell.todos.length) * 100)
+    : 0;
+  const data = { todoPct, schoolTasks: shell.schoolTasks, classes };
 
   return (
     <>

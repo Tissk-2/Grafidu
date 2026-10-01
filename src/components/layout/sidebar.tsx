@@ -1,14 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { id } from "date-fns/locale";
 import { Add, People } from "iconsax-reactjs";
 import { LogOut } from "lucide-react";
 import { logout, avatarSrc } from "@/lib/auth";
-import { Calendar } from "@/components/ui/calendar";
+import { id as idLocale } from "date-fns/locale/id";
+
+// react-day-picker + date-fns cukup berat untuk masuk chunk bersama semua
+// halaman dashboard — muat terpisah setelah shell tampil.
+const Calendar = dynamic(() => import("@/components/ui/calendar").then((m) => m.Calendar), {
+  ssr: false,
+  loading: () => <div style={{ minHeight: 320 }} aria-hidden />,
+});
 
 export type TodayTask = { id: string; title: string; sub: string; done: boolean };
 
@@ -64,7 +71,7 @@ const CHEVRON_UP = (
   </svg>
 );
 
-export function Sidebar({
+function SidebarImpl({
   role,
   user,
   tasksToday,
@@ -146,7 +153,7 @@ export function Sidebar({
         selected={selected}
         onSelect={setSelected}
         defaultMonth={selected}
-        locale={id}
+        locale={idLocale}
         weekStartsOn={1}
         showOutsideDays
         className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-white [&_button[data-range-start=true]]:text-white [&_button[data-range-end=true]]:text-white "
@@ -248,3 +255,9 @@ export function Sidebar({
     </aside>
   );
 }
+
+/**
+ * Memoized: the shells re-render on every navigation (usePathname), but the
+ * sidebar's props barely change — skip re-rendering the DayPicker subtree.
+ */
+export const Sidebar = memo(SidebarImpl);

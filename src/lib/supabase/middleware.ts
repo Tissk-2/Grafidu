@@ -124,7 +124,9 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const role = await getRole(supabase, user.id);
+    // Role sudah didapat dari query profil di atas — jangan query profiles
+    // lagi (getRole di sini berarti 1 round-trip tambahan di setiap request).
+    const role = profile?.role ?? null;
 
     if (role) {
       const wantStudent = path.startsWith("/student");

@@ -86,6 +86,8 @@ export default async function LandingPage() {
               style={{ transform: "scale(1.6) translateX(60px)" }}
               width={2704}
               height={1806}
+              sizes="(max-width: 900px) 100vw, 780px"
+              priority
               alt="Preview dashboard"
             ></Image>
           </div>

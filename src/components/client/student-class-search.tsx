@@ -50,7 +50,7 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
             <option value="Matematika">Matematika</option>
             <option value="Fisika">Fisika</option>
             <option value="Informatika">Informatika</option>
-            <option value="B. Indonesia">B. Indonesia</option>
+            <option value="Bahasa Indonesia">B. Indonesia</option>
             <option value="Seni Budaya">Seni</option>
           </select>
           <svg
@@ -67,14 +67,21 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
       </div>
 
       <div className="chips">
-        {["all", "Matematika", "Fisika", "Informatika", "B. Indonesia", "Seni Budaya"].map((f) => (
+        {[
+          { value: "all", label: "Semua" },
+          { value: "Matematika", label: "Matematika" },
+          { value: "Fisika", label: "Fisika" },
+          { value: "Informatika", label: "Informatika" },
+          { value: "Bahasa Indonesia", label: "B. Indonesia" },
+          { value: "Seni Budaya", label: "Seni" },
+        ].map((f) => (
           <button
-            key={f}
-            className={"chip" + (filter === f ? " on" : "")}
-            data-filter={f}
-            onClick={() => setFilter(f)}
+            key={f.value}
+            className={"chip" + (filter === f.value ? " on" : "")}
+            data-filter={f.value}
+            onClick={() => setFilter(f.value)}
           >
-            {f === "all" ? "Semua" : f === "Seni Budaya" ? "Seni" : f}
+            {f.label}
           </button>
         ))}
       </div>

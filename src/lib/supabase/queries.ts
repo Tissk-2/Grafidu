@@ -79,11 +79,15 @@ export async function fetchTasksToday(u: SessionUser): Promise<SidebarTask[]> {
   const classId = await classIdByName(u.className);
   if (!classId) return [];
   const supabase = createClient();
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("id, title, subject, description, due_at")
-    .eq("class_id", classId)
-    .order("due_at", { ascending: false });
+  // tasks + statuses tidak saling bergantung — jangan berurutan.
+  const [{ data: tasks }, { data: statuses }] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("id, title, subject, description, due_at")
+      .eq("class_id", classId)
+      .order("due_at", { ascending: false }),
+    supabase.from("task_statuses").select("task_id, done").eq("student_id", u.id),
+  ]);
   const rows = (tasks ?? []) as {
     id: string;
     title: string;
@@ -93,10 +97,6 @@ export async function fetchTasksToday(u: SessionUser): Promise<SidebarTask[]> {
   }[];
   if (rows.length === 0) return [];
 
-  const { data: statuses } = await supabase
-    .from("task_statuses")
-    .select("task_id, done")
-    .eq("student_id", u.id);
   const doneBy = new Map(
     ((statuses ?? []) as { task_id: string; done: boolean }[]).map((s) => [s.task_id, s.done])
   );
@@ -174,6 +174,23 @@ export async function fetchAnnouncements(limit = 3): Promise<AnnouncementItem[]>
   }));
 }
 
+export type AnnouncementPageItem = { title: string; body: string; when: string; date: string };
+
+/** Semua pengumuman tanpa dipotong, plus ISO date untuk filter & sort halaman. */
+export async function fetchAllAnnouncements(): Promise<AnnouncementPageItem[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("announcements")
+    .select("title, body, created_at")
+    .order("created_at", { ascending: false });
+  return ((data ?? []) as { title: string; body: string; created_at: string }[]).map((a) => ({
+    title: a.title,
+    body: a.body,
+    when: relativeWhen(a.created_at),
+    date: a.created_at,
+  }));
+}
+
 export async function fetchTodos(userId: string): Promise<TodoItem[]> {
   const supabase = createClient();
   const { data } = await supabase
@@ -206,16 +223,16 @@ export async function fetchSchoolTasks(u: SessionUser): Promise<SchoolTask[]> {
   const classId = await classIdByName(u.className);
   if (!classId) return [];
   const supabase = createClient();
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("id, title, subject, due_at")
-    .eq("class_id", classId)
-    .order("due_at", { ascending: false });
+  // tasks + statuses tidak saling bergantung — jangan berurutan.
+  const [{ data: tasks }, { data: statuses }] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("id, title, subject, due_at")
+      .eq("class_id", classId)
+      .order("due_at", { ascending: false }),
+    supabase.from("task_statuses").select("task_id, done, grade").eq("student_id", u.id),
+  ]);
   const rows = (tasks ?? []) as { id: string; title: string; subject: string; due_at: string }[];
-  const { data: statuses } = await supabase
-    .from("task_statuses")
-    .select("task_id, done, grade")
-    .eq("student_id", u.id);
   const byTask = new Map(
     ((statuses ?? []) as { task_id: string; done: boolean; grade: number | null }[]).map((s) => [
       s.task_id,
@@ -306,15 +323,10 @@ export async function submitTask(taskId: string, userId: string): Promise<void> 
 
 /** Daftar guru pengajar kelas siswa (nama kelas dari database). */
 export async function fetchClassTeachers(className: string | null): Promise<ClassTeacher[]> {
-  if (!className) return [];
-  const supabase = createClient();
-  const { data: cls } = await supabase
-    .from("classes")
-    .select("id")
-    .eq("name", className)
-    .single();
-  const classId = (cls as { id: string } | null)?.id;
+  // Lewat classIdByName supaya ikut cache 60 detik yang dipakai query lain.
+  const classId = await classIdByName(className);
   if (!classId) return [];
+  const supabase = createClient();
   const { data: teachings } = await supabase
     .from("teachings")
     .select("subject, teacher_id")

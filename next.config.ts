@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Paket ikon/lokal yang berat — paksa tree-shaking per impor.
+    optimizePackageImports: ["iconsax-reactjs", "date-fns"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "fonts.googleapis.com" },
