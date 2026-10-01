@@ -174,6 +174,23 @@ export async function fetchAnnouncements(limit = 3): Promise<AnnouncementItem[]>
   }));
 }
 
+export type AnnouncementPageItem = { title: string; body: string; when: string; date: string };
+
+/** Semua pengumuman tanpa dipotong, plus ISO date untuk filter & sort halaman. */
+export async function fetchAllAnnouncements(): Promise<AnnouncementPageItem[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("announcements")
+    .select("title, body, created_at")
+    .order("created_at", { ascending: false });
+  return ((data ?? []) as { title: string; body: string; created_at: string }[]).map((a) => ({
+    title: a.title,
+    body: a.body,
+    when: relativeWhen(a.created_at),
+    date: a.created_at,
+  }));
+}
+
 export async function fetchTodos(userId: string): Promise<TodoItem[]> {
   const supabase = createClient();
   const { data } = await supabase
