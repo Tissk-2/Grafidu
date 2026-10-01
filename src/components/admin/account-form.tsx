@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export type ClassOption = { id: number; name: string };
+export type ClassOption = { id: string; name: string };
 
 export type AccountFormValues = {
   role: "student" | "teacher";

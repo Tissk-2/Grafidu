@@ -35,3 +35,5 @@ ab_footer_results.json
 .zcode/
 agent/
 skills-lock.json
+
+gui-test-screenshots/
