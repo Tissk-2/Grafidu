@@ -18,9 +18,7 @@ const SORTS: { value: Sort; label: string }[] = [
 
 /** Middle column only — the sidebar and rightbar come from the teacher layout. */
 export default function TeacherTasksPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   // This page has no :id segment, so useRoutedClass falls back to the class
   // last picked on /teacher/home — the same one the shell is showing.
   const { kelas: active } = useRoutedClass();

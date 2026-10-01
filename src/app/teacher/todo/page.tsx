@@ -33,9 +33,7 @@ async function loadTodoPage(u: SessionUser): Promise<TodoPageData> {
 }
 
 export default function StudentTodoPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const [data, setData] = useState<TodoPageData | null>(null);
   useTitle("To-Do List Pribadi — Grafidu");
 

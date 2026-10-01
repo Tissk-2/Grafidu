@@ -28,9 +28,7 @@ const NAV_LABEL: Record<string, string> = {
  * nav highlight in sync.
  */
 export default function TeacherShell({ children }: { children: React.ReactNode }) {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const pathname = usePathname();
   const { kelas, classes, select } = useRoutedClass();
 
