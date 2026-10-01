@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import {
-  fetchSchoolTasks,
-  fetchSubjectScores,
-  avgOf,
-  type SchoolTask,
-  type SubjectScore,
-} from "@/lib/supabase/queries";
+import { avgOf } from "@/lib/supabase/queries";
 import { fmtDate } from "@/lib/format";
 import { StatCard } from "@/components/ui/stat-card";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import BodySync from "@/components/body-sync";
+import { useStudentShellData } from "../student-shell-data";
 
 type Filter = "semua" | "dinilai" | "belum";
 
@@ -24,8 +19,6 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "belum", label: "Belum Dinilai" },
 ];
 
-type PageData = { tasks: SchoolTask[]; subjects: SubjectScore[] };
-
 /** Pill per task grade. Threshold 70 follows the rest of the student side. */
 function gradePill(grade: number | null): { cls: string; label: string } {
   if (grade == null) return { cls: "pill-gray", label: "Belum Dinilai" };
@@ -33,44 +26,39 @@ function gradePill(grade: number | null): { cls: string; label: string } {
   return { cls: "pill-green", label: "Bagus" };
 }
 
-/** Middle column only — the sidebar and rightbar come from the student layout. */
+/**
+ * Middle column only — the sidebar and rightbar come from the student layout.
+ * Reads the shell's shared data (fetched once per load, stays mounted across
+ * navigation) instead of re-querying tasks + grades on every visit.
+ */
 export default function StudentGradesPage() {
   const u = useRequireUser("student");
-  const [data, setData] = useState<PageData | null>(null);
+  const shell = useStudentShellData();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("semua");
   useTitle("Grades — Grafidu");
 
-  useEffect(() => {
-    if (!u) return;
-    let cancelled = false;
-    Promise.all([fetchSchoolTasks(u), fetchSubjectScores(u.id)]).then(([tasks, subjects]) => {
-      if (!cancelled) setData({ tasks, subjects });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [u]);
+  const tasks = useMemo(() => shell?.schoolTasks ?? [], [shell]);
+  const subjects = shell?.subjects ?? [];
 
   const rows = useMemo(() => {
-    if (!data) return [];
     const q = query.trim().toLowerCase();
-    return data.tasks
+    return tasks
       .filter((t) => {
         if (filter === "dinilai" && t.grade == null) return false;
         if (filter === "belum" && t.grade != null) return false;
         return !q || t.title.toLowerCase().includes(q) || t.subject.toLowerCase().includes(q);
       })
       .sort((a, b) => new Date(b.dueAt).getTime() - new Date(a.dueAt).getTime());
-  }, [data, query, filter]);
+  }, [tasks, query, filter]);
 
-  if (!u || !data) return <PageSkeleton />;
+  if (!u || !shell) return <PageSkeleton />;
 
-  const graded = data.tasks.filter((t) => t.grade != null);
+  const graded = tasks.filter((t) => t.grade != null);
   const taskAvg = graded.length
     ? Math.round(graded.reduce((acc, t) => acc + (t.grade ?? 0), 0) / graded.length)
     : null;
-  const avgSubject = avgOf(data.subjects);
+  const avgSubject = avgOf(subjects);
   const filtering = query.trim().length > 0 || filter !== "semua";
 
   return (
@@ -131,7 +119,7 @@ export default function StudentGradesPage() {
       </div>
 
       {/* table */}
-      {data.tasks.length === 0 ? (
+      {tasks.length === 0 ? (
         <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
           <p className="text-[15px] font-medium text-[#222]">Belum ada tugas</p>
           <p className="mt-1 text-[13px] text-[#8A8A8A]">
@@ -148,7 +136,7 @@ export default function StudentGradesPage() {
           {filtering && (
             <p className="mt-5 text-[13px] text-[#8A8A8A]">
               Menampilkan <span className="font-medium tabular-nums text-[#222]">{rows.length}</span>{" "}
-              dari <span className="tabular-nums">{data.tasks.length}</span> tugas
+              dari <span className="tabular-nums">{tasks.length}</span> tugas
             </p>
           )}
           <div className="grade-table-wrap" style={{ marginTop: filtering ? 12 : 20 }}>
@@ -213,12 +201,12 @@ export default function StudentGradesPage() {
       )}
 
       {/* subject averages */}
-      {data.subjects.length > 0 && (
+      {subjects.length > 0 && (
         <div className="set-card" style={{ marginTop: 26 }}>
           <h3>Rata-rata per Mapel</h3>
           <p className="sub">Gabungan semua nilai yang sudah dinilai gurumu.</p>
           <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
-            {data.subjects.map((s) => (
+            {subjects.map((s) => (
               <div key={s.subject} className="flex items-center gap-4">
                 <span className="w-40 shrink-0 truncate text-[14px] font-medium text-[#222]">
                   {s.subject}

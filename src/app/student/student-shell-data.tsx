@@ -1,14 +1,19 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   fetchAnnouncements,
+  fetchSchoolTasks,
   fetchSubjectScores,
+  fetchTodos,
   fetchTasksToday,
   avgOf,
   aiNoteFromScores,
   type AnnouncementItem,
+  type SchoolTask,
   type SidebarTask,
+  type SubjectScore,
+  type TodoItem,
 } from "@/lib/supabase/queries";
 import type { SessionUser } from "@/lib/auth";
 import type { GradeRow } from "@/components/layout/rightbar";
@@ -18,17 +23,20 @@ export type StudentShellData = {
   data: {
     tasksToday: SidebarTask[];
     grades: GradeRow[];
+    subjects: SubjectScore[];
     avg: number;
     announcements: AnnouncementItem[];
     aiNote: string;
+    schoolTasks: SchoolTask[];
+    todos: TodoItem[];
   } | null;
 };
 
 /**
- * The sidebar and rightbar need the same rows on every student page, and the
- * dashboard also needs them for its stat cards. Fetching once here and sharing
- * it through context keeps the layout mounted across navigation and stops each
- * page from re-querying the same tables.
+ * The sidebar, rightbar AND most student pages need the same rows. Fetching
+ * once here (the provider stays mounted across navigation) and sharing it
+ * through context means /student/grades, /student/ai-agent and /student/tasks
+ * render from cache instead of re-querying the same tables on every visit.
  */
 const Ctx = createContext<StudentShellData>({ data: null });
 
@@ -40,6 +48,7 @@ export function StudentShellDataProvider({
   children: React.ReactNode;
 }) {
   const [data, setData] = useState<StudentShellData["data"]>(null);
+  const value = useMemo(() => ({ data }), [data]);
 
   useEffect(() => {
     if (!user) return;
@@ -49,14 +58,19 @@ export function StudentShellDataProvider({
       fetchTasksToday(user),
       fetchSubjectScores(user.id),
       fetchAnnouncements(3),
-    ]).then(([tasksToday, scores, announcements]) => {
+      fetchSchoolTasks(user),
+      fetchTodos(user.id),
+    ]).then(([tasksToday, scores, announcements, schoolTasks, todos]) => {
       if (cancelled) return;
       setData({
         tasksToday,
         grades: scores.map((s) => ({ subject: s.subject, score: s.score, status: s.status })),
+        subjects: scores,
         avg: avgOf(scores),
         announcements,
         aiNote: aiNoteFromScores(scores),
+        schoolTasks,
+        todos,
       });
     });
 
@@ -65,7 +79,7 @@ export function StudentShellDataProvider({
     };
   }, [user]);
 
-  return <Ctx.Provider value={{ data }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useStudentShellData() {

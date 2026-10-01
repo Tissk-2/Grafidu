@@ -4,15 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import {
-  fetchSchoolTasks,
-  fetchSubjectScores,
-  type SchoolTask,
-  type SubjectScore,
-} from "@/lib/supabase/queries";
+import { type SchoolTask, type SubjectScore } from "@/lib/supabase/queries";
 import { fmtDate } from "@/lib/format";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import BodySync from "@/components/body-sync";
+import { useStudentShellData } from "../student-shell-data";
 
 type Msg = { role: "user" | "ai"; text: string };
 type PageData = { tasks: SchoolTask[]; subjects: SubjectScore[] };
@@ -107,30 +103,21 @@ function studentAiReply(text: string, data: PageData): string {
 /** Middle column only — the sidebar and rightbar come from the student layout. */
 export default function StudentAiAgentPage() {
   const u = useRequireUser("student");
-  const [data, setData] = useState<PageData | null>(null);
+  const shell = useStudentShellData();
   useTitle("AI Agent — Grafidu");
-
-  useEffect(() => {
-    if (!u) return;
-    let cancelled = false;
-    Promise.all([fetchSchoolTasks(u), fetchSubjectScores(u.id)]).then(([tasks, subjects]) => {
-      if (!cancelled) setData({ tasks, subjects });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [u]);
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const dataRef = useRef<PageData | null>(null);
-  dataRef.current = data;
+  dataRef.current = shell
+    ? { tasks: shell.schoolTasks, subjects: shell.subjects }
+    : null;
 
   // Greeting butuh nama user — isi begitu sesi & data siap.
   useEffect(() => {
-    if (!u || !data) return;
+    if (!u || !shell) return;
     setMessages((prev) =>
       prev.length
         ? prev
@@ -141,13 +128,13 @@ export default function StudentAiAgentPage() {
             },
           ],
     );
-  }, [u, data]);
+  }, [u, shell]);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [messages, busy]);
 
-  if (!u || !data) return <PageSkeleton />;
+  if (!u || !shell) return <PageSkeleton />;
 
   function send(text?: string) {
     const t = (text ?? input).trim();

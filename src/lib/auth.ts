@@ -102,16 +102,32 @@ async function fetchSessionUser(): Promise<SessionUser | null> {
 // atau getSessionUser(), bukan dari data demo.
 let cachedUser: SessionUser | null = null;
 
+// Satu fetch profil dibagi ke semua instance useRequireUser yang mount
+// bersamaan (shell, page, rightbar) — bukan satu query per instance.
+let sessionPromise: Promise<SessionUser | null> | null = null;
+
+function fetchSessionUserShared(): Promise<SessionUser | null> {
+  if (!sessionPromise) {
+    sessionPromise = fetchSessionUser()
+      .then((u) => {
+        cachedUser = u;
+        return u;
+      })
+      .finally(() => {
+        sessionPromise = null;
+      });
+  }
+  return sessionPromise;
+}
+
 /** Versi sinkron: baca cache terakhir dari Supabase. */
 export function getCurrentUser(): SessionUser | null {
   return cachedUser;
 }
 
-/** Versi async: ambil sesi + profil fresh dari Supabase. */
+/** Versi async: ambil sesi + profil fresh dari Supabase (dedup antar pemanggil). */
 export async function getSessionUser(): Promise<SessionUser | null> {
-  const u = await fetchSessionUser();
-  cachedUser = u;
-  return u;
+  return fetchSessionUserShared();
 }
 
 export function login(): never {
@@ -125,6 +141,7 @@ export function signup(): never {
 export async function logout(): Promise<void> {
   if (typeof window === "undefined") return;
   cachedUser = null;
+  sessionPromise = null;
   const supabase = createClient();
   await supabase.auth.signOut();
 }
@@ -163,24 +180,34 @@ export function useRequireUser(role?: Role): SessionUser | null {
       setLoading(false);
     };
 
-    fetchSessionUser()
-      .then(applyUser)
-      .catch(() => applyUser(null));
+    // Fast path: cache dari mount sebelumnya (shell sudah resolve) langsung
+    // dipakai tanpa fetch ulang — subscription di bawah yang menjaga fresh.
+    if (cachedUser) {
+      applyUser(cachedUser);
+    } else {
+      fetchSessionUserShared()
+        .then((u) => applyUser(u))
+        .catch(() => applyUser(null));
+    }
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
       if (!session?.user) {
         applyUser(null);
         return;
       }
-      try {
-        const u = await fetchSessionUser();
-        applyUser(u);
-      } catch {
-        applyUser(null);
+      // User yang sama persis: INITIAL_SESSION (emit otomatis tiap subscribe)
+      // dan TOKEN_REFRESHED tidak perlu fetch + setUser ulang — identitas
+      // objek baru memicu efek data shell jalan dua kali. USER_UPDATED atau
+      // ganti akun (id beda) tetap di-fetch ulang.
+      if (cachedUser && cachedUser.id === session.user.id && event !== "USER_UPDATED") {
+        return;
       }
+      fetchSessionUserShared()
+        .then((u) => applyUser(u))
+        .catch(() => applyUser(null));
     });
 
     return () => {

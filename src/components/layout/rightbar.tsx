@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { dummyGuruData } from "@/lib/guru-demo";
 
 export type GradeRow = { subject: string; score: number; status: string };
 export type StudentRow = { name: string; avg: number };
 export type Announcement = { title: string; body: string; when: string; hl: boolean };
 
+/** KKM dipakai untuk warna pill nilai. (Sumber: dummyGuruData.kkm di guru-demo.ts) */
+const KKM = 80;
+
 /**
  * Marks a score against the class average: green with an up chevron once it
- * reaches the KKM (Kriteria Ketuntasan Minimal, `dummyGuruData.kkm`), red with
- * a down chevron when it falls short. The label is fixed — the score alone
- * decides the tone, so callers no longer pass their own text.
+ * reaches the KKM (Kriteria Ketuntasan Minimal), red with a down chevron when
+ * it falls short. The label is fixed — the score alone decides the tone, so
+ * callers no longer pass their own text.
  */
 function PillMean({ score }: { score: number }) {
-  const meets = score >= dummyGuruData.kkm;
+  const meets = score >= KKM;
   return (
     <span
       className={`pill inline-flex items-center gap-1 ${meets ? "pill-green" : "pill-red"}`}

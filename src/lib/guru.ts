@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { dummyGuruData, type GuruClass } from "@/lib/guru-demo";
 
@@ -58,12 +58,14 @@ export function useActiveClass() {
     if (classes.some((c) => c.id === saved)) setId(saved);
   }, [classes]);
 
-  const select = (next: number) => {
+  // useCallback: penerima props (mis. sidebar yang di-memo) bisa andalkan
+  // identitas select yang stabil antar render.
+  const select = useCallback((next: number) => {
     setId(next);
     try {
       localStorage.setItem("guru-class", String(next));
     } catch {}
-  };
+  }, []);
 
   return { classes, active: classes.find((c) => c.id === id) ?? classes[0], select };
 }
