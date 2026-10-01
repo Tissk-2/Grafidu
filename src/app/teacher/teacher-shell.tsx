@@ -18,8 +18,8 @@ const NAV_LABEL: Record<string, string> = {
   todo: "Tasks",
   materi: "Materi",
   grades: "Grades",
-  quiz: "Quiz Maker",
-  ai: "AI Agent",
+  "quiz-maker": "Quiz Maker",
+  "ai-agent": "AI Agent",
 };
 
 /**
