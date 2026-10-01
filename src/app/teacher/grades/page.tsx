@@ -83,7 +83,7 @@ export default function TeacherGradesPage() {
     <>
       <BodySync dataPage="teacher-grades" />
 
-      <header>
+      <header className="mb-5">
         <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
           Grades
         </h1>
@@ -148,8 +148,9 @@ export default function TeacherGradesPage() {
         <>
           {filtering && (
             <p className="mt-5 text-[13px] text-[#8A8A8A]">
-              Menampilkan <span className="font-medium tabular-nums text-[#222]">{rows.length}</span>{" "}
-              dari <span className="tabular-nums">{kelas.dataMurid.length}</span> siswa
+              Menampilkan{" "}
+              <span className="font-medium tabular-nums text-[#222]">{rows.length}</span> dari{" "}
+              <span className="tabular-nums">{kelas.dataMurid.length}</span> siswa
             </p>
           )}
           <div className="grade-table-wrap" style={{ marginTop: filtering ? 12 : 20 }}>
