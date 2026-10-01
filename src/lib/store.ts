@@ -10,6 +10,16 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 
 export type Role = "student" | "teacher";
 
+/**
+ * Id pemilik baris pada store demo: id user store (number) ATAU uuid sesi
+ * Supabase (string). Sesi login sekarang berasal dari Supabase Auth, dan user
+ * sesi tidak hidup di store, jadi komponen yang menulis baris milik pengguna
+ * login (chat, nilai kuis, materi, kuis, to-do hasil AI) menyimpan uuid-nya
+ * apa adanya. Pencocokan "baris milik saya" tetap konsisten karena id yang
+ * sama dipakai saat menulis dan saat memfilter.
+ */
+export type OwnerId = number | string;
+
 export type User = {
   id: number;
   role: Role;
@@ -27,13 +37,13 @@ export type User = {
 };
 
 export type ClassRoom = { id: number; name: string };
-export type Enrollment = { classId: number; studentId: number };
-export type Teaching = { classId: number; teacherId: number; subject: string };
+export type Enrollment = { classId: number; studentId: OwnerId };
+export type Teaching = { classId: number; teacherId: OwnerId; subject: string };
 
 export type Task = {
   id: number;
   classId: number;
-  createdBy: number;
+  createdBy: OwnerId;
   title: string;
   description: string;
   subject: string;
@@ -44,7 +54,7 @@ export type Task = {
 export type TaskStatus = {
   id: number;
   taskId: number;
-  studentId: number;
+  studentId: OwnerId;
   done: boolean;
   submittedAt: string | null;
   grade: number | null;
@@ -53,7 +63,7 @@ export type TaskStatus = {
 
 export type Grade = {
   id: number;
-  studentId: number;
+  studentId: OwnerId;
   subject: string;
   kind: string;
   score: number;
@@ -63,7 +73,7 @@ export type Grade = {
 export type Quiz = {
   id: number;
   classId: number;
-  createdBy: number;
+  createdBy: OwnerId;
   title: string;
   topic: string;
   difficulty: string;
@@ -77,7 +87,7 @@ export type QuizQuestion = { id: number; quizId: number; idx: number; text: stri
 
 export type Material = {
   id: number;
-  teacherId: number;
+  teacherId: OwnerId;
   classId: number;
   title: string;
   pages: number;
@@ -90,14 +100,14 @@ export type Announcement = {
   id: number;
   title: string;
   body: string;
-  createdBy: number | null;
+  createdBy: OwnerId | null;
   createdLabel: string;
   createdAt: string;
 };
 
 export type ChatMessage = {
   id: number;
-  userId: number;
+  userId: OwnerId;
   role: "user" | "ai";
   text: string;
   createdAt: string;
@@ -105,7 +115,7 @@ export type ChatMessage = {
 
 export type Todo = {
   id: number;
-  userId: number;
+  userId: OwnerId;
   title: string;
   subtitle: string;
   done: boolean;
@@ -114,7 +124,7 @@ export type Todo = {
 
 export type AiAction = {
   id: number;
-  userId: number;
+  userId: OwnerId;
   tool: string;
   payload: string;
   status: "pending" | "executed" | "declined" | "failed";

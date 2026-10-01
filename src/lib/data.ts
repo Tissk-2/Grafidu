@@ -1,5 +1,5 @@
 import { pill } from "@/lib/format";
-import type { DB } from "@/lib/store";
+import type { DB, OwnerId } from "@/lib/store";
 
 export type SubjectScore = {
   subject: string;
@@ -9,7 +9,7 @@ export type SubjectScore = {
 };
 
 /** Latest score per subject + trend (latest vs previous), sorted by subject. */
-export function studentSubjects(db: DB, studentId: number): SubjectScore[] {
+export function studentSubjects(db: DB, studentId: OwnerId): SubjectScore[] {
   const rows = db.grades
     .filter((g) => g.studentId === studentId)
     .sort(
@@ -44,7 +44,7 @@ export function avgScore(db: DB, studentId: number): number {
 }
 
 /** Class names this teacher teaches, sorted. */
-export function teacherClasses(db: DB, teacherId: number): string[] {
+export function teacherClasses(db: DB, teacherId: OwnerId): string[] {
   return db.teachings
     .filter((t) => t.teacherId === teacherId)
     .map((t) => db.classes.find((c) => c.id === t.classId)?.name ?? "")

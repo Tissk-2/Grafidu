@@ -1,4 +1,4 @@
-import { getDB, update } from "@/lib/store";
+import { getDB, update, type OwnerId } from "@/lib/store";
 import type { SessionUser, Role } from "@/lib/auth";
 
 /**
@@ -98,7 +98,7 @@ export function actionSummary(name: string, args: Record<string, unknown>): stri
 
 /** Records an executed/failed action so the chat history can audit it. */
 export function recordAction(
-  userId: number,
+  userId: OwnerId,
   tool: ToolName,
   payload: string,
   status: "executed" | "failed" | "declined",

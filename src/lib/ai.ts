@@ -228,7 +228,6 @@ export function createPendingAction(
   tool: ToolName,
   args: Record<string, unknown>
 ): number {
-  const db = getDB();
   let actionId = 0;
   update((d) => {
     actionId = d.nextId++;

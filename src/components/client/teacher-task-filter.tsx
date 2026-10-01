@@ -8,14 +8,11 @@ import Link from "next/link";
  * The class card click (sidebar) sets the active class and reloads the list.
  */
 export function TeacherTaskFilter({
-  classes,
   tasks,
 }: {
-  classes: { name: string; active?: boolean }[];
   tasks: { id: number; title: string; due: string; submitted: number; total: number; status: string }[];
 }) {
   const [q, setQ] = useState("");
-  const [activeClass, setActiveClass] = useState(classes.find((c) => c.active)?.name ?? classes[0]?.name ?? "");
 
   const filtered = tasks.filter((t) => t.title.toLowerCase().includes(q.toLowerCase()));
 
