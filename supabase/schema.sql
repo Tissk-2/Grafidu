@@ -255,6 +255,31 @@ create policy "own chat" on chat_messages
   for all using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- ---------- storage: avatar profil ----------
+-- Dipakai tombol "Ubah Foto" di halaman Pengaturan. Setiap user hanya boleh
+-- menulis di foldernya sendiri: avatars/<auth.uid>/…
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "avatar read" on storage.objects;
+create policy "avatar read" on storage.objects
+  for select using (bucket_id = 'avatars');
+
+drop policy if exists "avatar insert" on storage.objects;
+create policy "avatar insert" on storage.objects
+  for insert with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "avatar update" on storage.objects;
+create policy "avatar update" on storage.objects
+  for update using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
 -- ============================================================
 -- CONTOH ISI DATA (hapus tanda -- untuk menjalankan)
 -- Ganti uuid di bawah dengan id user dari tabel profiles.

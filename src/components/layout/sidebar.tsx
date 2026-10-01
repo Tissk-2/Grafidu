@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { id } from "date-fns/locale";
 import { Add, People } from "iconsax-reactjs";
 import { LogOut } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { logout, avatarSrc } from "@/lib/auth";
 import { Calendar } from "@/components/ui/calendar";
 
 export type TodayTask = { id: string; title: string; sub: string; done: boolean };
@@ -237,7 +237,7 @@ export function Sidebar({
           onClick={() => setMenuOpen((v) => !v)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={user.avatar.startsWith("/") ? user.avatar : "/" + user.avatar} alt={user.name} />
+          <img src={avatarSrc(user.avatar)} alt={user.name} />
           <span>
             <b>{user.name}</b>
             <span>{user.sub}</span>

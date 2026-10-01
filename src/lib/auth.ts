@@ -18,6 +18,16 @@ export type SessionUser = {
   prefs: string;
 };
 
+/**
+ * Kolom `profiles.avatar` boleh berisi path lokal ("/assets/…"), nama file di
+ * /public, atau URL penuh dari Supabase Storage. Hanya dua pertama yang perlu
+ * diawali "/" — URL absolut harus dilewati apa adanya.
+ */
+export function avatarSrc(avatar: string): string {
+  if (avatar.startsWith("http") || avatar.startsWith("/")) return avatar;
+  return "/" + avatar;
+}
+
 type ProfileRow = {
   role: Role | string | null;
   name: string | null;

@@ -161,8 +161,8 @@ export function TeacherRightbar({
             Lihat Semua
           </Link>
         </div>
-        {announcements.map((a) => (
-          <div key={a.title} className={"ann-item " + (a.hl ? "hl" : "gy")}>
+        {announcements.map((a, i) => (
+          <div key={`${a.title}-${i}`} className={"ann-item " + (a.hl ? "hl" : "gy")}>
             <b>{a.title}</b>
             <p>{a.body}</p>
             <time>{a.when}</time>
