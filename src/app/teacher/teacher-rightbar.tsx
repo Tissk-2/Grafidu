@@ -30,8 +30,9 @@ export default function TeacherRightbarSlot() {
           date: p.date,
         })) as never
       }
+      gradesHref="/teacher/grades"
       aiNote={`Nilai rata-rata ${lowest?.nama ?? "siswa"} masih paling rendah nih. Saya bakal siapin beberapa kuis tambahan buat bantu dia catch up.`}
-      ctaHref="/teacher/quiz"
+      ctaHref="/teacher/quiz-maker"
       ctaLabel="Buat Kuis"
     />
   );

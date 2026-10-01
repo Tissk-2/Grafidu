@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, TaskSquare, Chart1, Star, Book, MessageQuestion, Graph } from "iconsax-reactjs";
+import { Home, TaskSquare, Chart1, Book, MessageQuestion, Graph } from "iconsax-reactjs";
 import { Sparkles } from "lucide-react";
 
 type Item = { label: string; href: string; icon: React.ReactNode };
@@ -18,8 +18,8 @@ export function BottomNav({ role, active }: { role: "student" | "teacher"; activ
           { label: "Tasks", href: "/teacher/tasks", icon: <TaskSquare /> },
           { label: "Materi", href: "/teacher/materi", icon: <Book /> },
           { label: "Grades", href: "/teacher/grades", icon: <Chart1 /> },
-          { label: "Quiz Maker", href: "/teacher/quiz", icon: <MessageQuestion /> },
-          { label: "AI Agent", href: "/teacher/ai", icon: <Star /> },
+          { label: "Quiz Maker", href: "/teacher/quiz-maker", icon: <MessageQuestion /> },
+          { label: "AI Agent", href: "/teacher/ai-agent", icon: <Sparkles /> },
         ];
 
   return (

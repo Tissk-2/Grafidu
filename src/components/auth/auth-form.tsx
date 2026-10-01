@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+function dashboardPath(role?: string | null): string {
+  if (role === "teacher") return "/teacher/home";
+  if (role === "admin") return "/admin";
+  return "/student/home";
+}
 
 export default function AuthForm() {
   const router = useRouter();
@@ -13,6 +19,39 @@ export default function AuthForm() {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // Auto auth: kalau sesi masih ada (sudah login), langsung lempar ke dashboard
+  // tanpa harus isi form lagi. Ini cover navigasi client-side / tombol back.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user || cancelled) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        const role = (profile as { role?: string } | null)?.role;
+        if (role && !cancelled) {
+          router.replace(dashboardPath(role));
+          return;
+        }
+      } catch {
+        // Abaikan — biarkan form tampil.
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -92,7 +131,9 @@ export default function AuthForm() {
   return (
     <div className="auth-box">
       <h2>Welcome back</h2>
-      <p className="sub">Sign in to see what needs attention today.</p>
+      <p className="sub">
+        {checking ? "Checking your session..." : "Sign in to see what needs attention today."}
+      </p>
 
       {error ? (
         <div

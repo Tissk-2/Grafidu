@@ -714,9 +714,68 @@ export const dummyGuruData = {
       ],
     },
   ],
+  /**
+   * Kuis buatan AI milik guru (lintas kelas) untuk /teacher/quiz-maker.
+   * `soal` hanya pratinjau — lima soal per kuis cukup untuk demo akordeon.
+   */
+  kuis: [
+    {
+      id: 1,
+      kelas: "XI RPL B",
+      title: "Kuis: Teks Eksposisi",
+      topik: "Teks Eksposisi — struktur, kebahasaan, dan contoh",
+      jumlahSoal: 10,
+      durasiMenit: 20,
+      tanggal: "24 Agu 2026",
+      status: "Tayang",
+      soal: [
+        "Apa yang dimaksud dengan gagasan pokok dalam sebuah teks?",
+        "Tentukan tesis pada teks eksposisi berikut.",
+        "Sebutkan tiga konjungsi kausalitas yang tepat untuk teks eksposisi.",
+        "Tentukan struktur teks dari paragraf berikut.",
+        "Susunlah satu paragraf eksposisi tentang isu sampah sekolah.",
+      ],
+    },
+    {
+      id: 2,
+      kelas: "XI DKV A",
+      title: "Kuis: Unsur Intrinsik Cerpen",
+      topik: "Unsur Intrinsik Cerpen — tokoh, latar, konflik, amanat",
+      jumlahSoal: 15,
+      durasiMenit: 30,
+      tanggal: "18 Agu 2026",
+      status: "Tayang",
+      soal: [
+        "Identifikasi tokoh utama pada kutipan cerpen berikut.",
+        "Tentukan latar waktu dan tempat dari penggalan cerita ini.",
+        "Konflik apa yang mendasari kutipan cerpen tersebut?",
+        "Makna kata \"persuasif\" paling tepat adalah...",
+        "Tentukan amanat yang terkandung dalam cerpen berikut.",
+      ],
+    },
+    {
+      id: 3,
+      kelas: "XI RPL C",
+      title: "Kuis: Teks Pidato Persuasif",
+      topik: "Teks Pidato Persuasif — struktur dan teknik kebahasaan",
+      jumlahSoal: 10,
+      durasiMenit: 20,
+      tanggal: "12 Sep 2026",
+      status: "Draft",
+      soal: [
+        "Susunlah pembuka pidato yang sesuai untuk acara peluncuran produk karya siswa.",
+        "Pilihlah kalimat persuasif yang menggunakan ejaan baku dengan benar.",
+        "Tentukan struktur teks dari paragraf pidato berikut.",
+        "Cocokkan jenis kalimat ajakan dengan konteks penggunaannya.",
+        "Analisislah data pendukung argumen pada pidato berikut.",
+      ],
+    },
+  ],
 };
 
 export type GuruClass = (typeof dummyGuruData.dataKelas)[number];
+export type GuruMateri = GuruClass["materi"][number];
+export type GuruQuiz = (typeof dummyGuruData.kuis)[number];
 
 /** Look up one class by id — routes are `/teacher/home/[id]`. */
 export function findClass(id: number): GuruClass | undefined {

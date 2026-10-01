@@ -1,15 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AuthLeft from "@/components/auth/auth-left";
 import { createClient } from "@/lib/supabase/client";
 
+function dashboardPath(role?: string | null): string {
+  if (role === "teacher") return "/teacher/home";
+  if (role === "admin") return "/admin";
+  return "/student/home";
+}
+
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto auth: sudah login tidak perlu reset password dari sini.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user || cancelled) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        const role = (profile as { role?: string } | null)?.role;
+        if (role && !cancelled) router.replace(dashboardPath(role));
+      } catch {
+        // Abaikan — biarkan form tampil.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
