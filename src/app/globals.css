@@ -1798,7 +1798,11 @@
     color: var(--gray-4);
   }
   .side-user-wrap {
-    position: relative;
+    /* Sticky: kartu akun selalu terlihat di dasar sidebar walaupun konten
+       sidebar di-scroll. sticky sekaligus jadi anchor popup menu (absolute). */
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
     margin-top: auto;
   }
   .side-user {
@@ -1811,7 +1815,7 @@
   }
   button.side-user {
     width: 100%;
-    background: none;
+    background: #fff;
     font: inherit;
     text-align: left;
     cursor: pointer;
