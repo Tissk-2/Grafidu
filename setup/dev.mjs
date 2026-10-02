@@ -199,53 +199,6 @@ console.log("\nStarting Next.js dev server… (Ctrl+C to stop — the database i
 const next = spawn("npm", ["run", "dev:next"], { stdio: "inherit", cwd: root, shell: isWin });
 
 // ---- 4. export otomatis saat dev server keluar -------------------------------
-
-/**
- * Buat dump portable untuk server PostgreSQL yang lebih tua dari yang dipakai
- * lokal (VPS sering tertinggal satu-dua major version). pg_dump lokal = PG 17/18,
- * jadi ada tiga hal yang GAGAL di server lama:
- *
- *   1. `SET transaction_timeout = 0;`  → GUC hanya ada di PG 17+.
- *   2. `\restrict` / `\unrestrict`      → meta-command psql 18 (unknown di psql lama).
- *   3. Body fungsi `LANGUAGE sql … RETURN expr;` → sintaks SQL-standard hanya
- *      ada di PG 14+. Kalau gagal, function auth.uid()/auth.role() TIDAK terbentuk,
- *      lalu 25 policy RLS yang memakainya gagal dibuat → tabel kosong tanpa error.
- *
- * Transformasi di bawah hanya mengubah bentuk sintaks; isi data & skema tetap.
- */
-function makePortable(sqlText) {
-  const notes = [];
-
-  // 1. GUC PG17+.
-  const beforeGuc = sqlText;
-  sqlText = sqlText.replace(/^SET transaction_timeout = 0;$/gm, "");
-  if (sqlText !== beforeGuc) notes.push("dropped SET transaction_timeout (PG17+)");
-
-  // 2. Meta-command psql 18.
-  const beforeRestrict = sqlText;
-  sqlText = sqlText.replace(/^\\(un)?restrict .*$/gm, "");
-  if (sqlText !== beforeRestrict) notes.push("dropped \\restrict/\\unrestrict (psql 18)");
-
-  // 3. `LANGUAGE sql STABLE\n    RETURN expr;` → `AS $$ SELECT expr $$;`
-  //    Wajib ada SELECT-nya: tanpa itu `AS $$ COALESCE(...) $$` tersimpan tanpa
-  //    error tapi tidak bisa dipanggil — PG Parse body sebagai SQL statement
-  //    dan gagal saat inlining. Sudah diuji: uid()/role()/jwt() harus return
-  //    nilai, bukan "syntax error at or near COALESCE".
-  let converted = 0;
-  sqlText = sqlText.replace(
-    /(CREATE FUNCTION [^;]*?\n\s*LANGUAGE sql[^\n]*\n)(\s*)RETURN ([^\n]*);/g,
-    (_m, head, _indent, expr) => {
-      converted++;
-      return `${head}    AS $$ SELECT ${expr} $$;`;
-    },
-  );
-  if (converted > 0) {
-    notes.push(`rewrote ${converted} SQL-standard function bodies to AS $$ (PG14+)`);
-  }
-
-  return { sql: sqlText, notes };
-}
-
 let done = false;
 function exportDatabase() {
   if (done) return;
@@ -269,16 +222,11 @@ function exportDatabase() {
     process.exitCode = next.exitCode ?? 0;
     return;
   }
-  const { sql: portable, notes } = makePortable(readFileSync(tmp, "utf8"));
-
   writeFileSync(LATEST, readFileSync(setupDir + "/roles-prelude.sql"));
   appendFileSync(LATEST, "\n-- ==== database dump (auto-export saat dev exit) ====\n");
-  appendFileSync(LATEST, portable);
+  appendFileSync(LATEST, readFileSync(tmp));
   rmSync(tmp);
   console.log(`\n[dev] Database exported → setup/exports/latest-dump.sql`);
-  if (notes.length > 0) {
-    console.log(`[dev] Portable fixes applied: ${notes.join("; ")}`);
-  }
   console.log(`[dev] Commit & push it so your teammates get the latest data (PRIVATE repo only!).`);
   console.log(`[dev] Teammate restore:  psql -U postgres -d grafidu_admin_database -f setup/exports/latest-dump.sql`);
   process.exitCode = next.exitCode ?? 0;
