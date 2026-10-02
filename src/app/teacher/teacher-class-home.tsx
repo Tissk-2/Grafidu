@@ -22,13 +22,28 @@ import BodySync from "@/components/body-sync";
 export default function TeacherClassHome() {
   const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
-  const { tasks, roster, announcements, classes, classTotals } = useTeacherShellData();
+  const { tasks, roster, announcements, classes, classTotals, classesLoading } =
+    useTeacherShellData();
 
   useTitle(`Dashboard ${kelas?.name ?? "Kelas"} — Grafidu`);
 
   // useRequireUser null saat session resolve; kelas null saat kelas pertama
-  // belum ter-load — skeleton, bukan kosong.
-  if (!u || !kelas) return <MainSkeleton />;
+  // belum ter-load — skeleton, bukan kosong. Tapi begitu daftar kelas selesai
+  // diambil dan kosong, guru memang belum mengampu kelas apa pun — tampilkan
+  // empty state, bukan skeleton yang tidak pernah selesai.
+  if (!u || classesLoading || (!kelas && classes.length > 0)) return <MainSkeleton />;
+
+  if (!kelas) {
+    return (
+      <div className="empty-state mt-10 block">
+        <b>Belum mengampu kelas</b>
+        <span>
+          Akun ini belum terdaftar sebagai pengampu kelas mana pun. Klik tombol + di panel
+          “Kelas yang diampu” pada sidebar untuk membuat kelas baru.
+        </span>
+      </div>
+    );
+  }
 
   const aktif = tasks.filter((t) => !t.isCompleted).length;
 

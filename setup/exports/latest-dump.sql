@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict s44ZNcmfFjtrk1dbRE6EfGvGik6SRYXOYkmi1PZu48xVCrM0G2su1Jb3A9o6kHO
+\restrict iTD4U33FAlN3qBNXSlxJvaoK0YvvTBZnufsvGADYGzURDicslBiNvLqkC1mW5S2
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -1628,6 +1628,7 @@ COPY public.quizzes (id, class_id, created_by, title, topic, difficulty, num_que
 --
 
 COPY public.sessions (id, user_id, token_hash, user_agent, created_at, last_seen_at, expires_at) FROM stdin;
+fd6483ff-0050-40df-9822-ef510d660b38	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	0aa9d7f77e7f35f7483d1df7a8ec08a83d1167a8360df0411ad2f3efa628f0a9	\N	2026-10-02 18:44:48.672326+07	2026-10-02 18:44:49.502195+07	2026-11-01 18:44:48.672326+07
 \.
 
 
@@ -3545,5 +3546,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict s44ZNcmfFjtrk1dbRE6EfGvGik6SRYXOYkmi1PZu48xVCrM0G2su1Jb3A9o6kHO
+\unrestrict iTD4U33FAlN3qBNXSlxJvaoK0YvvTBZnufsvGADYGzURDicslBiNvLqkC1mW5S2
 

@@ -54,7 +54,7 @@ export default function TeacherShell({ children }: { children: React.ReactNode }
       // Shell harus tetap terpasang sebelum session resolve — fallback ke logo.
       user: {
         name: u?.name ?? "Guru",
-        sub: mapel,
+        sub: u?.subject ?? "...",
         avatar: u?.avatar ?? "/assets/logo.png",
       },
       tasksToday: [],

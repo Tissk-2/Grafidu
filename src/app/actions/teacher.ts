@@ -211,7 +211,7 @@ export async function createMaterial(input: {
 
 export async function updateMaterial(
   id: string,
-  patch: { title: string; description: string; attachments: string[]; status: string }
+  patch: { title: string; description: string; attachments: string[]; status: string },
 ): Promise<void> {
   const user = await requireTeacher();
   // Boleh dikelola guru pengampu kelas materinya (bukan hanya pembuatnya).
@@ -316,7 +316,11 @@ export async function fetchTaskSubmissions(taskId: string): Promise<SubmissionRo
 }
 
 /** Simpan nilai + umpan balik ke task_statuses (persisten, bukan store). */
-export async function saveGrade(submissionId: string, score: number, feedback: string): Promise<void> {
+export async function saveGrade(
+  submissionId: string,
+  score: number,
+  feedback: string,
+): Promise<void> {
   const user = await requireTeacher();
   await sql`
     UPDATE public.task_statuses ts
@@ -477,7 +481,7 @@ export async function deleteQuiz(id: string): Promise<void> {
 export async function createClassAnnouncement(
   classId: string,
   title: string,
-  body: string
+  body: string,
 ): Promise<void> {
   const user = await requireTeacher();
   await requireTeaching(user, classId);

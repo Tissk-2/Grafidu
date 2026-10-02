@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import type { SessionUser } from "@/lib/auth";
 import {
@@ -175,7 +168,16 @@ export function TeacherShellDataProvider({
       classLoading: classData === null,
       refresh,
     }),
-    [classes, classesLoading, classTotals, activeClassId, select, classData, announcements, refresh],
+    [
+      classes,
+      classesLoading,
+      classTotals,
+      activeClassId,
+      select,
+      classData,
+      announcements,
+      refresh,
+    ],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

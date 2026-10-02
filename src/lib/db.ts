@@ -15,7 +15,7 @@ function createSql(): postgres.Sql {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error(
-      "DATABASE_URL belum diisi — isi .env.local dengan koneksi Postgres self-hosted."
+      "DATABASE_URL belum diisi — isi .env.local dengan koneksi Postgres self-hosted.",
     );
   }
   return postgres(url, {
