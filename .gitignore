@@ -40,3 +40,9 @@ gui-test-screenshots/
 # DB dumps — contain user data & password hashes, never commit
 /full-dump.sql
 /auth-extra-data.sql
+
+# DB export dari export.sh — berisi data user, jangan commit
+/grafidu-export-*.sql
+
+# sementara dari auto-export dev.mjs
+setup/exports/.dump-in-progress.sql
