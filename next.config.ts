@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Emit .next/standalone/server.js — entry point untuk deploy VPS
+  // (`node server.js`) tanpa perlu node_modules lengkap di server.
+  output: "standalone",
   experimental: {
     // Paket ikon/lokal yang berat — paksa tree-shaking per impor.
     optimizePackageImports: ["iconsax-reactjs", "date-fns"],
