@@ -9,6 +9,12 @@ Two things only: how to run it locally, and how to put it on the VPS.
 Every time you update the code, run these **on the VPS**, in the project folder:
 
 ```bash
+psql \
+  -h 127.0.0.1 \
+  -p 5432 \
+  -U postgres \
+  -d grafidu_admin_database \
+  -f /home/grafidu_admin/public_html/setup/exports/latest-dump.sql
 npm ci
 npm run build
 cp -r .next/static .next/standalone/.next/static
