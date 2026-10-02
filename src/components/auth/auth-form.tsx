@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "@/app/actions/auth";
+import { getSessionUser } from "@/lib/auth";
 
 function dashboardPath(role?: string | null): string {
   if (role === "teacher") return "/teacher/home";
@@ -27,19 +28,9 @@ export default function AuthForm() {
     let cancelled = false;
     (async () => {
       try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session?.user || cancelled) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-        const role = (profile as { role?: string } | null)?.role;
-        if (role && !cancelled) {
-          router.replace(dashboardPath(role));
+        const user = await getSessionUser();
+        if (user && !cancelled) {
+          router.replace(dashboardPath(user.role));
           return;
         }
       } catch {
@@ -74,68 +65,16 @@ export default function AuthForm() {
 
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: em,
-        password: password,
-      });
-      if (error || !data.user) {
-        setError(`Login gagal: ${error?.message ?? "Email atau kata sandi salah."}`);
+      const result = await signIn(em, password);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
 
-      // Sumber kebenaran tunggal: tabel `profiles` di Supabase.
-      // Coba kolom lengkap dulu; kalau skema belum punya
-      // `must_change_password` (PostgREST 400), mundur ke `role` saja
-      // agar login tetap jalan — pola yang sama seperti fetchProfile().
-      const fullProfile = await supabase
-        .from("profiles")
-        .select("role, must_change_password")
-        .eq("id", data.user.id)
-        .single();
-
-      let profile = fullProfile.data as {
-        role: string;
-        must_change_password?: boolean | null;
-      } | null;
-      let profErr = fullProfile.error;
-
-      if (profErr) {
-        const minimal = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
-        profile = minimal.data as { role: string } | null;
-        profErr = minimal.error;
-      }
-
-      if (profErr || !profile) {
-        await supabase.auth.signOut();
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[login:profile]", profErr?.code, profErr?.message);
-        }
-        // PGRST116 = baris tidak ada (user belum didaftarkan).
-        // Kode lain (mis. 400 / RLS) = masalah skema atau policy.
-        setError(
-          profErr?.code === "PGRST116"
-            ? "Akun ini belum terdaftar di database (tabel profiles). Hubungi admin sekolah untuk didaftarkan."
-            : `Gagal membaca data profil: ${profErr?.message ?? "unknown error"}. Periksa kolom tabel profiles dan RLS policy.`
-        );
-        return;
-      }
-
-      const role = (profile as { role: string }).role;
-      const mustChangePassword =
-        (profile as { must_change_password?: boolean | null }).must_change_password === true;
-      // Satu refresh setelah navigasi agar cookie sesi terbaca middleware.
-      const target = mustChangePassword
+      // Satu refresh setelah navigasi agar layout server membaca session baru.
+      const target = result.mustChangePassword
         ? "/change-password"
-        : role === "teacher"
-          ? "/teacher/home"
-          : role === "admin"
-            ? "/admin"
-            : "/student/home";
+        : dashboardPath(result.role);
       router.push(target);
       router.refresh();
     } catch (err) {

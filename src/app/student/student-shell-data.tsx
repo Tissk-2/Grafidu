@@ -1,12 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { fetchAnnouncements, fetchSchoolTasks, fetchSubjectScores, fetchTodos, fetchTasksToday } from "@/app/actions/student";
 import {
-  fetchAnnouncements,
-  fetchSchoolTasks,
-  fetchSubjectScores,
-  fetchTodos,
-  fetchTasksToday,
   avgOf,
   aiNoteFromScores,
   type AnnouncementItem,
@@ -14,7 +10,7 @@ import {
   type SidebarTask,
   type SubjectScore,
   type TodoItem,
-} from "@/lib/supabase/queries";
+} from "@/lib/student-model";
 import type { SessionUser } from "@/lib/auth";
 import type { GradeRow } from "@/components/layout/rightbar";
 
@@ -55,11 +51,11 @@ export function StudentShellDataProvider({
     let cancelled = false;
 
     Promise.all([
-      fetchTasksToday(user),
-      fetchSubjectScores(user.id),
+      fetchTasksToday(),
+      fetchSubjectScores(),
       fetchAnnouncements(3),
-      fetchSchoolTasks(user),
-      fetchTodos(user.id),
+      fetchSchoolTasks(),
+      fetchTodos(),
     ]).then(([tasksToday, scores, announcements, schoolTasks, todos]) => {
       if (cancelled) return;
       setData({

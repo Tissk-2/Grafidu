@@ -4,8 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { dummyGuruData } from "@/lib/guru-demo";
-import { classAvg, parseIdDate, useRoutedClass } from "@/lib/guru";
+import { classAvg, useRoutedClass } from "@/lib/guru";
+import { useTeacherShellData } from "./teacher-shell-data";
+import { fmtDate } from "@/lib/format";
 import { StatCard } from "@/components/ui/stat-card";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import TaskCard from "@/components/ui/task-card";
@@ -13,37 +14,42 @@ import BottomCards from "./teacher-bottom-cards";
 import BodySync from "@/components/body-sync";
 
 /**
- * The dashboard's middle column. The sidebar and rightbar live in
- * `src/app/teacher/layout.tsx`, so switching class or page re-renders only
- * this component — the shell stays mounted and the data just swaps in place.
+ * Kolom tengah dashboard. Sidebar dan rightbar tinggal di
+ * `src/app/teacher/layout.tsx`, jadi ganti kelas atau halaman hanya merender
+ * ulang komponen ini — shell tetap terpasang dan datanya bertukar di tempat.
+ * Semua data live dari database (tasks, roster, pengumuman) lewat shell context.
  */
 export default function TeacherClassHome() {
   const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
+  const { tasks, roster, announcements, classes, classTotals } = useTeacherShellData();
 
-  useTitle(`Dashboard ${kelas.kelas} — Grafidu`);
+  useTitle(`Dashboard ${kelas?.name ?? "Kelas"} — Grafidu`);
 
-  // useRequireUser returns null while the session resolves. The routed class is
-  // always defined, so this is only ever the auth wait — skeleton, not blank.
-  if (!u) return <MainSkeleton />;
+  // useRequireUser null saat session resolve; kelas null saat kelas pertama
+  // belum ter-load — skeleton, bukan kosong.
+  if (!u || !kelas) return <MainSkeleton />;
 
-  const aktif = kelas.tugas.filter((t) => !t.completed).length;
+  const aktif = tasks.filter((t) => !t.isCompleted).length;
 
-  const byDeadline = [...kelas.tugas].sort(
-    (a, b) => parseIdDate(b.deadline).getTime() - parseIdDate(a.deadline).getTime(),
+  const byDeadline = [...tasks].sort(
+    (a, b) => new Date(b.dueAt).getTime() - new Date(a.dueAt).getTime(),
   );
-  // Tasks that already have submissions waiting to be graded
-  const perluDinilai = byDeadline.filter((t) => t.muridSelesai > 0).slice(0, 3);
+  // Tugas yang sudah ada pengumpulan menunggu penilaian
+  const perluDinilai = byDeadline.filter((t) => t.submitted > 0).slice(0, 3);
+
+  // Mapel tampil di bawah nama — gabungan unik mapel yang diampu.
+  const mapel = [...new Set(classes.map((c) => c.subject).filter(Boolean))].join(" • ");
 
   return (
     <>
       <BodySync dataPage="teacher-home" />
       <div className="profile-head">
-        <Image src={u.avatar} alt={dummyGuruData.name} width={96} height={96} />
+        <Image src={u.avatar} alt={u.name} width={96} height={96} />
         <div>
           <div className="profile-name">
-            {dummyGuruData.name} <span className="dot"></span>
-            <small>{dummyGuruData.mapel}</small>
+            {u.name} <span className="dot"></span>
+            <small>{mapel}</small>
           </div>
           <div className="profile-sub">
             Kelola kelas, pantau pembelajaran, dan buat pembelajaran yang lebih efektif
@@ -51,10 +57,10 @@ export default function TeacherClassHome() {
         </div>
       </div>
 
-      <h2 className="h2">Overview — {kelas.kelas}</h2>
+      <h2 className="h2">Overview — {kelas.name}</h2>
       <div className="stat-grid">
-        <StatCard label="Total Tugas" value={kelas.tugas.length} tone="green" />
-        <StatCard label="Rata Rata Kelas" value={classAvg(kelas)} tone="blue" />
+        <StatCard label="Total Tugas" value={tasks.length} tone="green" />
+        <StatCard label="Rata Rata Kelas" value={classAvg(roster)} tone="blue" />
         <StatCard label="Tugas Aktif" value={aktif} tone="purple" />
       </div>
 
@@ -70,13 +76,23 @@ export default function TeacherClassHome() {
       <ul className="grid gap-2.5">
         {byDeadline.slice(0, 3).map((t) => (
           <li key={t.id}>
-            <TaskCard task={t} total={kelas.totalMurid} />
+            <TaskCard
+              task={{
+                id: t.id,
+                name: t.title,
+                ditugaskan: fmtDate(t.assignedAt),
+                deadline: fmtDate(t.dueAt),
+                completed: t.isCompleted,
+                muridSelesai: t.submitted,
+              }}
+              total={classTotals[kelas.id] ?? 0}
+            />
           </li>
         ))}
       </ul>
 
       {/* Aktivitas & Perlu Dinilai */}
-      <BottomCards pengumuman={kelas.pengumuman} perluDinilai={perluDinilai} />
+      <BottomCards pengumuman={announcements} perluDinilai={perluDinilai} />
     </>
   );
 }

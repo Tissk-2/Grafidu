@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createClass, listClassesDetailed, type ClassSummary } from "@/lib/admin";
+import { createClass, listClassesDetailed } from "@/app/actions/admin";
+import type { ClassSummary } from "@/lib/admin-model";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /**

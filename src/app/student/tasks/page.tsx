@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRequireUser } from "@/lib/auth";
-import { fetchClassTeachers, type ClassTeacher } from "@/lib/supabase/queries";
+import { fetchClassTeachers } from "@/app/actions/student";
+import type { ClassTeacher } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
 import { useTitle } from "@/lib/hooks";
 import StudentTasksSkeleton from "@/components/ui/student-tasks-skeleton";
@@ -25,7 +26,7 @@ export default function StudentTasksPage() {
   useEffect(() => {
     if (!u) return;
     let cancelled = false;
-    fetchClassTeachers(u.className).then((c) => {
+    fetchClassTeachers().then((c) => {
       if (!cancelled) setClasses(c);
     });
     return () => {

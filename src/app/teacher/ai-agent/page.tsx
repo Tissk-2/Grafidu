@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { dummyGuruData, type GuruClass } from "@/lib/guru-demo";
-import { classAvg, parseIdDate, studentsWithStatus, useRoutedClass } from "@/lib/guru";
+import { classAvg, studentsWithStatus, useRoutedClass } from "@/lib/guru";
+import { useTeacherShellData } from "../teacher-shell-data";
+import { fmtDate } from "@/lib/format";
+import type { MaterialRow, RosterRow, TeacherTask } from "@/lib/teacher-model";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
 
@@ -18,22 +20,30 @@ const SUGGESTIONS = [
   "Buatkan latihan soal Fisika",
 ];
 
+/** Data kelas aktif yang jadi konteks jawaban AI (live dari shell). */
+type AiClassContext = {
+  className: string;
+  materials: MaterialRow[];
+  tasks: TeacherTask[];
+  roster: RosterRow[];
+};
+
 /**
- * Prototipe AI lokal: jawaban deterministik dari keyword + data dummy kelas
- * yang sedang aktif (rata-rata, siswa terlemah, materi, tenggat) supaya chat
+ * Prototipe AI lokal: jawaban deterministik dari keyword + data kelas aktif
+ * LIVE dari database (rata-rata, siswa terlemah, materi, tenggat) supaya chat
  * terasa hidup tanpa backend. Ganti dengan pemanggilan model saat production.
  */
-function teacherAiReply(text: string, kelas: GuruClass): string {
+function teacherAiReply(text: string, kelas: AiClassContext): string {
   const t = text.toLowerCase();
-  const students = studentsWithStatus(kelas); // terlemah dulu
+  const students = studentsWithStatus(kelas.roster); // terlemah dulu
   const lowest = students[0];
-  const avg = classAvg(kelas);
+  const avg = classAvg(kelas.roster);
 
   if (/(rencana|plan)/.test(t)) {
-    const m1 = kelas.materi[0]?.title ?? "materi kelas";
-    const m2 = kelas.materi[1]?.title ?? m1;
+    const m1 = kelas.materials[0]?.title ?? "materi kelas";
+    const m2 = kelas.materials[1]?.title ?? m1;
     return (
-      `Siap! Rencana seminggu untuk ${kelas.kelas}:\n` +
+      `Siap! Rencana seminggu untuk ${kelas.className}:\n` +
       `1. Review materi "${m1}" 20 menit per hari.\n` +
       `2. Kuis pendek "${m2}" tiap Rabu.\n` +
       `3. Pendampingan khusus ${lowest?.nama ?? "siswa terlemah"} (rata-rata ${lowest?.rata ?? 0}).`
@@ -41,8 +51,8 @@ function teacherAiReply(text: string, kelas: GuruClass): string {
   }
   if (/(materi|pelajari)/.test(t)) {
     return (
-      `Materi yang sudah kamu bagikan di ${kelas.kelas}:\n` +
-      kelas.materi.map((m, i) => `${i + 1}. ${m.title}`).join("\n") +
+      `Materi yang sudah kamu bagikan di ${kelas.className}:\n` +
+      kelas.materials.map((m, i) => `${i + 1}. ${m.title}`).join("\n") +
       `\n\nMau kubuatkan kuis dari salah satunya?`
     );
   }
@@ -52,7 +62,7 @@ function teacherAiReply(text: string, kelas: GuruClass): string {
       .map((s) => `${s.nama} (${s.rata})`)
       .join(" dan ");
     return (
-      `Rata-rata ${kelas.kelas} semester ini ${avg}/100. ` +
+      `Rata-rata ${kelas.className} semester ini ${avg}/100. ` +
       `Yang paling perlu perhatian: ${dua}. Mau kubuatkan kuis tambahan untuk mereka?`
     );
   }
@@ -63,17 +73,17 @@ function teacherAiReply(text: string, kelas: GuruClass): string {
     );
   }
   if (/(tenggat|jadwal|deadline|agenda)/.test(t)) {
-    const rows = [...kelas.tugas]
-      .sort((a, b) => parseIdDate(b.deadline).getTime() - parseIdDate(a.deadline).getTime())
+    const rows = [...kelas.tasks]
+      .sort((a, b) => new Date(b.dueAt).getTime() - new Date(a.dueAt).getTime())
       .slice(0, 3);
     return (
-      `Tenggat tugas ${kelas.kelas} terdekat:\n` +
-      rows.map((r) => `- ${r.name}: ${r.deadline}`).join("\n")
+      `Tenggat tugas ${kelas.className} terdekat:\n` +
+      rows.map((r) => `- ${r.title}: ${fmtDate(r.dueAt)}`).join("\n")
     );
   }
   if (/(siswa|perhatian|rendah|remedial)/.test(t)) {
     return (
-      `Siswa yang perlu pendampingan di ${kelas.kelas}: ` +
+      `Siswa yang perlu pendampingan di ${kelas.className}: ` +
       students
         .slice(0, 3)
         .map((s) => `${s.nama} (${s.rata})`)
@@ -91,14 +101,15 @@ function teacherAiReply(text: string, kelas: GuruClass): string {
 export default function TeacherAiAgentPage() {
   // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
   // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
+  const { tasks, roster, materials } = useTeacherShellData();
   useTitle("AI Agent — Grafidu");
 
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "ai",
-      text: `Hai ${dummyGuruData.name.split(" ").slice(0, 2).join(" ")}! 👋 Aku AI Agent Grafidu. Aku sudah lihat nilai dan tugas kelas Anda minggu ini — mau mulai dari mana?`,
+      text: `Hai ${u ? u.name.split(" ").slice(0, 2).join(" ") : "Bu"}! 👋 Aku AI Agent Grafidu. Aku sudah lihat nilai dan tugas kelas Anda minggu ini — mau mulai dari mana?`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -109,7 +120,9 @@ export default function TeacherAiAgentPage() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [messages, busy]);
 
-  if (!u) return <MainSkeleton />;
+  if (!u || !kelas) return <MainSkeleton />;
+  // TS narrowing tidak menembus closure setTimeout — kunci di konstanta lokal.
+  const activeKelas = kelas;
 
   function send(text?: string) {
     const t = (text ?? input).trim();
@@ -121,7 +134,12 @@ export default function TeacherAiAgentPage() {
     window.setTimeout(() => {
       let reply: string;
       try {
-        reply = teacherAiReply(t, kelas);
+        reply = teacherAiReply(t, {
+        className: activeKelas.name,
+        materials,
+        tasks,
+        roster,
+      });
       } catch {
         reply = "Maaf, aku tidak bisa menjawab sekarang.";
       }

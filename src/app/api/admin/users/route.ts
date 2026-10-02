@@ -1,38 +1,24 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@/lib/supabase/server";
+import bcrypt from "bcryptjs";
+import { sql } from "@/lib/db";
+import { getSessionUser } from "@/lib/session";
 
 /**
  * POST /api/admin/users — buat akun siswa/guru baru.
  *
- * Membuat user di auth.users (butuh service-role key, tidak bisa dari
- * browser), lalu baris profiles + enrollment. Pemanggil wajib admin.
+ * Menulis langsung ke Postgres self-hosted: baris auth.users (hash bcrypt,
+ * email terkonfirmasi) + profiles + enrollment dalam SATU transaksi —
+ * tidak ada lagi rollback manual ala service-role Supabase.
+ * Pemanggil wajib admin.
  * Body: { role, name, email, phone?, classId?, subject?, password }
  */
-
-function serviceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createServerClient(url, key, {
-    cookies: { getAll: () => [], setAll: () => {} },
-  });
-}
 
 type Gate = { status: number; message: string } | null;
 
 async function requireAdmin(): Promise<Gate> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) return { status: 401, message: "Kamu harus login terlebih dahulu." };
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if ((profile as { role?: string } | null)?.role !== "admin") {
+  if (user.role !== "admin") {
     return { status: 403, message: "Hanya admin yang boleh melakukan aksi ini." };
   }
   return null;
@@ -44,17 +30,6 @@ export async function POST(request: Request) {
   const gate = await requireAdmin();
   if (gate) {
     return NextResponse.json({ error: gate.message }, { status: gate.status });
-  }
-
-  const admin = serviceClient();
-  if (!admin) {
-    return NextResponse.json(
-      {
-        error:
-          "SUPABASE_SERVICE_ROLE_KEY belum diisi di .env.local. Tambahkan service role key dari Dashboard Supabase (Settings → API) lalu restart dev server.",
-      },
-      { status: 500 }
-    );
   }
 
   let body: {
@@ -99,60 +74,63 @@ export async function POST(request: Request) {
     if (!body.classId) {
       return NextResponse.json({ error: "Pilih kelas untuk siswa." }, { status: 400 });
     }
-    const { data: cls, error: clsErr } = await admin
-      .from("classes")
-      .select("id, name")
-      .eq("id", body.classId)
-      .single();
-    if (clsErr || !cls) {
+    const classes = await sql<{ id: string; name: string }[]>`
+      SELECT id, name FROM public.classes WHERE id = ${body.classId} LIMIT 1
+    `;
+    if (!classes[0]) {
       return NextResponse.json({ error: "Kelas tidak ditemukan." }, { status: 400 });
     }
-    className = (cls as { name: string }).name;
+    className = classes[0].name;
   }
 
-  const { data: authData, error: authErr } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { name, role },
-  });
-  if (authErr || !authData?.user) {
-    const message = authErr?.message ?? "Gagal membuat user auth.";
-    const status = /already|registered|exists/i.test(message) ? 409 : 400;
-    return NextResponse.json(
-      { error: status === 409 ? "Email sudah terdaftar." : message },
-      { status }
-    );
-  }
+  const passwordHash = await bcrypt.hash(password, 10);
 
-  const userId = authData.user.id;
-  const { error: profErr } = await admin.from("profiles").insert({
-    id: userId,
-    role,
-    name,
-    email,
-    phone: phone || null,
-    subject: role === "teacher" ? subject : null,
-    class_name: className,
-    is_active: true,
-    must_change_password: true,
-  });
-  if (profErr) {
-    // Rollback user auth agar tidak ada akun yatim tanpa profil.
-    await admin.auth.admin.deleteUser(userId);
-    return NextResponse.json({ error: profErr.message }, { status: 500 });
-  }
+  try {
+    const userId = await sql.begin(async (tx) => {
+      const inserted = await tx<{ id: string }[]>`
+        INSERT INTO auth.users (
+          aud, role, email, encrypted_password, email_confirmed_at,
+          raw_app_meta_data, raw_user_meta_data,
+          created_at, updated_at, is_sso_user, is_anonymous
+        ) VALUES (
+          'authenticated', 'authenticated', ${email}, ${passwordHash}, now(),
+          ${sql.json({ provider: "email", providers: ["email"] })},
+          ${sql.json({ name, role })},
+          now(), now(), false, false
+        )
+        RETURNING id
+      `;
+      const id = inserted[0].id;
 
-  if (role === "student" && body.classId) {
-    const { error: enrollErr } = await admin
-      .from("enrollments")
-      .insert({ class_id: body.classId, student_id: userId });
-    if (enrollErr) {
-      await admin.from("profiles").delete().eq("id", userId);
-      await admin.auth.admin.deleteUser(userId);
-      return NextResponse.json({ error: enrollErr.message }, { status: 500 });
+      await tx`
+        INSERT INTO public.profiles (
+          id, role, name, email, phone, subject, class_name,
+          is_active, must_change_password
+        ) VALUES (
+          ${id}, ${role}, ${name}, ${email}, ${phone || null},
+          ${role === "teacher" ? subject : null},
+          ${className},
+          true, true
+        )
+      `;
+
+      if (role === "student" && body.classId) {
+        await tx`
+          INSERT INTO public.enrollments (class_id, student_id)
+          VALUES (${body.classId}, ${id})
+        `;
+      }
+
+      return id;
+    });
+
+    return NextResponse.json({ id: userId, temporaryPassword: password });
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "23505") {
+      return NextResponse.json({ error: "Email sudah terdaftar." }, { status: 409 });
     }
+    const message = (err as Error).message ?? "Gagal membuat akun.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  return NextResponse.json({ id: userId, temporaryPassword: password });
 }

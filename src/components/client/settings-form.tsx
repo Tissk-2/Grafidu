@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera } from "lucide-react";
 import { avatarSrc, type SessionUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/client";
+import { changePassword, updateProfile } from "@/app/actions/auth";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -39,21 +39,17 @@ export default function SettingsForm({ initialUser }: { initialUser: SessionUser
     }
     setSavingProfile(true);
     try {
-      const supabase = createClient();
-      const { error: profErr } = await supabase
-        .from("profiles")
-        .update({ name: cleanName })
-        .eq("id", initialUser.id);
-      if (profErr) throw new Error(profErr.message);
-
-      if (cleanEmail !== initialUser.email) {
-        const { error: emailErr } = await supabase.auth.updateUser({ email: cleanEmail });
-        if (emailErr) throw new Error(emailErr.message);
-        await supabase.from("profiles").update({ email: cleanEmail }).eq("id", initialUser.id);
-        window.gtoast?.("Profil diperbarui. Cek email barumu untuk konfirmasi penggantian email.");
-      } else {
-        window.gtoast?.("Profil berhasil diperbarui.");
-      }
+      const emailChanged = cleanEmail !== initialUser.email;
+      const result = await updateProfile({
+        name: cleanName,
+        email: emailChanged ? cleanEmail : undefined,
+      });
+      if (!result.ok) throw new Error(result.error);
+      window.gtoast?.(
+        emailChanged
+          ? "Profil & email login berhasil diperbarui."
+          : "Profil berhasil diperbarui."
+      );
       router.refresh();
     } catch (err) {
       window.gtoast?.((err as Error).message, "error");
@@ -76,20 +72,11 @@ export default function SettingsForm({ initialUser }: { initialUser: SessionUser
     }
     setUploadingPhoto(true);
     try {
-      const supabase = createClient();
-      const ext = (file.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
-      const path = `${initialUser.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
-      if (upErr) throw new Error(upErr.message);
-
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      const { error: profErr } = await supabase
-        .from("profiles")
-        .update({ avatar: data.publicUrl })
-        .eq("id", initialUser.id);
-      if (profErr) throw new Error(profErr.message);
+      const body = new FormData();
+      body.set("file", file);
+      const res = await fetch("/api/upload/avatar", { method: "POST", body });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) throw new Error(data.error || "Gagal mengunggah foto.");
 
       window.gtoast?.("Foto profil berhasil diperbarui.");
       // Muat ulang agar sidebar & header ikut memakai avatar baru.
@@ -116,20 +103,8 @@ export default function SettingsForm({ initialUser }: { initialUser: SessionUser
     }
     setSavingPw(true);
     try {
-      const supabase = createClient();
-      // Supabase tidak mewajibkan sandi lama saat sesi aktif — verifikasi
-      // manual dengan sign-in ulang supaya kolom ini benar-benar dicek.
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email: initialUser.email,
-        password: currentPw,
-      });
-      if (signInErr) {
-        throw new Error(
-          signInErr.status === 400 ? "Kata sandi saat ini salah." : signInErr.message,
-        );
-      }
-      const { error } = await supabase.auth.updateUser({ password: newPw });
-      if (error) throw new Error(error.message);
+      const result = await changePassword(currentPw, newPw);
+      if (!result.ok) throw new Error(result.error);
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");

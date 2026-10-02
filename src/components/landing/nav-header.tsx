@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { getSessionUser } from "@/lib/auth";
 
 function dashboardPath(role?: string | null): string {
   if (role === "teacher") return "/teacher/home";
@@ -41,18 +41,9 @@ export default function NavHeader() {
     let cancelled = false;
     (async () => {
       try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session?.user || cancelled) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-        const role = (profile as { role?: string } | null)?.role;
-        if (role && !cancelled) setDashboardHref(dashboardPath(role));
+        const sessionUser = await getSessionUser();
+        if (!sessionUser || cancelled) return;
+        setDashboardHref(dashboardPath(sessionUser.role));
       } catch {
         // Abaikan — tetap tampil Sign in.
       }

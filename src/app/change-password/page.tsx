@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { getSessionUser, type SessionUser } from "@/lib/auth";
+import { changePassword } from "@/app/actions/auth";
+import { clearSessionCache, getSessionUser, type SessionUser } from "@/lib/auth";
 
 /**
  * Ganti kata sandi wajib untuk akun yang masih memakai sandi sementara dari
@@ -51,18 +51,13 @@ export default function ChangePasswordPage() {
     }
     setBusy(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPw });
-      if (error) {
-        setError(`Gagal mengganti kata sandi: ${error.message}`);
+      // Akun wajib-ganti: tanpa verifikasi sandi lama (baru saja login dengannya).
+      const result = await changePassword(null, newPw);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
-      if (user) {
-        await supabase
-          .from("profiles")
-          .update({ must_change_password: false })
-          .eq("id", user.id);
-      }
+      clearSessionCache();
       const target =
         user?.role === "teacher" ? "/teacher/home" : user?.role === "admin" ? "/admin" : "/student/home";
       router.replace(target);

@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
-import type { GuruClass } from "@/lib/guru-demo";
-
-type Task = GuruClass["tugas"][number];
+import type { AnnouncementItem } from "@/lib/student-model";
+import type { TeacherTask } from "@/lib/teacher-model";
 
 /**
  * The dashboard's two bottom cards: recent announcements, and tasks that have
@@ -16,8 +15,8 @@ export function BottomCards({
   pengumuman,
   perluDinilai,
 }: {
-  pengumuman: GuruClass["pengumuman"];
-  perluDinilai: Task[];
+  pengumuman: AnnouncementItem[];
+  perluDinilai: TeacherTask[];
 }) {
   return (
     <div className="mt-6 grid grid-cols-2 items-start gap-[13px]">
@@ -35,7 +34,7 @@ export function BottomCards({
         <div>
           {pengumuman.map((p, i) => (
             <div
-              key={p.id}
+              key={`${p.title}-${i}`}
               className={`flex items-center gap-3 py-3 ${
                 i < pengumuman.length - 1 ? "border-b border-[#E5E5E5]" : ""
               }`}
@@ -45,9 +44,9 @@ export function BottomCards({
               </span>
               <span className="min-w-0 flex-1">
                 <div className="truncate text-[14px] leading-[18px] font-medium text-[#222]">
-                  {p.nama}
+                  {p.title}
                 </div>
-                <div className="mt-0.5 truncate text-[12px] leading-4 text-[#777]">{p.date}</div>
+                <div className="mt-0.5 truncate text-[12px] leading-4 text-[#777]">{p.when}</div>
               </span>
             </div>
           ))}
@@ -77,10 +76,10 @@ export function BottomCards({
               </span>
               <span className="min-w-0 flex-1">
                 <div className="truncate text-[14px] leading-[18px] font-medium text-[#222]">
-                  {t.name}
+                  {t.title}
                 </div>
                 <div className="mt-0.5 truncate text-[12px] leading-4 text-[#777]">
-                  {t.muridSelesai} pengumpulan
+                  {t.submitted} pengumpulan
                 </div>
               </span>
             </Link>

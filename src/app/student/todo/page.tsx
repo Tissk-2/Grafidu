@@ -19,7 +19,7 @@ export default function StudentTodoPage() {
   return (
     <>
       <BodySync dataPage="student-todo" />
-      <StudentTodoManager userId={u.id} />
+      <StudentTodoManager />
     </>
   );
 }

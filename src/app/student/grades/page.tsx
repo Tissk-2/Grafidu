@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { avgOf } from "@/lib/supabase/queries";
+import { avgOf } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
 import { StatCard } from "@/components/ui/stat-card";
 import PageSkeleton from "@/components/ui/page-skeleton";

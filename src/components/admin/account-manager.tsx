@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { listAccounts, type AdminAccount } from "@/lib/admin";
+import { listAccounts } from "@/app/actions/admin";
+import type { AdminAccount } from "@/lib/admin-model";
 import { generateTemporaryPassword } from "@/lib/password";
 import AccountForm, { emptyAccountValues, type AccountFormValues } from "./account-form";
 import AdminSkeleton from "@/components/admin/admin-skeleton";

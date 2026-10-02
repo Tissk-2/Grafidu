@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { dummyGuruData, type GuruQuiz } from "@/lib/guru-demo";
 import { useRoutedClass } from "@/lib/guru";
+import { createQuiz, deleteQuiz, setQuizStatus } from "@/app/actions/teacher";
+import { useTeacherShellData } from "../teacher-shell-data";
+import { fmtDate } from "@/lib/format";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
 
@@ -24,6 +26,7 @@ const CHEVRON = (
 /**
  * Prototipe AI lokal: soal disusun dari template per tingkat kesulitan, {t}
  * diganti topik yang diketik guru. Cukup untuk demo sebelum backend AI siap.
+ * Kuis jadi tersimpan ke tabel quizzes/quiz_questions lewat server action.
  */
 const SOAL_TEMPLATES: Record<string, string[]> = {
   Mudah: [
@@ -59,31 +62,33 @@ const PREVIEW_SOAL = [
   "Cocokkan jenis teks dengan ciri-cirinya berikut.",
 ];
 
-const todayLabel = () =>
-  new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(
-    new Date(),
-  );
-
 /** Middle column only — the sidebar and rightbar come from the teacher layout. */
 export default function TeacherQuizMakerPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
-  const { classes } = useRoutedClass();
+  const u = useRequireUser("teacher");
+  const { kelas, classes } = useRoutedClass();
+  const { quizzes, refresh } = useTeacherShellData();
   useTitle("Quiz Maker — Grafidu");
 
-  const [quizzes, setQuizzes] = useState<GuruQuiz[]>(dummyGuruData.kuis);
-  const [selectedClass, setSelectedClass] = useState(classes[0]?.kelas ?? "");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [numQuestions, setNumQuestions] = useState(10);
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("Sedang");
   const [generating, setGenerating] = useState(false);
   const [invalidTopic, setInvalidTopic] = useState(false);
-  const [openIds, setOpenIds] = useState<Set<number>>(new Set());
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
 
-  if (!u) return <MainSkeleton />;
+  // Kelas default: kelas aktif, fallback kelas pertama.
+  useEffect(() => {
+    if (!selectedClassId && classes.length > 0) {
+      setSelectedClassId(kelas?.id ?? classes[0].id);
+    }
+  }, [classes, kelas?.id, selectedClassId]);
 
-  function toggleAccordion(id: number) {
+  if (!u || !kelas) return <MainSkeleton />;
+
+  const selectedClass = classes.find((c) => c.id === selectedClassId) ?? kelas;
+
+  function toggleAccordion(id: string) {
     setOpenIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -92,7 +97,7 @@ export default function TeacherQuizMakerPage() {
     });
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     const rawTopic = topic.trim();
     if (!rawTopic) {
       setInvalidTopic(true);
@@ -103,44 +108,49 @@ export default function TeacherQuizMakerPage() {
     setInvalidTopic(false);
     setGenerating(true);
 
-    const label = rawTopic.split("—")[0].trim().replace(/-+$/, "").trim() || rawTopic;
-    const templates = SOAL_TEMPLATES[difficulty] ?? SOAL_TEMPLATES.Sedang;
-    const soal: string[] = [];
-    for (let i = 0; i < numQuestions; i++) {
-      soal.push(templates[i % templates.length].replace(/\{t\}/g, label));
-    }
+    try {
+      const label = rawTopic.split("—")[0].trim().replace(/-+$/, "").trim() || rawTopic;
+      const templates = SOAL_TEMPLATES[difficulty] ?? SOAL_TEMPLATES.Sedang;
+      const soal: string[] = [];
+      for (let i = 0; i < numQuestions; i++) {
+        soal.push(templates[i % templates.length].replace(/\{t\}/g, label));
+      }
 
-    const newId = Math.max(...quizzes.map((q) => q.id), 0) + 1;
-    // Jeda singkat supaya animasi tombol generate terbaca sebagai "AI bekerja".
-    window.setTimeout(() => {
-      setQuizzes((prev) => [
-        {
-          id: newId,
-          kelas: selectedClass,
-          title: `Kuis: ${label}`,
-          topik: rawTopic,
-          jumlahSoal: soal.length,
-          durasiMenit: Math.max(10, soal.length * 2),
-          tanggal: todayLabel(),
-          status: "Draft",
-          soal,
-        },
-        ...prev,
-      ]);
-      setOpenIds((prev) => new Set(prev).add(newId));
-      setGenerating(false);
+      await createQuiz({
+        classId: selectedClass.id,
+        title: `Kuis: ${label}`,
+        topic: rawTopic,
+        difficulty,
+        durationMin: Math.max(10, soal.length * 2),
+        questions: soal,
+      });
+      refresh();
       window.gtoast?.("Kuis berhasil dibuat oleh AI dan disimpan sebagai draft.");
-    }, 900);
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    } finally {
+      setGenerating(false);
+    }
   }
 
-  function handlePublish(id: number) {
-    setQuizzes((prev) => prev.map((q) => (q.id === id ? { ...q, status: "Tayang" } : q)));
-    window.gtoast?.("Kuis tayang ke siswa.");
+  async function handlePublish(id: string) {
+    try {
+      await setQuizStatus(id, "published");
+      refresh();
+      window.gtoast?.("Kuis tayang ke siswa.");
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    }
   }
 
-  function handleDelete(id: number) {
-    setQuizzes((prev) => prev.filter((q) => q.id !== id));
-    window.gtoast?.("Kuis dihapus.");
+  async function handleDelete(id: string) {
+    try {
+      await deleteQuiz(id);
+      refresh();
+      window.gtoast?.("Kuis dihapus.");
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    }
   }
 
   return (
@@ -177,10 +187,13 @@ export default function TeacherQuizMakerPage() {
             <div className="field-d">
               <label>Kelas</label>
               <div className="control">
-                <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
+                <select
+                  value={selectedClass.id}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                >
                   {classes.map((c) => (
-                    <option key={c.id} value={c.kelas}>
-                      {c.kelas}
+                    <option key={c.id} value={c.id}>
+                      {c.name}
                     </option>
                   ))}
                 </select>
@@ -246,7 +259,7 @@ export default function TeacherQuizMakerPage() {
             <span>
               <b>Pratinjau Soal</b>
               <span className="sub">
-                {difficulty} · {numQuestions} soal · {selectedClass}
+                {difficulty} · {numQuestions} soal · {selectedClass.name}
               </span>
             </span>
           </div>
@@ -280,6 +293,7 @@ export default function TeacherQuizMakerPage() {
         <div>
           {quizzes.map((qz) => {
             const isOpen = openIds.has(qz.id);
+            const tayang = qz.status === "published";
             return (
               <div key={qz.id} className={"quiz-row acc-row" + (isOpen ? " open" : "")}>
                 <span className="task-ic">
@@ -288,12 +302,13 @@ export default function TeacherQuizMakerPage() {
                 <span className="info">
                   <b>{qz.title}</b>
                   <span>
-                    {qz.kelas} · {qz.jumlahSoal} soal · {qz.durasiMenit} menit · {qz.tanggal}
+                    {kelas.name} · {qz.numQuestions} soal · {qz.durationMin} menit ·{" "}
+                    {fmtDate(qz.createdAt)}
                   </span>
                 </span>
                 <span className="right">
-                  <span className={"pill " + (qz.status === "Tayang" ? "pill-green-plain" : "pill-gray")}>
-                    {qz.status}
+                  <span className={"pill " + (tayang ? "pill-green-plain" : "pill-gray")}>
+                    {tayang ? "Tayang" : "Draft"}
                   </span>
                   <button
                     className="chev"
@@ -309,7 +324,7 @@ export default function TeacherQuizMakerPage() {
                     <div className="acc-inner">
                       <div className="acc-title">Pratinjau Soal</div>
                       <ul className="acc-list">
-                        {qz.soal.map((s, i) => (
+                        {qz.questions.map((s, i) => (
                           <li key={i}>
                             <span className="n">{i + 1}</span>
                             <span>{s}</span>
@@ -318,14 +333,14 @@ export default function TeacherQuizMakerPage() {
                       </ul>
                       <div className="acc-meta" style={{ marginTop: 12 }}>
                         <span>
-                          <b>Topik:</b> {qz.topik}
+                          <b>Topik:</b> {qz.topic}
                         </span>
                         <span>
-                          <b>Kelas:</b> {qz.kelas}
+                          <b>Kelas:</b> {kelas.name}
                         </span>
                       </div>
                       <div className="acc-actions">
-                        {qz.status === "Draft" ? (
+                        {!tayang ? (
                           <button className="btn-mini btn-mini-primary" onClick={() => handlePublish(qz.id)}>
                             Tayangkan
                           </button>

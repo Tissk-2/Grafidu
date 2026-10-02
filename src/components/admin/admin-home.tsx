@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { fetchOverview, type OverviewData } from "@/lib/admin";
+import { fetchOverview } from "@/app/actions/admin";
+import type { OverviewData } from "@/lib/admin-model";
 import { getSessionUser } from "@/lib/auth";
-import { relativeWhen } from "@/lib/supabase/queries";
+import { relativeWhen } from "@/lib/student-model";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /** Ringkasan Sekolah: honest counts + recent school announcements, live from

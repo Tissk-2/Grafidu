@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchTodos, addTodo, toggleTodo, type TodoItem } from "@/lib/supabase/queries";
+import { fetchTodos, addTodo, toggleTodo } from "@/app/actions/student";
+import type { TodoItem } from "@/lib/student-model";
 
 const CHECK = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
@@ -9,19 +10,19 @@ const CHECK = (
   </svg>
 );
 
-export default function StudentTodoManager({ userId }: { userId: string }) {
+export default function StudentTodoManager() {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [input, setInput] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    fetchTodos(userId).then((rows) => {
+    fetchTodos().then((rows) => {
       if (!cancelled) setTodos(rows);
     });
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, []);
 
   const doneCount = todos.filter((t) => t.done).length;
   const pct = todos.length ? Math.round((doneCount / todos.length) * 100) : 0;
@@ -41,7 +42,7 @@ export default function StudentTodoManager({ userId }: { userId: string }) {
     if (!v) return;
     setInput("");
     try {
-      const row = await addTodo(userId, v);
+      const row = await addTodo(v);
       if (row) setTodos((prev) => [...prev, row]);
     } catch (err) {
       window.gtoast?.((err as Error).message, "error");

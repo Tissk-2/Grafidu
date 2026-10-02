@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { classAvg, useRoutedClass } from "@/lib/guru";
-import { dummyGuruData } from "@/lib/guru-demo";
+import { useRoutedClass } from "@/lib/guru";
+import { fetchClassGradeRows } from "@/app/actions/teacher";
 import { StatCard } from "@/components/ui/stat-card";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
@@ -19,7 +19,7 @@ const SORTS: { value: Sort; label: string }[] = [
 ];
 
 type Row = {
-  id: number;
+  id: string;
   nama: string;
   nilai: number[];
   rata: number;
@@ -28,56 +28,91 @@ type Row = {
 
 /**
  * Middle column only — the sidebar and rightbar come from the teacher layout.
- * Reads the active class, so switching class in the sidebar swaps the table
- * in place. Each student's `nilai` array lines up with the class's tugas
- * order (Tugas 1..4) in the dummy data.
+ * Matriks nilai per siswa × mapel dari tabel grades (nilai terbaru per mapel),
+ * bukan lagi per "Tugas 1..4" dummy. Kolom mengikuti mapel yang ada datanya.
  */
 export default function TeacherGradesPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("tertinggi");
-  useTitle(`Grades ${kelas.kelas} — Grafidu`);
+  const [cells, setCells] = useState<{ studentId: string; name: string; subject: string; score: number }[] | null>(null);
+  useTitle(`Grades ${kelas?.name ?? ""} — Grafidu`);
 
-  const kkm = dummyGuruData.kkm;
-  const avgKelas = classAvg(kelas);
+  const classId = kelas?.id ?? null;
+  const kkm = kelas?.kkm ?? 80;
 
-  const rows = useMemo<Row[]>(() => {
-    const all = kelas.dataMurid.map((m) => {
-      const rata = Math.round(m.nilai.reduce((a, b) => a + b, 0) / m.nilai.length);
-      return { id: m.id, nama: m.nama, nilai: m.nilai, rata, tuntas: rata >= kkm };
+  useEffect(() => {
+    if (!classId) return;
+    let cancelled = false;
+    setCells(null);
+    fetchClassGradeRows(classId).then((rows) => {
+      if (!cancelled) setCells(rows);
     });
+    return () => {
+      cancelled = true;
+    };
+  }, [classId]);
+
+  // Pivot cells → baris siswa × kolom mapel (urut abjad).
+  const { subjects, allRows } = useMemo(() => {
+    if (!cells) return { subjects: [] as string[], allRows: [] as Row[] };
+    const subjectSet = new Set<string>();
+    const byStudent = new Map<string, { name: string; scores: Map<string, number> }>();
+    for (const c of cells) {
+      subjectSet.add(c.subject);
+      let s = byStudent.get(c.studentId);
+      if (!s) {
+        s = { name: c.name, scores: new Map() };
+        byStudent.set(c.studentId, s);
+      }
+      s.scores.set(c.subject, c.score);
+    }
+    const subs = [...subjectSet].sort((a, b) => a.localeCompare(b));
+    const rows: Row[] = [...byStudent.entries()].map(([id, s]) => {
+      const nilai = subs.map((sub) => s.scores.get(sub) ?? 0);
+      const rata = nilai.length
+        ? Math.round(nilai.reduce((a, b) => a + b, 0) / nilai.length)
+        : 0;
+      return { id, nama: s.name, nilai, rata, tuntas: rata >= kkm };
+    });
+    return { subjects: subs, allRows: rows };
+  }, [cells, kkm]);
+
+  const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const filtered = q ? all.filter((r) => r.nama.toLowerCase().includes(q)) : all;
-    return filtered.sort((a, b) => {
+    const filtered = q ? allRows.filter((r) => r.nama.toLowerCase().includes(q)) : allRows;
+    return [...filtered].sort((a, b) => {
       if (sort === "nama") return a.nama.localeCompare(b.nama);
       if (sort === "terendah") return a.rata - b.rata || a.nama.localeCompare(b.nama);
       return b.rata - a.rata || a.nama.localeCompare(b.nama);
     });
-  }, [kelas, query, sort, kkm]);
+  }, [allRows, query, sort]);
 
-  // Stat cards always describe the whole class, not the filtered subset.
+  // Stat cards selalu menggambarkan seluruh kelas, bukan subset terfilter.
   const stats = useMemo(() => {
-    const tuntasFlags = kelas.dataMurid.map((m) => {
-      const rata = Math.round(m.nilai.reduce((a, b) => a + b, 0) / m.nilai.length);
-      return rata >= kkm;
-    });
-    const tuntas = tuntasFlags.filter(Boolean).length;
-    return { tuntas, remedial: tuntasFlags.length - tuntas };
-  }, [kelas, kkm]);
+    const tuntas = allRows.filter((r) => r.tuntas).length;
+    return { tuntas, remedial: allRows.length - tuntas };
+  }, [allRows]);
 
-  if (!u) return <MainSkeleton />;
+  const avgKelas = allRows.length
+    ? Math.round((allRows.reduce((a, r) => a + r.rata, 0) / allRows.length) * 10) / 10
+    : 0;
+
+  // Rata-rata per kolom mapel.
+  const colAvg = useMemo(
+    () =>
+      subjects.map((_, i) =>
+        allRows.length
+          ? Math.round(allRows.reduce((acc, r) => acc + (r.nilai[i] ?? 0), 0) / allRows.length)
+          : 0,
+      ),
+    [subjects, allRows],
+  );
+
+  if (!u || !kelas || cells === null) return <MainSkeleton />;
 
   const filtering = query.trim().length > 0;
-  const colAvg = kelas.dataMurid.length
-    ? kelas.dataMurid[0].nilai.map((_, i) =>
-        Math.round(
-          kelas.dataMurid.reduce((acc, m) => acc + (m.nilai[i] ?? 0), 0) / kelas.dataMurid.length,
-        ),
-      )
-    : [];
 
   return (
     <>
@@ -88,7 +123,7 @@ export default function TeacherGradesPage() {
           Grades
         </h1>
         <p className="mt-1 text-[14px] text-[#8A8A8A]">
-          Rekap nilai siswa {kelas.kelas} terhadap KKM {kkm}.
+          Rekap nilai siswa {kelas.name} terhadap KKM {kkm}.
         </p>
       </header>
 
@@ -139,9 +174,13 @@ export default function TeacherGradesPage() {
       {/* table */}
       {rows.length === 0 ? (
         <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <p className="text-[15px] font-medium text-[#222]">Siswa tidak ditemukan</p>
+          <p className="text-[15px] font-medium text-[#222]">
+            {allRows.length === 0 ? "Belum ada nilai" : "Siswa tidak ditemukan"}
+          </p>
           <p className="mt-1 text-[13px] text-[#8A8A8A]">
-            Coba kata kunci lain atau pilih kelas berbeda.
+            {allRows.length === 0
+              ? `Kelas ${kelas.name} belum punya nilai tercatat.`
+              : "Coba kata kunci lain atau pilih kelas berbeda."}
           </p>
         </div>
       ) : (
@@ -150,7 +189,7 @@ export default function TeacherGradesPage() {
             <p className="mt-5 text-[13px] text-[#8A8A8A]">
               Menampilkan{" "}
               <span className="font-medium tabular-nums text-[#222]">{rows.length}</span> dari{" "}
-              <span className="tabular-nums">{kelas.dataMurid.length}</span> siswa
+              <span className="tabular-nums">{allRows.length}</span> siswa
             </p>
           )}
           <div className="grade-table-wrap" style={{ marginTop: filtering ? 12 : 20 }}>
@@ -159,9 +198,9 @@ export default function TeacherGradesPage() {
                 <tr>
                   <th className="c">No</th>
                   <th>Siswa</th>
-                  {kelas.dataMurid[0]?.nilai.map((_, i) => (
-                    <th key={i} className="c">
-                      Tugas {i + 1}
+                  {subjects.map((s) => (
+                    <th key={s} className="c">
+                      {s}
                     </th>
                   ))}
                   <th className="c">Rata Rata</th>
@@ -198,7 +237,7 @@ export default function TeacherGradesPage() {
                 <tr>
                   <td className="c"></td>
                   <td className="text-[12.5px] font-medium tracking-wide text-[var(--gray-3)] uppercase">
-                    Rata-rata Tugas
+                    Rata-rata Mapel
                   </td>
                   {colAvg.map((n, i) => (
                     <td key={i} className="c tabular-nums">

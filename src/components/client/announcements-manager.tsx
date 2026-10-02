@@ -5,10 +5,10 @@ import {
   createAnnouncement,
   deleteAnnouncement,
   listAnnouncements,
-  type AnnouncementRow,
-} from "@/lib/admin";
+} from "@/app/actions/admin";
+import type { AnnouncementRow } from "@/lib/admin-model";
 import { getSessionUser } from "@/lib/auth";
-import { relativeWhen } from "@/lib/supabase/queries";
+import { relativeWhen } from "@/lib/student-model";
 
 export default function AnnouncementsManager({
   role,
@@ -57,7 +57,7 @@ export default function AnnouncementsManager({
         window.gtoast?.("Sesi berakhir. Silakan login ulang.", "error");
         return;
       }
-      await createAnnouncement(user.id, title.trim(), body.trim());
+      await createAnnouncement(title.trim(), body.trim());
       setTitle("");
       setBody("");
       setShowModal(false);

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight, ClipboardCheck } from "lucide-react";
 
 export type TaskCardTask = {
-  id: number;
+  id: string | number;
   name: string;
   ditugaskan: string;
   deadline: string;

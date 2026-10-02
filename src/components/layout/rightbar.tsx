@@ -5,7 +5,7 @@ export type GradeRow = { subject: string; score: number; status: string };
 export type StudentRow = { name: string; avg: number };
 export type Announcement = { title: string; body: string; when: string; hl: boolean };
 
-/** KKM dipakai untuk warna pill nilai. (Sumber: dummyGuruData.kkm di guru-demo.ts) */
+/** KKM dipakai untuk warna pill nilai. */
 const KKM = 80;
 
 /**

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { update } from "@/lib/store";
 
 function FooterArt() {
   const [markup, setMarkup] = useState<string | null>(null);
@@ -34,13 +33,7 @@ export default function SiteFooter() {
     e.preventDefault();
     const value = email.trim();
     if (!value) return;
-    update((db) => {
-      db.subscribers.push({
-        id: db.nextId++,
-        email: value.toLowerCase(),
-        createdAt: new Date().toISOString(),
-      });
-    });
+    // Newsletter hanya demo lokal (dulu in-memory store) — tidak ada penyimpanan.
     setEmail("");
     window.gtoast?.("Terima kasih! Kamu sudah terdaftar.");
   }

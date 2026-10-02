@@ -4,10 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronDown, Megaphone, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import {
-  fetchAllAnnouncements,
-  type AnnouncementPageItem,
-} from "@/lib/supabase/queries";
+import { fetchAllAnnouncements } from "@/app/actions/student";
+import type { AnnouncementPageItem } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
 import PageSkeleton from "@/components/ui/page-skeleton";
 

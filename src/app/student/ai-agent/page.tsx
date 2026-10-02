@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { type SchoolTask, type SubjectScore } from "@/lib/supabase/queries";
+import { type SchoolTask, type SubjectScore } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import BodySync from "@/components/body-sync";

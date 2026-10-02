@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { useRequireUser } from "@/lib/auth";
+import { changePassword, updateProfile } from "@/app/actions/auth";
+import { logout, useRequireUser } from "@/lib/auth";
 
 /**
  * Admin "Pengaturan" page: real profile (profiles row) and password controls.
- * Password change re-authenticates with the current password first, then
- * updates via Supabase Auth.
+ * Password change verifies the current password server-side, then updates the
+ * bcrypt hash in auth.users.
  */
 export default function AdminSettingsForm() {
   const router = useRouter();
@@ -45,24 +45,13 @@ export default function AdminSettingsForm() {
     }
     setSavingProfile(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("profiles")
-        .update({ name: cleanName, email: cleanEmail, phone: phone.trim() || null })
-        .eq("id", user.id);
-      if (error) throw error;
-      // Email juga hidup di auth.users; perbarui bila berubah. Bila proyek
-      // mengaktifkan konfirmasi email, perubahan berlaku setelah konfirmasi.
-      if (cleanEmail !== user.email) {
-        const { error: authErr } = await supabase.auth.updateUser({ email: cleanEmail });
-        if (authErr) {
-          window.gtoast?.(`Profil tersimpan, tetapi email login gagal diperbarui: ${authErr.message}`, "error");
-          return;
-        }
-        window.gtoast?.("Profil diperbarui. Cek email baru untuk konfirmasi bila diminta.");
-      } else {
-        window.gtoast?.("Profil berhasil diperbarui.");
-      }
+      const result = await updateProfile({
+        name: cleanName,
+        email: cleanEmail,
+        phone: phone.trim() || undefined,
+      });
+      if (!result.ok) throw new Error(result.error);
+      window.gtoast?.("Profil berhasil diperbarui.");
       router.refresh();
     } catch (err) {
       window.gtoast?.((err as Error).message || "Gagal memperbarui profil.", "error");
@@ -87,19 +76,11 @@ export default function AdminSettingsForm() {
     }
     setSavingPw(true);
     try {
-      const supabase = createClient();
-      // Verifikasi sandi lama lewat sign-in ulang (Supabase tidak memverifikasi
-      // sandi lama pada updateUser).
-      const { error: verifyErr } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPw,
-      });
-      if (verifyErr) {
-        window.gtoast?.("Kata sandi saat ini salah.", "error");
+      const result = await changePassword(currentPw, newPw);
+      if (!result.ok) {
+        window.gtoast?.(result.error, "error");
         return;
       }
-      const { error } = await supabase.auth.updateUser({ password: newPw });
-      if (error) throw error;
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
@@ -112,8 +93,7 @@ export default function AdminSettingsForm() {
   }
 
   async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await logout();
     router.push("/login");
   }
 

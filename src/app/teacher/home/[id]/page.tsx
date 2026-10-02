@@ -1,21 +1,10 @@
-import { dummyGuruData } from "@/lib/guru-demo";
 import TeacherClassHome from "@/app/teacher/teacher-class-home";
 
 /**
- * Only the demo classes are valid routes — anything else 404s here, which is
- * what lets this page stay synchronous (see below).
- */
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return dummyGuruData.dataKelas.map((c) => ({ id: String(c.id) }));
-}
-
-/**
- * Deliberately NOT async. An `async` page awaits `params`, so every class
- * switch suspends the segment and blanks the page. The class data lives in a
- * static module, so there is nothing to fetch — the client reads the id off
- * the URL and swaps the data in place instead.
+ * Kelas kini uuid dari database — tidak bisa lagi di-enumerate statis lewat
+ * generateStaticParams. Halaman tetap sinkron: client membaca :id dari URL
+ * (useRoutedClass) dan menukar data dari shell context tanpa menunggu apa pun.
+ * :id yang tidak ada di amanah guru jatuh kembali ke kelas aktif.
  */
 export default function TeacherClassHomePage() {
   return <TeacherClassHome />;

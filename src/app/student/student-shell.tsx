@@ -28,13 +28,13 @@ const NAV_LABEL: Record<string, string> = {
  */
 function StudentShellRightbar() {
   const pathname = usePathname();
-  const u = useRequireUser("student");
+  // Guard saja: sesi diverifikasi di sini walau identitas dipakai via context.
+  useRequireUser("student");
   const data = useStudentShellData();
 
   if (pathname.startsWith("/student/tasks")) {
     return (
       <StudentTasksRightbar
-        userId={u?.id ?? ""}
         todos={data?.todos}
         aiNote="Selesaikan tugas dengan tenggat terdekat dulu."
       />

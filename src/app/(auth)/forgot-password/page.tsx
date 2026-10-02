@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthLeft from "@/components/auth/auth-left";
-import { createClient } from "@/lib/supabase/client";
+import { getSessionUser } from "@/lib/auth";
 
 function dashboardPath(role?: string | null): string {
   if (role === "teacher") return "/teacher/home";
@@ -12,30 +12,24 @@ function dashboardPath(role?: string | null): string {
   return "/student/home";
 }
 
+/**
+ * Atur ulang kata sandi. Pemulihan lewat email (SMTP) belum tersedia di
+ * infrastruktur self-hosted — alur lama Supabase mengandalkan email link
+ * dan memang belum lengkap. Untuk saat ini reset dilakukan admin sekolah
+ * lewat panel Akun (sandi sementara + wajib ganti di login berikutnya).
+ */
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Auto auth: sudah login tidak perlu reset password dari sini.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session?.user || cancelled) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-        const role = (profile as { role?: string } | null)?.role;
-        if (role && !cancelled) router.replace(dashboardPath(role));
+        const user = await getSessionUser();
+        if (user && !cancelled) router.replace(dashboardPath(user.role));
       } catch {
         // Abaikan — biarkan form tampil.
       }
@@ -45,33 +39,11 @@ export default function ForgotPasswordPage() {
     };
   }, [router]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (loading) return;
-    setError(null);
     const em = email.trim().toLowerCase();
-    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
-      setError("Format email tidak valid.");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Murni via Supabase Auth — tidak ada simulasi lokal/demo.
-      const supabase = createClient();
-      const { error } = await supabase.auth.resetPasswordForEmail(em, {
-        redirectTo: `${window.location.origin}/login`,
-      });
-      if (error) {
-        setError(`Gagal mengirim tautan: ${error.message}`);
-        return;
-      }
-      setSubmitted(true);
-      window.gtoast?.("Tautan pemulihan kata sandi telah dikirim ke email kamu.");
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return;
+    setSubmitted(true);
   }
 
   return (
@@ -85,14 +57,8 @@ export default function ForgotPasswordPage() {
 
           <h2>Atur Ulang Kata Sandi</h2>
           <p className="sub">
-            Masukkan alamat email akun Grafidu kamu untuk menerima tautan atur ulang kata sandi.
+            Masukkan alamat email akun Grafidu kamu untuk melihat cara pemulihan kata sandi.
           </p>
-
-          {error && (
-            <div className="field-error" style={{ color: "var(--red)", marginBottom: 12, fontSize: 13 }}>
-              {error}
-            </div>
-          )}
 
           {submitted ? (
             <div style={{ background: "#F9FAFB", border: "1px solid var(--line)", borderRadius: 12, padding: 22, marginTop: 20, textAlign: "center" }}>
@@ -101,8 +67,8 @@ export default function ForgotPasswordPage() {
                   width: 44,
                   height: 44,
                   borderRadius: "50%",
-                  background: "var(--green-soft)",
-                  color: "#2F9E5B",
+                  background: "var(--purple-soft)",
+                  color: "var(--purple)",
                   display: "grid",
                   placeItems: "center",
                   margin: "0 auto 12px",
@@ -112,9 +78,11 @@ export default function ForgotPasswordPage() {
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               </span>
-              <b style={{ fontSize: 16, display: "block", marginBottom: 6 }}>Email Pemulihan Terkirim</b>
+              <b style={{ fontSize: 16, display: "block", marginBottom: 6 }}>Hubungi Admin Sekolah</b>
               <p style={{ fontSize: 13.5, color: "var(--gray-3)", lineHeight: 1.6, margin: "0 0 16px" }}>
-                Kami telah mengirimkan instruksi pemulihan ke <b>{email}</b>. Silakan periksa kotak masuk atau folder spam kamu.
+                Pemulihan lewat email belum tersedia. Admin sekolah dapat mengatur ulang kata sandi
+                untuk <b>{email}</b> lewat panel Akun — kamu akan menerima kata sandi sementara dan
+                diminta membuat yang baru saat login.
               </p>
               <Link href="/login" className="btn btn-primary" style={{ width: "100%" }}>
                 Kembali ke Halaman Masuk
@@ -138,8 +106,8 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
 
-              <button className={"btn-auth" + (loading ? " is-loading" : "")} type="submit" disabled={loading}>
-                Kirim Tautan Pemulihan
+              <button className="btn-auth" type="submit">
+                Lanjutkan
               </button>
             </form>
           )}

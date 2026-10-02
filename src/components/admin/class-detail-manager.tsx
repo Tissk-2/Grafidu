@@ -8,8 +8,8 @@ import {
   moveStudent,
   removeTeaching,
   renameClass,
-  type ClassDetailData,
-} from "@/lib/admin";
+} from "@/app/actions/admin";
+import type { ClassDetailData } from "@/lib/admin-model";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /**

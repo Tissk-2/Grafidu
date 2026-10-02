@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { update } from "@/lib/store";
+import { useEffect, useRef, useState } from "react";
+import { createTeacherClass } from "@/app/actions/teacher";
+import { useTeacherShellData } from "@/app/teacher/teacher-shell-data";
 
 /**
  * "Tambah Kelas" dialog (teacher). Mirrors the original #dlg-add-class,
@@ -11,6 +11,8 @@ import { update } from "@/lib/store";
  */
 export default function AddClassDialog() {
   const ref = useRef<HTMLDialogElement>(null);
+  const { refresh } = useTeacherShellData();
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -23,32 +25,24 @@ export default function AddClassDialog() {
     return () => el.removeEventListener("click", open);
   }, []);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const user = getCurrentUser();
-    if (!user) return;
+    if (busy) return;
     const form = e.currentTarget as HTMLFormElement;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
     if (!name) return;
-    update((d) => {
-      let cls = d.classes.find((c) => c.name === name);
-      if (!cls) {
-        cls = { id: d.nextId++, name };
-        d.classes.push(cls);
-      }
-      const teaching = d.teachings.find(
-        (t) => t.classId === cls!.id && t.teacherId === user.id
-      );
-      if (!teaching) {
-        d.teachings.push({
-          classId: cls.id,
-          teacherId: user.id,
-          subject: user.subject || "Umum",
-        });
-      }
-    });
-    ref.current?.close();
-    window.gtoast?.("Kelas baru berhasil ditambahkan.");
+    setBusy(true);
+    try {
+      // Guru pembuat otomatis di-assign sebagai pengampu (subject Umum).
+      await createTeacherClass(name, "Umum");
+      refresh();
+      ref.current?.close();
+      window.gtoast?.("Kelas baru berhasil ditambahkan.");
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

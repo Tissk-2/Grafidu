@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { addTodo, toggleTodo, type TodoItem } from "@/lib/supabase/queries";
+import { addTodo, toggleTodo } from "@/app/actions/student";
+import type { TodoItem } from "@/lib/student-model";
 
 const CHECK = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
@@ -11,11 +12,9 @@ const CHECK = (
 );
 
 export default function StudentTasksRightbar({
-  userId,
   aiNote,
   todos: initialTodos,
 }: {
-  userId: string;
   aiNote: string;
   /** From the shell's shared data — avoids a second todos query on this screen. */
   todos?: TodoItem[];
@@ -40,7 +39,7 @@ export default function StudentTasksRightbar({
     if (!v) return;
     setInput("");
     try {
-      const row = await addTodo(userId, v);
+      const row = await addTodo(v);
       if (row) setLocalTodos([...rows, row]);
     } catch (err) {
       window.gtoast?.((err as Error).message, "error");

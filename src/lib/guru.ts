@@ -1,101 +1,60 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { dummyGuruData, type GuruClass } from "@/lib/guru-demo";
+import { useTeacherShellData } from "@/app/teacher/teacher-shell-data";
+import type { RosterRow, TeacherClass } from "@/lib/teacher-model";
 
-export type { GuruClass };
-export type GuruTask = GuruClass["tugas"][number];
+export type { TeacherClass };
+export type TeacherTaskRow = RosterRow;
 
-const BULAN: Record<string, number> = {
-  januari: 0,
-  februari: 1,
-  maret: 2,
-  april: 3,
-  mei: 4,
-  juni: 5,
-  juli: 6,
-  agustus: 7,
-  september: 8,
-  oktober: 9,
-  october: 9,
-  november: 10,
-  desember: 11,
-};
-
-/** "10 September 2026" -> Date */
-export function parseIdDate(s: string): Date {
-  const [d, m, y] = s.split(" ");
-  return new Date(Number(y), BULAN[m.toLowerCase()] ?? 0, Number(d));
+/**
+ * Helper nilai kelas — sekarang bekerja di atas roster LIVE (RosterRow dari
+ * actions/teacher), bukan lagi data demo. Bentuk return dipertahankan agar
+ * halaman lama tetap jalan.
+ */
+export function classAvg(roster: RosterRow[]): number {
+  if (roster.length === 0) return 0;
+  const sum = roster.reduce((acc, r) => acc + r.avg, 0);
+  return Math.round((sum / roster.length) * 10) / 10;
 }
 
-export const studentAvg = (nilai: number[]) =>
-  Math.round(nilai.reduce((a, b) => a + b, 0) / nilai.length);
-
-export function classAvg(k: GuruClass) {
-  const avgs = k.dataMurid.map((m) => studentAvg(m.nilai));
-  return Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 10) / 10;
-}
-
-/** Students sorted by lowest average first, with status vs class average */
-export function studentsWithStatus(k: GuruClass) {
-  const avg = classAvg(k);
-  return k.dataMurid
-    .map((m) => {
-      const rata = studentAvg(m.nilai);
-      return { nama: m.nama, rata, status: rata >= avg ? "Atas Rata Rata" : "Bawah Rata Rata" };
-    })
+/** Siswa diurutkan rata-rata terendah dulu, dengan status vs rata kelas. */
+export function studentsWithStatus(roster: RosterRow[]) {
+  const avg = classAvg(roster);
+  return roster
+    .map((r) => ({
+      nama: r.name,
+      rata: r.avg,
+      status: r.avg >= avg ? "Atas Rata Rata" : "Bawah Rata Rata",
+    }))
     .sort((a, b) => a.rata - b.rata);
 }
 
-/** Active class shared between pages (persisted in localStorage) */
+/** Kelas aktif bersama antar halaman — kini dari shell context (data live). */
 export function useActiveClass() {
-  const classes = dummyGuruData.dataKelas;
-  const [id, setId] = useState<number>(classes[0].id);
-
-  useEffect(() => {
-    const saved = Number(localStorage.getItem("guru-class"));
-    if (classes.some((c) => c.id === saved)) setId(saved);
-  }, [classes]);
-
-  // useCallback: penerima props (mis. sidebar yang di-memo) bisa andalkan
-  // identitas select yang stabil antar render.
-  const select = useCallback((next: number) => {
-    setId(next);
-    try {
-      localStorage.setItem("guru-class", String(next));
-    } catch {}
-  }, []);
-
-  return { classes, active: classes.find((c) => c.id === id) ?? classes[0], select };
+  const { classes, activeClassId, select } = useTeacherShellData();
+  return {
+    classes,
+    active: classes.find((c) => c.id === activeClassId) ?? classes[0] ?? null,
+    select,
+  };
 }
 
 /**
- * The class the teacher shell should render: the `:id` route param wins, and
- * otherwise we fall back to the class last picked on /teacher/home. Because
- * this lives in the layout's shell, the sidebar, the rightbar and the page all
- * read the same source and can never disagree.
- *
- * The route is also mirrored back to localStorage so the pages that only read
- * the stored id (/teacher/tasks and friends) follow the URL.
+ * Kelas yang dirender shell guru: param rute /teacher/home/[id] menang,
+ * lalu kelas aktif dari shell context (yang sendirinya menghormati localStorage).
+ * Semua sumber membaca data yang sama sehingga tidak mungkin berbeda.
  */
 export function useRoutedClass() {
   const params = useParams<{ id?: string }>();
   const pathname = usePathname();
-  const { classes, active, select } = useActiveClass();
-  // Only /teacher/home/[id] is class-scoped. Other dynamic routes reuse the
-  // `id` segment for something else (e.g. /teacher/tasks/[id] is a task id), so
-  // honouring it there would silently switch the active class.
-  const routeId = pathname.startsWith("/teacher/home/") ? Number(params?.id) : Number.NaN;
-  const fromRoute = classes.some((c) => c.id === routeId);
+  const { classes, kelas, select } = useTeacherShellData();
 
-  useEffect(() => {
-    if (!fromRoute || routeId === active.id) return;
-    try {
-      localStorage.setItem("guru-class", String(routeId));
-    } catch {}
-  }, [fromRoute, routeId, active.id]);
+  // Hanya /teacher/home/[id] yang class-scoped. Rute dinamis lain memakai
+  // segmen `id` untuk hal lain (mis. /teacher/tasks/[id] itu id tugas).
+  const routeId = pathname.startsWith("/teacher/home/") ? (params?.id ?? null) : null;
+  const fromRoute = routeId ? classes.some((c) => c.id === routeId) : false;
+  const routed = fromRoute ? classes.find((c) => c.id === routeId) : undefined;
 
-  const kelas = (fromRoute ? classes.find((c) => c.id === routeId) : undefined) ?? active;
-  return { kelas, classes, select };
+  return { kelas: routed ?? kelas, classes, select };
 }

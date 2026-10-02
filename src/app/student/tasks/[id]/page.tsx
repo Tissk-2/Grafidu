@@ -4,12 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useRequireUser, type SessionUser } from "@/lib/auth";
-import {
-  fetchTaskDetail,
-  fetchTaskStatus,
-  type TaskDetail,
-  type TaskStatus,
-} from "@/lib/supabase/queries";
+import { fetchTaskDetail, fetchTaskStatus } from "@/app/actions/student";
+import type { TaskDetail, TaskStatus } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
 import { useTitle } from "@/lib/hooks";
 import StudentTaskDetailSkeleton from "@/components/ui/student-task-detail-skeleton";
@@ -24,7 +20,7 @@ type DetailData = {
 async function loadDetail(u: SessionUser, taskId: string): Promise<DetailData | null> {
   const [task, status] = await Promise.all([
     fetchTaskDetail(taskId),
-    fetchTaskStatus(taskId, u.id),
+    fetchTaskStatus(taskId),
   ]);
   if (!task) return null;
   return { task, status };
@@ -130,7 +126,6 @@ export default function StudentTaskDetailPage() {
 
       <StudentTaskSubmission
         taskId={data.task.id}
-        userId={u.id}
         isSubmitted={isSubmitted}
         submittedAtStr={submittedAtStr}
         grade={data.status?.grade}

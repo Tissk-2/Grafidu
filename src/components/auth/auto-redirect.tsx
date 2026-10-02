@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { getSessionUser } from "@/lib/auth";
 
 function dashboardPath(role?: string | null): string {
   if (role === "teacher") return "/teacher/home";
@@ -11,9 +11,9 @@ function dashboardPath(role?: string | null): string {
 }
 
 /**
- * Auto auth client-side: kalau browser masih punya sesi Supabase,
+ * Auto auth client-side: kalau browser masih punya session cookie yang valid,
  * langsung lempar ke dashboard. Dipakai di landing (/) dan halaman auth
- * sebagai cadangan kalau redirect server/middleware tidak jalan
+ * sebagai cadangan kalau redirect server tidak jalan
  * (mis. halaman ter-cache statis atau cookie belum sinkron).
  */
 export default function AutoRedirect() {
@@ -23,18 +23,8 @@ export default function AutoRedirect() {
     let cancelled = false;
     (async () => {
       try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session?.user || cancelled) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-        const role = (profile as { role?: string } | null)?.role;
-        if (role && !cancelled) router.replace(dashboardPath(role));
+        const user = await getSessionUser();
+        if (user && !cancelled) router.replace(dashboardPath(user.role));
       } catch {
         // Abaikan — biarkan halaman tampil.
       }

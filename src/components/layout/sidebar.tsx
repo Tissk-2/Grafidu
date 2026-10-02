@@ -19,14 +19,14 @@ const Calendar = dynamic(() => import("@/components/ui/calendar").then((m) => m.
 
 export type TodayTask = { id: string; title: string; sub: string; done: boolean };
 
-export type SidebarClass = { id: number; name: string; total: number };
+export type SidebarClass = { id: string | number; name: string; total: number };
 
 export type SidebarPropsData = {
   user: { name: string; sub: string; avatar: string };
   tasksToday: TodayTask[];
   classes?: SidebarClass[];
-  activeClassId?: number;
-  onSelectClass?: (id: number) => void;
+  activeClassId?: string | number;
+  onSelectClass?: (id: string | number) => void;
 };
 
 const TASK_ICON = (
@@ -83,8 +83,8 @@ function SidebarImpl({
   user: { name: string; sub: string; avatar: string };
   tasksToday: TodayTask[];
   classes?: SidebarClass[];
-  activeClassId?: number;
-  onSelectClass?: (id: number) => void;
+  activeClassId?: string | number;
+  onSelectClass?: (id: string | number) => void;
 }) {
   const settingsHref = role === "student" ? "/student/settings" : "/teacher/settings";
   const router = useRouter();

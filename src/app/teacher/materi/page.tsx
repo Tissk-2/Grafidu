@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, FileText, Plus, Search, Trash2, Pencil } from "lucide-react";
 import { Book } from "iconsax-reactjs";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { useRoutedClass } from "@/lib/guru";
-import type { GuruMateri } from "@/lib/guru-demo";
+import { createMaterial, deleteMaterial, updateMaterial } from "@/app/actions/teacher";
+import { useTeacherShellData } from "../teacher-shell-data";
+import type { MaterialRow } from "@/lib/teacher-model";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
 import MateriFormDialog, { type MateriFormValue } from "./materi-form-dialog";
@@ -24,34 +26,28 @@ function fileLabel(path: string): string {
 
 /**
  * Middle column only — the sidebar and rightbar come from the teacher layout.
- * Materi is scoped to the active class (same model as the tasks page), so the
- * dialog adds to `kelas.materi` without a class picker. Changes live in local
- * state, matching the prototype's dummy-data approach.
+ * Materi ter-scoped ke kelas aktif; create/update/delete langsung ke tabel
+ * materials lewat server action, lalu shell.refresh() menarik ulang dari DB.
  */
 export default function TeacherMateriPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
+  const { materials, refresh } = useTeacherShellData();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"terbaru" | "nama">("terbaru");
-  const [items, setItems] = useState<GuruMateri[]>(kelas.materi);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<GuruMateri | null>(null);
-  useTitle(`Materi ${kelas.kelas} — Grafidu`);
+  const [editing, setEditing] = useState<MaterialRow | null>(null);
+  const [busy, setBusy] = useState(false);
+  useTitle(`Materi ${kelas?.name ?? ""} — Grafidu`);
 
-  // Following the sidebar's class switch swaps the list in place.
-  useEffect(() => {
-    setItems(kelas.materi);
-  }, [kelas]);
-
-  if (!u) return <MainSkeleton />;
+  if (!u || !kelas) return <MainSkeleton />;
+  const activeKelas = kelas;
 
   const q = query.trim().toLowerCase();
-  const filtered = items
-    .filter((m) => !q || m.title.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q))
+  const filtered = materials
+    .filter((m) => !q || m.title.toLowerCase().includes(q) || m.description.toLowerCase().includes(q))
     .sort((a, b) =>
-      sort === "nama" ? a.title.localeCompare(b.title) : b.id - a.id,
+      sort === "nama" ? a.title.localeCompare(b.title) : b.createdAt.localeCompare(a.createdAt),
     );
 
   function openCreate() {
@@ -59,41 +55,55 @@ export default function TeacherMateriPage() {
     setDialogOpen(true);
   }
 
-  function openEdit(m: GuruMateri) {
+  function openEdit(m: MaterialRow) {
     setEditing(m);
     setDialogOpen(true);
   }
 
-  function handleSubmit(value: MateriFormValue) {
-    const attachedFiles = value.files
+  async function handleSubmit(value: MateriFormValue) {
+    if (busy) return;
+    const attachments = value.files
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-
-    if (editing) {
-      setItems((prev) =>
-        prev.map((m) =>
-          m.id === editing.id
-            ? { ...m, title: value.title, desc: value.desc, attachedFiles }
-            : m,
-        ),
-      );
-      window.gtoast?.("Materi berhasil diperbarui.");
-    } else {
-      const newId = Math.max(...items.map((m) => m.id), 0) + 1;
-      setItems((prev) => [
-        { id: newId, title: value.title, desc: value.desc, attachedFiles },
-        ...prev,
-      ]);
-      window.gtoast?.("Materi berhasil dibagikan ke " + kelas.kelas + ".");
+    setBusy(true);
+    try {
+      if (editing) {
+        await updateMaterial(editing.id, {
+          title: value.title,
+          description: value.desc,
+          attachments,
+          status: editing.status,
+        });
+        window.gtoast?.("Materi berhasil diperbarui.");
+      } else {
+        await createMaterial({
+          classId: activeKelas.id,
+          title: value.title,
+          description: value.desc,
+          attachments,
+          status: "published",
+        });
+        window.gtoast?.("Materi berhasil dibagikan ke " + activeKelas.name + ".");
+      }
+      refresh();
+      setDialogOpen(false);
+      setEditing(null);
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    } finally {
+      setBusy(false);
     }
-    setDialogOpen(false);
-    setEditing(null);
   }
 
-  function handleDelete(id: number) {
-    setItems((prev) => prev.filter((m) => m.id !== id));
-    window.gtoast?.("Materi dihapus.");
+  async function handleDelete(id: string) {
+    try {
+      await deleteMaterial(id);
+      window.gtoast?.("Materi dihapus.");
+      refresh();
+    } catch (err) {
+      window.gtoast?.((err as Error).message, "error");
+    }
   }
 
   return (
@@ -106,7 +116,7 @@ export default function TeacherMateriPage() {
             Materi
           </h1>
           <p className="mt-1 text-[14px] text-[#8A8A8A]">
-            Materi {kelas.kelas} yang bisa dipakai siswa — dan dijadikan bahan kuis oleh AI.
+            Materi {kelas.name} yang bisa dipakai siswa — dan dijadikan bahan kuis oleh AI.
           </p>
         </div>
         <button className="btn btn-primary btn-sm" type="button" onClick={openCreate}>
@@ -157,11 +167,11 @@ export default function TeacherMateriPage() {
             <Book size={18} aria-hidden />
           </span>
           <p className="mt-3.5 text-[15px] font-medium text-[#222]">
-            {items.length === 0 ? "Belum ada materi" : "Materi tidak ditemukan"}
+            {materials.length === 0 ? "Belum ada materi" : "Materi tidak ditemukan"}
           </p>
           <p className="mt-1 text-[13px] text-[#8A8A8A]">
-            {items.length === 0
-              ? `Kelas ${kelas.kelas} belum punya materi. Klik "Bagikan Materi" untuk memulai.`
+            {materials.length === 0
+              ? `Kelas ${kelas.name} belum punya materi. Klik "Bagikan Materi" untuk memulai.`
               : "Coba kata kunci lain atau pilih kelas berbeda."}
           </p>
         </div>
@@ -179,14 +189,14 @@ export default function TeacherMateriPage() {
                 <div className="min-w-0 flex-1">
                   <b className="block text-[15px] font-semibold text-[#222]">{m.title}</b>
                   <p className="mt-1.5 line-clamp-3 text-[13.5px] leading-relaxed text-[#8A8A8A]">
-                    {m.desc}
+                    {m.description}
                   </p>
                 </div>
               </div>
 
-              {m.attachedFiles.length > 0 && (
+              {m.attachments.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {m.attachedFiles.map((f) => (
+                  {m.attachments.map((f) => (
                     <span
                       key={f}
                       className="inline-flex max-w-full items-center gap-1.5 rounded-md bg-[var(--purple-soft)] px-2.5 py-1.5 text-[12px] font-medium text-[var(--purple)]"
@@ -201,7 +211,7 @@ export default function TeacherMateriPage() {
 
               <div className="mt-4 flex items-center justify-between border-t border-[var(--line-soft)] pt-3.5">
                 <span className="text-[12px] text-[#8A8A8A]">
-                  {m.attachedFiles.length} lampiran
+                  {m.attachments.length} lampiran
                 </span>
                 <span className="flex gap-2">
                   <button className="btn-mini btn-mini-ghost" type="button" onClick={() => openEdit(m)}>
@@ -227,10 +237,10 @@ export default function TeacherMateriPage() {
         open={dialogOpen}
         initial={
           editing
-            ? { title: editing.title, desc: editing.desc, files: editing.attachedFiles.join(", ") }
+            ? { title: editing.title, desc: editing.description, files: editing.attachments.join(", ") }
             : undefined
         }
-        kelasLabel={kelas.kelas}
+        kelasLabel={kelas.name}
         onClose={() => {
           setDialogOpen(false);
           setEditing(null);
