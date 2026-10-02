@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict gfdbi61P3qttpSq5YXf13ForDBbbIt3LZ1UrtdOimA9YPrL6jMP0fLj2ZyZjTTB
+
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -66,7 +66,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
+
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -264,7 +264,7 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 CREATE FUNCTION auth.email() RETURNS text
     LANGUAGE sql STABLE
-    RETURN COALESCE(NULLIF(current_setting('request.jwt.claim.email'::text, true), ''::text), ((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'email'::text));
+    AS $$ SELECT COALESCE(NULLIF(current_setting('request.jwt.claim.email'::text, true), ''::text), ((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'email'::text)) $$;
 
 
 --
@@ -273,7 +273,7 @@ CREATE FUNCTION auth.email() RETURNS text
 
 CREATE FUNCTION auth.jwt() RETURNS jsonb
     LANGUAGE sql STABLE
-    RETURN COALESCE((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb, '{}'::jsonb);
+    AS $$ SELECT COALESCE((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb, '{}'::jsonb) $$;
 
 
 --
@@ -282,7 +282,7 @@ CREATE FUNCTION auth.jwt() RETURNS jsonb
 
 CREATE FUNCTION auth.role() RETURNS text
     LANGUAGE sql STABLE
-    RETURN COALESCE(NULLIF(current_setting('request.jwt.claim.role'::text, true), ''::text), ((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'role'::text), 'anon'::text);
+    AS $$ SELECT COALESCE(NULLIF(current_setting('request.jwt.claim.role'::text, true), ''::text), ((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'role'::text), 'anon'::text) $$;
 
 
 --
@@ -291,7 +291,7 @@ CREATE FUNCTION auth.role() RETURNS text
 
 CREATE FUNCTION auth.uid() RETURNS uuid
     LANGUAGE sql STABLE
-    RETURN COALESCE((NULLIF(current_setting('request.jwt.claim.sub'::text, true), ''::text))::uuid, (((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'sub'::text))::uuid);
+    AS $$ SELECT COALESCE((NULLIF(current_setting('request.jwt.claim.sub'::text, true), ''::text))::uuid, (((NULLIF(current_setting('request.jwt.claims'::text, true), ''::text))::jsonb ->> 'sub'::text))::uuid) $$;
 
 
 --
@@ -1626,7 +1626,6 @@ COPY public.quizzes (id, class_id, created_by, title, topic, difficulty, num_que
 --
 
 COPY public.sessions (id, user_id, token_hash, user_agent, created_at, last_seen_at, expires_at) FROM stdin;
-e9828b2f-fcc5-4ece-88cb-36213f8290b6	e94384ff-fcf2-434a-b0e2-6c71a16e5529	28054c15faae7e4d51d1e82a7b62fe44a1f11a2c5447a9e74ff95c672e295459	\N	2026-10-02 18:55:13.033469+07	2026-10-02 20:49:50.442862+07	2026-11-01 18:55:13.033469+07
 af9f9203-28bc-4b64-8dbe-1024c8e57f95	e94384ff-fcf2-434a-b0e2-6c71a16e5529	3616b56f78dec51de8f9c292b332d1b0ea9650f62c1391630f1f2b1a786c1ba3	\N	2026-10-02 19:04:40.217163+07	2026-10-02 20:04:29.432148+07	2026-11-01 19:04:40.217163+07
 \.
 
@@ -3545,5 +3544,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict gfdbi61P3qttpSq5YXf13ForDBbbIt3LZ1UrtdOimA9YPrL6jMP0fLj2ZyZjTTB
+
 
