@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
       // /teacher/home tanpa :id sah — kelas aktif diambil dari shell context
       // (uuid dari database, tidak bisa lagi di-hardcode ke redirect).
       { source: "/student", destination: "/student/home", permanent: false },
+      // Tidak ada pendaftaran mandiri: akun dibuat admin (sandi sementara +
+      // wajib ganti di login pertama). Semua tautan /signup di landing, legal,
+      // dan footer diarahkan ke login agar tidak 404.
+      { source: "/signup", destination: "/login", permanent: false },
     ];
   },
 };
