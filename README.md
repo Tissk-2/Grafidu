@@ -27,11 +27,13 @@ full admin area (users, classes, announcements, settings).
 
 ## Data & the Database
 
-Everything is persisted in PostgreSQL. `npm run dev` starts the local PostgreSQL cluster before
-`next dev`, and **exports the whole database to `setup/exports/latest-dump.sql` when the dev
-server exits** (Ctrl+C included) so teammates and the VPS can restore the latest data. Dump files
-contain user data and password hashes — this repository must stay private. Full details, restore
-commands and the VPS deploy procedure are in [GUIDE.md](./GUIDE.md).
+Everything is persisted in PostgreSQL. `npm run dev` starts the local PostgreSQL cluster, imports
+`setup/exports/latest-dump.sql` if the database is empty, then runs `next dev` — and **exports the
+whole database back to `setup/exports/latest-dump.sql` when the dev server exits** (Ctrl+C
+included) so teammates and the VPS can restore the latest data. Use `npm run dev:restore` to
+force the import over existing data. Dump files contain user data and password hashes — this
+repository must stay private. Full details and the VPS deploy procedure are in
+[GUIDE.md](./GUIDE.md).
 
 ---
 
@@ -43,9 +45,9 @@ npm install
 npm run dev
 ```
 
-`npm run dev` boots PostgreSQL for you, then runs the dev server at
-[http://localhost:3000](http://localhost:3000). If the dump on exit fails, run `./setup/start.sh`
-and `./setup/export.sh` manually — see GUIDE.md.
+`npm run dev` boots PostgreSQL, imports the dump if the database is empty, then runs the dev
+server at [http://localhost:3000](http://localhost:3000). If the dump on exit fails, run
+`./setup/start.sh` and `./setup/export.sh` manually — see GUIDE.md.
 
 ## Accounts & Roles
 
@@ -53,7 +55,7 @@ Accounts live in the database (94 seeded profiles). Roles are `student`, `teache
 with its own dashboard (`/student/home`, `/teacher/home`, `/admin`). The admin account is
 `admin@grafidu.sch.id`; passwords are bcrypt hashes, and new/changed accounts get a random
 temporary password that is shown once. There are no hard-coded demo logins in the code — restore
-the database (GUIDE.md §6.2) and use the accounts that come with the dump.
+the database (see GUIDE.md) and use the accounts that come with the dump.
 
 ---
 
@@ -67,4 +69,4 @@ cp -r public .next/standalone/public
 cd .next/standalone && node server.js
 ```
 
-See [GUIDE.md §8](./GUIDE.md) for the full VPS deployment checklist.
+See [GUIDE.md](./GUIDE.md) for the full VPS deployment steps.

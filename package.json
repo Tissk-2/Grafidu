@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node setup/dev.mjs",
     "dev:next": "next dev",
+    "dev:restore": "node setup/dev.mjs --restore",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
