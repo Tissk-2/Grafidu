@@ -10,6 +10,8 @@ export type AdminAccount = {
   className: string | null;
   isActive: boolean;
   mustChangePassword: boolean;
+  /** Amanah mengajar dari tabel teachings — sumber kebenaran Kelas / Mapel guru. */
+  teachings: { classId: string; className: string; subject: string }[];
 };
 
 export type AccountsData = {

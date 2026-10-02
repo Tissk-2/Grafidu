@@ -34,7 +34,7 @@ async function requireAdmin(): Promise<string> {
 
 export async function listAccounts(): Promise<AccountsData> {
   await requireAdmin();
-  const [profiles, classes, enrollments] = await Promise.all([
+  const [profiles, classes, enrollments, teachings] = await Promise.all([
     sql<{
       id: string;
       role: string;
@@ -57,11 +57,27 @@ export async function listAccounts(): Promise<AccountsData> {
     sql<{ student_id: string; class_id: string }[]>`
       SELECT student_id, class_id FROM public.enrollments
     `,
+    sql<{ teacher_id: string; class_id: string; class_name: string | null; subject: string }[]>`
+      SELECT t.teacher_id, t.class_id, c.name AS class_name, t.subject
+      FROM public.teachings t
+      LEFT JOIN public.classes c ON c.id = t.class_id
+      ORDER BY c.name
+    `,
   ]);
 
   const classByStudent = new Map<string, string>();
   for (const row of enrollments) {
     classByStudent.set(row.student_id, row.class_id);
+  }
+  const teachingsByTeacher = new Map<string, { classId: string; className: string; subject: string }[]>();
+  for (const row of teachings) {
+    const list = teachingsByTeacher.get(row.teacher_id) ?? [];
+    list.push({
+      classId: row.class_id,
+      className: row.class_name ?? "Kelas",
+      subject: row.subject || "Umum",
+    });
+    teachingsByTeacher.set(row.teacher_id, list);
   }
   const accounts: AdminAccount[] = profiles.map((r) => ({
     id: r.id,
@@ -73,6 +89,7 @@ export async function listAccounts(): Promise<AccountsData> {
     className: r.class_name,
     isActive: r.is_active !== false,
     mustChangePassword: r.must_change_password === true,
+    teachings: teachingsByTeacher.get(r.id) ?? [],
   }));
   return {
     accounts,

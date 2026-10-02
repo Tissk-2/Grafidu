@@ -16,6 +16,18 @@ type ListState = {
 
 const PAGE_SIZE = 20;
 
+/**
+ * Kelas / Mapel guru dari teachings. Satu mapel untuk banyak kelas diringkas
+ * jadi "Kelas A, Kelas B • Mapel"; mapel campuran ditampilkan per amanah.
+ */
+function teachingLabel(u: AdminAccount): string {
+  if (u.teachings.length === 0) return u.subject ?? "—";
+  const classes = [...new Set(u.teachings.map((t) => t.className))];
+  const subjects = [...new Set(u.teachings.map((t) => t.subject))];
+  if (subjects.length === 1) return `${classes.join(", ")} • ${subjects[0]}`;
+  return u.teachings.map((t) => `${t.className} • ${t.subject}`).join(", ");
+}
+
 async function callAdminApi(input: string, init: RequestInit): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch(input, init);
@@ -28,17 +40,17 @@ async function callAdminApi(input: string, init: RequestInit): Promise<{ ok: boo
 }
 
 /**
- * Search, filter and paginate school accounts; create, edit, deactivate and
- * reset them. Data comes from Supabase (profiles/enrollments); creating an
+ * Search, filter and paginate school accounts of one role (students or
+ * teachers — the route decides); create, edit, deactivate and reset them.
+ * Data comes from the database (profiles/enrollments/teachings); creating an
  * account also registers the auth user via /api/admin/users, and the one-time
  * temporary password is shown only inside a panel that requires explicit
  * dismissal and is never persisted.
  */
-export default function AccountManager() {
+export default function AccountManager({ role }: { role: "student" | "teacher" }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof listAccounts>> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<"" | "student" | "teacher">("");
   const [classId, setClassId] = useState("");
   const [active, setActive] = useState<"" | "true" | "false">("");
   const [page, setPage] = useState(1);
@@ -60,6 +72,8 @@ export default function AccountManager() {
   const editDialogRef = useRef<HTMLDialogElement>(null);
   const lastActiveRef = useRef<HTMLElement | null>(null);
 
+  const roleLabel = role === "teacher" ? "guru" : "siswa";
+
   const reload = useCallback(async () => {
     try {
       const next = await listAccounts();
@@ -75,15 +89,24 @@ export default function AccountManager() {
   }, [reload]);
 
   const classes = data?.classes ?? [];
+  // Nama kelas dari id enrollment — sumber yang sama dengan filter kelas.
+  const classNameById = new Map(classes.map((c) => [c.id, c.name]));
 
   const list: ListState | null = (() => {
     if (!data) return null;
     const needle = q.trim().toLowerCase();
     const filtered = data.accounts.filter((u) => {
-      if (role && u.role !== role) return false;
+      if (u.role !== role) return false;
       if (active && u.isActive !== (active === "true")) return false;
       if (needle && !u.name.toLowerCase().includes(needle) && !u.email.toLowerCase().includes(needle)) return false;
-      if (classId && data.classByStudent.get(u.id) !== classId) return false;
+      // Siswa dicocokkan lewat enrollments, guru lewat amanah mengajarnya.
+      if (
+        classId &&
+        data.classByStudent.get(u.id) !== classId &&
+        !u.teachings.some((t) => t.classId === classId)
+      ) {
+        return false;
+      }
       return true;
     });
     const total = filtered.length;
@@ -100,7 +123,7 @@ export default function AccountManager() {
 
   function openCreate() {
     lastActiveRef.current = document.activeElement as HTMLElement | null;
-    setCreateValues(emptyAccountValues);
+    setCreateValues({ ...emptyAccountValues, role });
     setCreateError(null);
     setCredential(null);
     requestAnimationFrame(() => createDialogRef.current?.showModal());
@@ -153,8 +176,10 @@ export default function AccountManager() {
       name: u.name,
       email: u.email,
       phone: u.phone,
-      classId: "",
-      subject: u.subject ?? "",
+      // Kelas siswa saat ini dari enrollments — dasar deteksi "berubah".
+      classId: u.role === "student" ? data?.classByStudent.get(u.id) ?? "" : "",
+      // Mapel utama: profiles.subject bisa kosong — isi dari amanah mengajar.
+      subject: [...new Set(u.teachings.map((t) => t.subject))][0] ?? u.subject ?? "",
     });
     setEditError(null);
     requestAnimationFrame(() => editDialogRef.current?.showModal());
@@ -178,6 +203,13 @@ export default function AccountManager() {
         email: editValues.email.trim().toLowerCase(),
         phone: editValues.phone.trim(),
         subject: editTarget.role === "teacher" ? editValues.subject.trim() : undefined,
+        // Kirim hanya bila kelas siswa benar-benar diganti.
+        classId:
+          editTarget.role === "student" &&
+          editValues.classId &&
+          editValues.classId !== (data?.classByStudent.get(editTarget.id) ?? "")
+            ? editValues.classId
+            : undefined,
       }),
     });
     setEditBusy(false);
@@ -277,8 +309,8 @@ export default function AccountManager() {
           </svg>
           <input
             type="search"
-            placeholder="Cari nama atau email…"
-            aria-label="Cari akun"
+            placeholder={`Cari nama atau email ${roleLabel}…`}
+            aria-label={`Cari akun ${roleLabel}`}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
@@ -286,18 +318,6 @@ export default function AccountManager() {
             }}
           />
         </div>
-        <select
-          aria-label="Filter peran"
-          value={role}
-          onChange={(e) => {
-            setRole(e.target.value as "" | "student" | "teacher");
-            setPage(1);
-          }}
-        >
-          <option value="">Semua peran</option>
-          <option value="student">Siswa</option>
-          <option value="teacher">Guru</option>
-        </select>
         <select
           aria-label="Filter kelas"
           value={classId}
@@ -354,8 +374,7 @@ export default function AccountManager() {
           <thead>
             <tr>
               <th scope="col">Akun</th>
-              <th scope="col">Peran</th>
-              <th scope="col">Kelas / Mapel</th>
+              <th scope="col">{role === "teacher" ? "Kelas / Mapel" : "Kelas"}</th>
               <th scope="col">Status</th>
               <th scope="col" style={{ textAlign: "right" }}>Aksi</th>
             </tr>
@@ -368,11 +387,12 @@ export default function AccountManager() {
                   <span>{u.email}</span>
                 </td>
                 <td>
-                  <span className={"pill " + (u.role === "teacher" ? "pill-purple" : "pill-blue")}>
-                    {u.role === "teacher" ? "Guru" : "Siswa"}
-                  </span>
+                  {u.role === "teacher"
+                    ? teachingLabel(u)
+                    : classNameById.get(data.classByStudent.get(u.id) ?? "") ??
+                      u.className ??
+                      "—"}
                 </td>
-                <td>{u.role === "student" ? u.className ?? "—" : u.subject ?? "—"}</td>
                 <td>
                   <span className={"pill " + (u.isActive ? "pill-green" : "pill-red")}>
                     {u.isActive ? "Aktif" : "Nonaktif"}
@@ -404,7 +424,7 @@ export default function AccountManager() {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </span>
-            <b>Tidak ada akun yang cocok</b>
+            <b>Tidak ada akun {roleLabel} yang cocok</b>
             <p>Ubah filter pencarian atau buat akun baru untuk sekolah ini.</p>
             <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
               Tambah akun
@@ -416,7 +436,7 @@ export default function AccountManager() {
       {list && list.total > 0 ? (
         <div className="adm-pager">
           <span>
-            Menampilkan {startItem}–{endItem} dari {list.total} akun
+            Menampilkan {startItem}–{endItem} dari {list.total} akun {roleLabel}
           </span>
           <button type="button" className="btn-mini" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             ‹ Sebelumnya
@@ -434,11 +454,11 @@ export default function AccountManager() {
       <dialog className="gdialog" ref={createDialogRef} onClose={closeCreate}>
         <div className="gdialog-head">
           <div>
-            <h3>{credential ? "Kata Sandi Sementara" : "Tambah Akun"}</h3>
+            <h3>{credential ? "Kata Sandi Sementara" : `Tambah Akun ${role === "teacher" ? "Guru" : "Siswa"}`}</h3>
             <p>
               {credential
                 ? "Bagikan melalui saluran komunikasi sekolah. Kata sandi ini hanya ditampilkan sekali."
-                : "Buat akun siswa atau guru dengan kata sandi sementara."}
+                : `Buat akun ${roleLabel} dengan kata sandi sementara.`}
             </p>
           </div>
           <button className="gdialog-close" aria-label="Tutup" onClick={closeCreate}>
@@ -489,6 +509,7 @@ export default function AccountManager() {
               onSubmit={handleCreate}
               submitLabel={createBusy ? "Membuat…" : "Buat akun"}
               onCancel={closeCreate}
+              fixedRole
             />
           </div>
         )}

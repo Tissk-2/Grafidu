@@ -6,11 +6,13 @@ import { destroyUserSessions, getSessionUser } from "@/lib/session";
 /**
  * PATCH /api/admin/users/[id] — ubah akun siswa/guru.
  *
- * Field profil (nama/telepon/mapel) langsung ke profiles. Email dan kata sandi
- * ditulis ke auth.users (hash bcrypt); ganti sandi menandai
- * must_change_password dan menutup semua session user itu. Nonaktif
- * (is_active = false) juga menutup session — pengganti mekanisme ban Supabase.
- * Body: { name?, email?, phone?, subject?, isActive?, password? }
+ * Field profil (nama/telepon/mapel) langsung ke profiles. Untuk siswa,
+ * classId mengganti kelas: enrollment lama diganti baru dan label
+ * profiles.class_name disinkronkan. Email dan kata sandi ditulis ke
+ * auth.users (hash bcrypt); ganti sandi menandai must_change_password dan
+ * menutup semua session user itu. Nonaktif (is_active = false) juga menutup
+ * session — pengganti mekanisme ban Supabase.
+ * Body: { name?, email?, phone?, subject?, classId?, isActive?, password? }
  */
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -45,6 +47,7 @@ export async function PATCH(
     email?: string;
     phone?: string;
     subject?: string;
+    classId?: string;
     isActive?: boolean;
     password?: string;
   };
@@ -54,13 +57,36 @@ export async function PATCH(
     return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   }
 
-  const current = await sql<{ email: string | null }[]>`
-    SELECT email FROM auth.users WHERE id = ${id} LIMIT 1
+  const current = await sql<{ email: string | null; role: string | null }[]>`
+    SELECT u.email, p.role
+    FROM auth.users u
+    LEFT JOIN public.profiles p ON p.id = u.id
+    WHERE u.id = ${id} LIMIT 1
   `;
   if (!current[0]) {
     return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
   }
   const currentEmail = current[0].email ?? "";
+
+  // Pindah kelas (siswa): validasi kelasnya dulu, eksekusinya di transaksi.
+  let newClassId: string | null = null;
+  let newClassName: string | null = null;
+  if (body.classId !== undefined && body.classId !== "") {
+    if (!UUID_RE.test(body.classId)) {
+      return NextResponse.json({ error: "Id kelas tidak valid." }, { status: 400 });
+    }
+    if (current[0].role !== "student") {
+      return NextResponse.json({ error: "Hanya akun siswa yang memiliki kelas." }, { status: 400 });
+    }
+    const cls = await sql<{ id: string; name: string }[]>`
+      SELECT id, name FROM public.classes WHERE id = ${body.classId} LIMIT 1
+    `;
+    if (!cls[0]) {
+      return NextResponse.json({ error: "Kelas tidak ditemukan." }, { status: 400 });
+    }
+    newClassId = cls[0].id;
+    newClassName = cls[0].name;
+  }
 
   const email = body.email?.trim().toLowerCase() ?? undefined;
   const emailChanged = Boolean(email && email !== currentEmail.toLowerCase());
@@ -99,10 +125,19 @@ export async function PATCH(
           email                = COALESCE(${newEmail}, email),
           phone                = COALESCE(${newPhone}, phone),
           subject              = COALESCE(${newSubject}, subject),
+          class_name           = COALESCE(${newClassName}, class_name),
           is_active            = COALESCE(${newIsActive}, is_active),
           must_change_password = CASE WHEN ${passwordHash !== null} THEN true ELSE must_change_password END
         WHERE id = ${id}
       `;
+
+      if (newClassId && newClassName) {
+        await tx`DELETE FROM public.enrollments WHERE student_id = ${id}`;
+        await tx`
+          INSERT INTO public.enrollments (class_id, student_id)
+          VALUES (${newClassId}, ${id})
+        `;
+      }
     });
   } catch (err) {
     const code = (err as { code?: string }).code;

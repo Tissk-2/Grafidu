@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict dvzTt5hBTZvWgA2umgJPwBXNFioy8LuHNFDI9332g3bcJrPQ9GQrU1n2Ti9TuR2
+\restrict gfdbi61P3qttpSq5YXf13ForDBbbIt3LZ1UrtdOimA9YPrL6jMP0fLj2ZyZjTTB
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -966,7 +966,6 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 00000000-0000-0000-0000-000000000000	a90e2951-1040-45e9-a98c-3b5920fceed8	authenticated	authenticated	murid.30.xirplc@grafidu.sch.id	$2a$06$b2BOaf.i8B55D8LtHslK.OdRE4cPNhEGKPeqQHM.6gInNgbTQlNtW	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:23:50.251556+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	00f37c28-c8ed-4bf2-b6a7-3126a75e0745	authenticated	authenticated	murid.13.xidkva@grafidu.sch.id	$2a$06$6NBh1/UTpnS3UvjEXS1pmOaJ913kAyUaWQxXVTLllL00xC1T7k6.K	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	2026-10-01 15:25:59.596276+07	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:25:59.642942+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	4c214951-4517-4ea0-b1c7-4907cbb98ed9	authenticated	authenticated	murid.6.xirplc@grafidu.sch.id	$2a$06$hHuCKAS1/2g.7mDsIx3.KODW6jD6uZSnlWejo/wnXVxK/ViAOQwRW	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	2026-10-01 15:27:14.157801+07	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:27:14.165996+07	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	0a9bd9ff-16ff-4c2c-bddd-63bc4db9afe9	authenticated	authenticated	guru1@grafidu.sch.id	$2a$06$q9IGOF.LYndh8jv55NDE.e9w7Pi0YkH61NDkDv98I3myAh8JUIZKK	2026-09-28 09:16:14.083604+07	\N		\N		\N			\N	2026-10-01 16:34:33.742596+07	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-09-28 09:16:14.078167+07	2026-10-01 17:26:09.985904+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	2f0e1e72-cb41-4924-82cc-7e9e82e434bf	authenticated	authenticated	murid.1.xirplb@grafidu.sch.id	$2a$06$VQcAKXy5Y3D8cvd9ouRbu.gFZnSCHzlDeVG8Oy6u3ejKPffCvSSCi	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:23:50.251556+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	11996aad-e3bc-430d-a961-0868a4cffe9c	authenticated	authenticated	murid.2.xirplb@grafidu.sch.id	$2a$06$mbbdAxr7Q/dUGEEU7tsYwe/.lBK6TgTc.2n5oMGphFuuW81EHFxzS	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:23:50.251556+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	b8572d2e-1e9b-455d-9030-6891c7d52b0c	authenticated	authenticated	murid.3.xirplb@grafidu.sch.id	$2a$06$WKs.IX2yFZ9O4ARuoOEzYePeOPa01NHwiL5CxOKueLZC0gJaFlKP.	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:23:50.251556+07	\N	\N			\N		0	\N		\N	f	\N	f
@@ -978,7 +977,7 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 00000000-0000-0000-0000-000000000000	fc737808-6aac-4efa-9fd3-35481131db0d	authenticated	authenticated	murid.19.xirplc@grafidu.sch.id	$2a$06$b4OEKXtdrXjUk4Wu5GHo4uoyDyHSvG2RQeiszxsUM6PI.brYyeakG	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 15:23:50.251556+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	authenticated	authenticated	siswa1@grafidu.sch.id	$2a$06$Rgb/WyymrJhNmz3yfQnwGOjUGqCej83S/gbiAKG3wg6CMv3UMIhhC	2026-09-28 09:15:22.485405+07	\N		\N		\N			\N	2026-10-01 16:10:27.715246+07	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-09-28 09:15:22.468524+07	2026-10-01 16:10:27.739957+07	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	authenticated	authenticated	admin@grafidu.sch.id	$2a$06$YrTgNmY/kDvxcH7hsepAoOaZmGQE9QS/Qmeh7qHPC/IR01owTh762	2026-10-01 14:38:54.527876+07	\N		\N		\N			\N	2026-10-01 16:34:32.650815+07	{"provider": "email", "providers": ["email"]}	{}	\N	2026-10-01 14:38:54.527876+07	2026-10-01 16:34:32.693772+07	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	e94384ff-fcf2-434a-b0e2-6c71a16e5529	authenticated	authenticated	admin1@grafidu.sch.id	$2a$06$m7tQGReseftCOL8Qg0F7WuKgd3rHynEn.54jOeye.IGShsSJ2k60W	2026-09-28 09:16:34.712837+07	\N		\N		\N			\N	2026-10-01 16:36:27.962778+07	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-09-28 09:16:34.710225+07	2026-10-01 16:45:22.572343+07	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	e94384ff-fcf2-434a-b0e2-6c71a16e5529	authenticated	authenticated	admin1@grafidu.sch.id	$2a$06$m7tQGReseftCOL8Qg0F7WuKgd3rHynEn.54jOeye.IGShsSJ2k60W	2026-09-28 09:16:34.712837+07	\N		\N		\N			\N	2026-10-01 16:36:27.962778+07	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	t	2026-09-28 09:16:34.710225+07	2026-10-01 16:45:22.572343+07	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -1024,7 +1023,6 @@ COPY public.classes (id, name, ordinal, created_at) FROM stdin;
 
 COPY public.enrollments (id, class_id, student_id, created_at) FROM stdin;
 f2d49333-da1c-4632-a4d6-7f1742707278	46a5ee71-767e-778d-e2a9-334eb0845e73	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	2026-10-01 14:38:54.527876+07
-cf12330d-68e5-40f0-a073-44bc5d44570b	46a5ee71-767e-778d-e2a9-334eb0845e73	2f0e1e72-cb41-4924-82cc-7e9e82e434bf	2026-10-01 14:38:54.527876+07
 776af8d3-469f-474c-aea5-36f3151e0c33	46a5ee71-767e-778d-e2a9-334eb0845e73	11996aad-e3bc-430d-a961-0868a4cffe9c	2026-10-01 14:38:54.527876+07
 6d2d4877-283b-4e92-b799-c1d4914afa5a	46a5ee71-767e-778d-e2a9-334eb0845e73	b8572d2e-1e9b-455d-9030-6891c7d52b0c	2026-10-01 14:38:54.527876+07
 b9103ef6-ca52-4363-a61b-8a57160be6d1	46a5ee71-767e-778d-e2a9-334eb0845e73	27c0ec69-0d28-48c3-8bbd-b3acb528ba13	2026-10-01 14:38:54.527876+07
@@ -1114,6 +1112,7 @@ b31e4362-74fa-41d1-9a52-d2d6ebc08454	407a66ba-e691-c373-c7fd-d40671b6596b	aca8a3
 d67eac7a-e304-47d4-9cf2-6f777e9a25c8	407a66ba-e691-c373-c7fd-d40671b6596b	7a45981c-1cb1-446c-9a65-7ac0c9865e85	2026-10-01 14:38:54.527876+07
 6f7f22d8-b2df-4cad-8b2e-db4423fd667b	407a66ba-e691-c373-c7fd-d40671b6596b	0ef61474-e479-4e95-a456-4780bee27050	2026-10-01 14:38:54.527876+07
 1bba7bc3-c00a-48bf-8cfb-db82fc4caf0c	407a66ba-e691-c373-c7fd-d40671b6596b	a90e2951-1040-45e9-a98c-3b5920fceed8	2026-10-01 14:38:54.527876+07
+b7e3474b-92fd-4d02-b859-8b24a4a58486	46a5ee71-767e-778d-e2a9-334eb0845e73	2f0e1e72-cb41-4924-82cc-7e9e82e434bf	2026-10-02 19:32:41.158205+07
 \.
 
 
@@ -1514,7 +1513,6 @@ COPY public.profiles (id, email, name, role, class_name, avatar, created_at, pho
 e94384ff-fcf2-434a-b0e2-6c71a16e5529	admin1@grafidu.sch.id	Gibran	admin	\N	/assets/logo.png	2026-09-28 09:20:06.092717+07	\N	\N	t	f
 bdf6187d-5f04-4e52-864b-1aa87a1c143e	murid.27.xirplb@grafidu.sch.id	Umar Shara	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	admin@grafidu.sch.id	Bu Dewi Lestari	teacher	\N	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
-2f0e1e72-cb41-4924-82cc-7e9e82e434bf	murid.1.xirplb@grafidu.sch.id	Adam Saputra	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 11996aad-e3bc-430d-a961-0868a4cffe9c	murid.2.xirplb@grafidu.sch.id	Andrew Toby	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 b8572d2e-1e9b-455d-9030-6891c7d52b0c	murid.3.xirplb@grafidu.sch.id	Arfan Dwitara	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 27c0ec69-0d28-48c3-8bbd-b3acb528ba13	murid.4.xirplb@grafidu.sch.id	Eka Wulandari	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
@@ -1531,7 +1529,6 @@ da602c03-1b20-478c-a81d-fa111ce71e41	murid.13.xirplb@grafidu.sch.id	Fajar Lestar
 dd562628-fd47-4b90-989c-ac6df5ad7e03	murid.15.xirplb@grafidu.sch.id	Hendra Wicaksono	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 bfe4f4a1-7d19-4f81-9122-f7b4299cc285	murid.16.xirplb@grafidu.sch.id	Irfan Malik	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 04b3bcf9-3367-46a4-9a78-a92696e4ef8e	murid.17.xirplb@grafidu.sch.id	Jihan Hardiman	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
-0a9bd9ff-16ff-4c2c-bddd-63bc4db9afe9	guru1@grafidu.sch.id	Mahmudi	teacher	\N	/assets/logo.png	2026-09-28 09:19:11.662805+07	\N	\N	t	f
 467a114f-d73f-4556-89c2-3c794e1aaecd	murid.18.xirplb@grafidu.sch.id	Karim Dwitara	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 ac155231-ae3d-4d88-9394-8883411cf7d8	murid.19.xirplb@grafidu.sch.id	Lukman Nuraini	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 e6f10eeb-feee-41dd-8429-c8a938bee48e	murid.20.xirplb@grafidu.sch.id	Mahler Hakim	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
@@ -1565,6 +1562,7 @@ fb8682da-d1a6-4bcd-88ad-577ceb2b36fc	murid.11.xidkva@grafidu.sch.id	Dea Hardiman
 43a2e079-1f15-4045-aa42-a4bfb5a2d157	murid.17.xidkva@grafidu.sch.id	Jihan Halim	student	XI DKV A	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 991c36a6-c684-49b3-a0a2-4d4b4c06c099	murid.18.xidkva@grafidu.sch.id	Karim Fauzi	student	XI DKV A	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 3eee6182-1bba-46e0-9146-9116a260773c	murid.22.xirplc@grafidu.sch.id	Oki Setiawan	student	XI RPL C	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
+2f0e1e72-cb41-4924-82cc-7e9e82e434bf	murid.1.xirplb@grafidu.sch.id	Adam Saputra	student	XI RPL B	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 c860ee43-a393-421f-8e98-114fc699c7e7	murid.23.xirplc@grafidu.sch.id	Putra Rakabumi	student	XI RPL C	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 2a1cdaa2-4010-42d9-abc0-8e02da1f7149	murid.19.xidkva@grafidu.sch.id	Lukman Kusuma	student	XI DKV A	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
 00116bb5-1856-41c2-a82b-315e292ab22c	murid.20.xidkva@grafidu.sch.id	Mahler Yuliana	student	XI DKV A	/assets/logo.png	2026-10-01 14:38:54.527876+07	\N	\N	t	f
@@ -1628,7 +1626,8 @@ COPY public.quizzes (id, class_id, created_by, title, topic, difficulty, num_que
 --
 
 COPY public.sessions (id, user_id, token_hash, user_agent, created_at, last_seen_at, expires_at) FROM stdin;
-fd6483ff-0050-40df-9822-ef510d660b38	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	0aa9d7f77e7f35f7483d1df7a8ec08a83d1167a8360df0411ad2f3efa628f0a9	\N	2026-10-02 18:44:48.672326+07	2026-10-02 18:44:49.502195+07	2026-11-01 18:44:48.672326+07
+e9828b2f-fcc5-4ece-88cb-36213f8290b6	e94384ff-fcf2-434a-b0e2-6c71a16e5529	28054c15faae7e4d51d1e82a7b62fe44a1f11a2c5447a9e74ff95c672e295459	\N	2026-10-02 18:55:13.033469+07	2026-10-02 20:49:50.442862+07	2026-11-01 18:55:13.033469+07
+af9f9203-28bc-4b64-8dbe-1024c8e57f95	e94384ff-fcf2-434a-b0e2-6c71a16e5529	3616b56f78dec51de8f9c292b332d1b0ea9650f62c1391630f1f2b1a786c1ba3	\N	2026-10-02 19:04:40.217163+07	2026-10-02 20:04:29.432148+07	2026-11-01 19:04:40.217163+07
 \.
 
 
@@ -3303,8 +3302,8 @@ GRANT ALL ON FUNCTION extensions.uuid_ns_x500() TO dashboard_user;
 -- Name: FUNCTION app_role(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.app_role() TO anon;
 GRANT ALL ON FUNCTION public.app_role() TO authenticated;
+GRANT ALL ON FUNCTION public.app_role() TO anon;
 GRANT ALL ON FUNCTION public.app_role() TO service_role;
 
 
@@ -3312,8 +3311,8 @@ GRANT ALL ON FUNCTION public.app_role() TO service_role;
 -- Name: FUNCTION verify_profile_login(p_email text, p_password text); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.verify_profile_login(p_email text, p_password text) TO anon;
 GRANT ALL ON FUNCTION public.verify_profile_login(p_email text, p_password text) TO authenticated;
+GRANT ALL ON FUNCTION public.verify_profile_login(p_email text, p_password text) TO anon;
 GRANT ALL ON FUNCTION public.verify_profile_login(p_email text, p_password text) TO service_role;
 
 
@@ -3339,8 +3338,8 @@ GRANT ALL ON TABLE extensions.pg_stat_statements_info TO dashboard_user;
 -- Name: TABLE announcements; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.announcements TO anon;
 GRANT ALL ON TABLE public.announcements TO authenticated;
+GRANT ALL ON TABLE public.announcements TO anon;
 GRANT ALL ON TABLE public.announcements TO service_role;
 
 
@@ -3348,8 +3347,8 @@ GRANT ALL ON TABLE public.announcements TO service_role;
 -- Name: TABLE chat_messages; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.chat_messages TO anon;
 GRANT ALL ON TABLE public.chat_messages TO authenticated;
+GRANT ALL ON TABLE public.chat_messages TO anon;
 GRANT ALL ON TABLE public.chat_messages TO service_role;
 
 
@@ -3357,8 +3356,8 @@ GRANT ALL ON TABLE public.chat_messages TO service_role;
 -- Name: TABLE classes; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.classes TO anon;
 GRANT ALL ON TABLE public.classes TO authenticated;
+GRANT ALL ON TABLE public.classes TO anon;
 GRANT ALL ON TABLE public.classes TO service_role;
 
 
@@ -3366,8 +3365,8 @@ GRANT ALL ON TABLE public.classes TO service_role;
 -- Name: TABLE enrollments; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.enrollments TO anon;
 GRANT ALL ON TABLE public.enrollments TO authenticated;
+GRANT ALL ON TABLE public.enrollments TO anon;
 GRANT ALL ON TABLE public.enrollments TO service_role;
 
 
@@ -3375,8 +3374,8 @@ GRANT ALL ON TABLE public.enrollments TO service_role;
 -- Name: TABLE grades; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.grades TO anon;
 GRANT ALL ON TABLE public.grades TO authenticated;
+GRANT ALL ON TABLE public.grades TO anon;
 GRANT ALL ON TABLE public.grades TO service_role;
 
 
@@ -3384,8 +3383,8 @@ GRANT ALL ON TABLE public.grades TO service_role;
 -- Name: TABLE materials; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.materials TO anon;
 GRANT ALL ON TABLE public.materials TO authenticated;
+GRANT ALL ON TABLE public.materials TO anon;
 GRANT ALL ON TABLE public.materials TO service_role;
 
 
@@ -3393,8 +3392,8 @@ GRANT ALL ON TABLE public.materials TO service_role;
 -- Name: TABLE profiles; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.profiles TO anon;
 GRANT ALL ON TABLE public.profiles TO authenticated;
+GRANT ALL ON TABLE public.profiles TO anon;
 GRANT ALL ON TABLE public.profiles TO service_role;
 
 
@@ -3402,8 +3401,8 @@ GRANT ALL ON TABLE public.profiles TO service_role;
 -- Name: TABLE quiz_questions; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.quiz_questions TO anon;
 GRANT ALL ON TABLE public.quiz_questions TO authenticated;
+GRANT ALL ON TABLE public.quiz_questions TO anon;
 GRANT ALL ON TABLE public.quiz_questions TO service_role;
 
 
@@ -3411,8 +3410,8 @@ GRANT ALL ON TABLE public.quiz_questions TO service_role;
 -- Name: TABLE quizzes; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.quizzes TO anon;
 GRANT ALL ON TABLE public.quizzes TO authenticated;
+GRANT ALL ON TABLE public.quizzes TO anon;
 GRANT ALL ON TABLE public.quizzes TO service_role;
 
 
@@ -3429,8 +3428,8 @@ GRANT ALL ON TABLE public.sessions TO service_role;
 -- Name: TABLE task_statuses; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.task_statuses TO anon;
 GRANT ALL ON TABLE public.task_statuses TO authenticated;
+GRANT ALL ON TABLE public.task_statuses TO anon;
 GRANT ALL ON TABLE public.task_statuses TO service_role;
 
 
@@ -3438,8 +3437,8 @@ GRANT ALL ON TABLE public.task_statuses TO service_role;
 -- Name: TABLE tasks; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.tasks TO anon;
 GRANT ALL ON TABLE public.tasks TO authenticated;
+GRANT ALL ON TABLE public.tasks TO anon;
 GRANT ALL ON TABLE public.tasks TO service_role;
 
 
@@ -3447,8 +3446,8 @@ GRANT ALL ON TABLE public.tasks TO service_role;
 -- Name: TABLE teachings; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.teachings TO anon;
 GRANT ALL ON TABLE public.teachings TO authenticated;
+GRANT ALL ON TABLE public.teachings TO anon;
 GRANT ALL ON TABLE public.teachings TO service_role;
 
 
@@ -3456,8 +3455,8 @@ GRANT ALL ON TABLE public.teachings TO service_role;
 -- Name: TABLE todos; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.todos TO anon;
 GRANT ALL ON TABLE public.todos TO authenticated;
+GRANT ALL ON TABLE public.todos TO anon;
 GRANT ALL ON TABLE public.todos TO service_role;
 
 
@@ -3546,5 +3545,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dvzTt5hBTZvWgA2umgJPwBXNFioy8LuHNFDI9332g3bcJrPQ9GQrU1n2Ti9TuR2
+\unrestrict gfdbi61P3qttpSq5YXf13ForDBbbIt3LZ1UrtdOimA9YPrL6jMP0fLj2ZyZjTTB
 
