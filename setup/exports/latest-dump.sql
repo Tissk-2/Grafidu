@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict iTD4U33FAlN3qBNXSlxJvaoK0YvvTBZnufsvGADYGzURDicslBiNvLqkC1mW5S2
+\restrict dvzTt5hBTZvWgA2umgJPwBXNFioy8LuHNFDI9332g3bcJrPQ9GQrU1n2Ti9TuR2
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -3546,5 +3546,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict iTD4U33FAlN3qBNXSlxJvaoK0YvvTBZnufsvGADYGzURDicslBiNvLqkC1mW5S2
+\unrestrict dvzTt5hBTZvWgA2umgJPwBXNFioy8LuHNFDI9332g3bcJrPQ9GQrU1n2Ti9TuR2
 
