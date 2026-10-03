@@ -19,7 +19,7 @@ export function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="border border-stone-300 aspect-[1/1] p-5 relative overflow-hidden rounded-md">
+    <div className="border border-stone-300 aspect-[1/1] max-[940px]:aspect-auto max-[940px]:min-h-[180px] p-5 relative overflow-hidden rounded-md">
       <p className="text-xl">{label}</p>
       <div className="absolute right-6 bottom-6 z-10">
         <span className="text-7xl font-light">{value}</span>

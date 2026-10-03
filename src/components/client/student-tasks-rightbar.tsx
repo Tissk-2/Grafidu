@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { addTodo, toggleTodo } from "@/app/actions/student";
 import type { TodoItem } from "@/lib/student-model";
+import { useStudentTodos } from "@/app/student/student-shell-data";
 
 const CHECK = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
@@ -13,37 +13,20 @@ const CHECK = (
 
 export default function StudentTasksRightbar({
   aiNote,
-  todos: initialTodos,
 }: {
   aiNote: string;
-  /** From the shell's shared data — avoids a second todos query on this screen. */
+  /** Tidak dipakai lagi: data to-do dibaca langsung dari data bersama shell. */
   todos?: TodoItem[];
 }) {
-  // null = belum ada editan lokal → tampilkan data dari shell context.
-  const [localTodos, setLocalTodos] = useState<TodoItem[] | null>(null);
+  const { todos, toggle, add } = useStudentTodos();
   const [input, setInput] = useState("");
-  const rows = localTodos ?? initialTodos ?? [];
-
-  async function toggle(id: string, done: boolean) {
-    setLocalTodos(rows.map((t) => (t.id === id ? { ...t, done: !done } : t)));
-    try {
-      await toggleTodo(id, !done);
-    } catch (err) {
-      setLocalTodos(rows.map((t) => (t.id === id ? { ...t, done } : t)));
-      window.gtoast?.((err as Error).message, "error");
-    }
-  }
+  const rows = todos ?? [];
 
   async function handleAdd() {
     const v = input.trim();
     if (!v) return;
     setInput("");
-    try {
-      const row = await addTodo(v);
-      if (row) setLocalTodos([...rows, row]);
-    } catch (err) {
-      window.gtoast?.((err as Error).message, "error");
-    }
+    await add(v);
   }
 
   return (
@@ -51,7 +34,7 @@ export default function StudentTasksRightbar({
       <div className="rb-head">
         <h3>To–Do List Pribadi</h3>
       </div>
-      <div className="search-row" style={{ display: "flex", flexDirection: "row", gap: 14, marginBottom: 16 }}>
+      <div className="search-row" style={{ marginBottom: 16 }}>
         <div className="search-box">
           <input
             type="text"

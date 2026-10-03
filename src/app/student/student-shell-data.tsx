@@ -1,7 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { fetchAnnouncements, fetchSchoolTasks, fetchSubjectScores, fetchTodos, fetchTasksToday } from "@/app/actions/student";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  addTodo,
+  fetchAnnouncements,
+  fetchSchoolTasks,
+  fetchSubjectScores,
+  fetchTodos,
+  fetchTasksToday,
+  toggleTodo,
+} from "@/app/actions/student";
 import {
   avgOf,
   aiNoteFromScores,
@@ -34,7 +42,12 @@ export type StudentShellData = {
  * through context means /student/grades, /student/ai-agent and /student/tasks
  * render from cache instead of re-querying the same tables on every visit.
  */
-const Ctx = createContext<StudentShellData>({ data: null });
+type StudentShellContext = StudentShellData & {
+  /** Ubah daftar to-do di data bersama, supaya semua tampilan ikut berubah. */
+  setTodos: (fn: (prev: TodoItem[]) => TodoItem[]) => void;
+};
+
+const Ctx = createContext<StudentShellContext>({ data: null, setTodos: () => {} });
 
 export function StudentShellDataProvider({
   user,
@@ -44,7 +57,10 @@ export function StudentShellDataProvider({
   children: React.ReactNode;
 }) {
   const [data, setData] = useState<StudentShellData["data"]>(null);
-  const value = useMemo(() => ({ data }), [data]);
+  const setTodos = useCallback((fn: (prev: TodoItem[]) => TodoItem[]) => {
+    setData((d) => (d ? { ...d, todos: fn(d.todos) } : d));
+  }, []);
+  const value = useMemo(() => ({ data, setTodos }), [data, setTodos]);
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +96,42 @@ export function StudentShellDataProvider({
 
 export function useStudentShellData() {
   return useContext(Ctx).data;
+}
+
+/**
+ * To-do pribadi dari data bersama + aksi centang/tambah. Dipakai oleh rightbar,
+ * halaman To-Do, dan panel To-Do di HP, jadi progres di halaman Tasks langsung
+ * ikut berubah begitu satu item dicentang di mana pun.
+ */
+export function useStudentTodos() {
+  const { data, setTodos } = useContext(Ctx);
+
+  const toggle = useCallback(
+    async (id: string, done: boolean) => {
+      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !done } : t)));
+      try {
+        await toggleTodo(id, !done);
+      } catch (err) {
+        setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done } : t)));
+        window.gtoast?.((err as Error).message, "error");
+      }
+    },
+    [setTodos],
+  );
+
+  const add = useCallback(
+    async (title: string) => {
+      try {
+        const row = await addTodo(title);
+        if (row) setTodos((prev) => [...prev, row]);
+      } catch (err) {
+        window.gtoast?.((err as Error).message, "error");
+      }
+    },
+    [setTodos],
+  );
+
+  return { todos: data?.todos ?? null, toggle, add };
 }
 
 export default StudentShellDataProvider;

@@ -9,6 +9,7 @@ import { Add, People } from "iconsax-reactjs";
 import { LogOut } from "lucide-react";
 import { logout, avatarSrc } from "@/lib/auth";
 import { id as idLocale } from "date-fns/locale/id";
+import SidebarTodo from "@/components/client/sidebar-todo";
 
 // react-day-picker + date-fns cukup berat untuk masuk chunk bersama semua
 // halaman dashboard — muat terpisah setelah shell tampil.
@@ -148,24 +149,22 @@ function SidebarImpl({
           Calendar
         </h3>
       </div>
-      <div className="cal-container">
-        <Calendar
-          mode="single"
-          selected={selected}
-          onSelect={setSelected}
-          defaultMonth={selected}
-          locale={idLocale}
-          weekStartsOn={1}
-          showOutsideDays
-          className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-white [&_button[data-range-start=true]]:text-white [&_button[data-range-end=true]]:text-white "
-          modifiers={{ sunday: { dayOfWeek: [0] } }}
-          modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
-          classNames={{
-            today:
-              "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] font-semibold data-[selected-single=true]:bg-primary",
-          }}
-        />
-      </div>
+      <Calendar
+        mode="single"
+        selected={selected}
+        onSelect={setSelected}
+        defaultMonth={selected}
+        locale={idLocale}
+        weekStartsOn={1}
+        showOutsideDays
+        className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-white [&_button[data-range-start=true]]:text-white [&_button[data-range-end=true]]:text-white "
+        modifiers={{ sunday: { dayOfWeek: [0] } }}
+        modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
+        classNames={{
+          today:
+            "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] font-semibold data-[selected-single=true]:bg-primary",
+        }}
+      />
 
       {role === "student" ? (
         <>
@@ -224,6 +223,9 @@ function SidebarImpl({
           ))}
         </>
       )}
+
+      {/* To-Do pribadi: hanya tampil di panel HP (CSS .m-only), siswa saja. */}
+      {role === "student" ? <SidebarTodo /> : null}
 
       <div className="side-user-wrap" ref={userWrapRef}>
         {menuOpen && (
