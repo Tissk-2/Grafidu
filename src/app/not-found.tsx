@@ -59,9 +59,9 @@ export default function NotFound() {
           <Link className="btn btn-primary" href="/">
             Kembali ke Beranda
           </Link>
-          <a className="btn btn-outline" href="/#contact">
+          <Link className="btn btn-outline" href="/#contact">
             Hubungi Kami
-          </a>
+          </Link>
         </div>
       </main>
     </>

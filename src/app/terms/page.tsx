@@ -105,7 +105,7 @@ export default function TermsPage() {
               6. Batasan Tanggung Jawab
             </h2>
             <p>
-              Grafidu disediakan "sebagaimana adanya" dan merupakan alat bantu proses
+              Grafidu disediakan &quot;sebagaimana adanya&quot; dan merupakan alat bantu proses
               belajar-mengajar. Grafidu tidak bertanggung jawab atas keputusan akademik, kelulusan,
               maupun kerugian tidak langsung yang timbul dari penggunaan platform. Sesuai bagian 4,
               hasil dari Asisten AI bersifat pendamping dan tetap memerlukan evaluasi guru
