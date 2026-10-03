@@ -76,8 +76,8 @@ export default function ClassManager() {
       <div className="adm-card" style={{ marginTop: 22 }}>
         <h2>Buat Kelas Baru</h2>
         <p className="sub">Satu kelas mewakili satu rombongan belajar. Nama kelas harus unik.</p>
-        <form onSubmit={handleCreate} noValidate style={{ display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap", marginTop: 14 }}>
-          <div className="field-d" style={{ marginTop: 0, flex: "1 1 260px" }}>
+        <form onSubmit={handleCreate} noValidate className="adm-create-form">
+          <div className="field-d">
             <label htmlFor="new-class-name">Nama kelas</label>
             <div className="control">
               <input
@@ -92,15 +92,15 @@ export default function ClassManager() {
                 aria-invalid={error ? true : undefined}
               />
             </div>
-            {error ? (
-              <span className="adm-inline-error" role="alert">
-                {error}
-              </span>
-            ) : null}
           </div>
-          <button type="submit" className={"btn btn-primary btn-sm" + (busy ? " is-loading" : "")} disabled={busy} style={{ marginTop: 0, height: 42 }}>
+          <button type="submit" className={"btn btn-primary btn-sm" + (busy ? " is-loading" : "")} disabled={busy}>
             Buat Kelas
           </button>
+          {error ? (
+            <span className="adm-inline-error adm-create-error" role="alert">
+              {error}
+            </span>
+          ) : null}
         </form>
         {notice ? (
           <p role="status" style={{ marginTop: 12, fontSize: 13.5, color: "#2F7D42" }}>

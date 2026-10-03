@@ -545,7 +545,7 @@ export async function fetchClassGradeRows(classId: string): Promise<GradeCell[]>
     await requireTeaching(user, classId);
     return await sql<GradeCell[]>`
       SELECT DISTINCT ON (g.student_id, g.subject)
-        g.student_id, p.name AS name, g.subject, g.score
+        g.student_id AS "studentId", p.name AS name, g.subject, g.score
       FROM public.grades g
       JOIN public.profiles p ON p.id = g.student_id
       WHERE g.class_id = ${classId}

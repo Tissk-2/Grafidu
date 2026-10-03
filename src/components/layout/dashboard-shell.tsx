@@ -4,20 +4,11 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Plus, Settings } from "lucide-react";
+import { CalendarDays, Settings } from "lucide-react";
 import type { SidebarPropsData } from "@/components/layout/sidebar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import AddClassDialog from "@/components/dialogs/add-class-dialog";
-
-/** Sama dengan tombol "+" di Sidebar: membuka dialog tambah kelas. */
-function openAddClassDialog() {
-  const dlg = document.getElementById("dlg-add-class") as HTMLDialogElement | null;
-  if (dlg) {
-    if (typeof dlg.showModal === "function") dlg.showModal();
-    else dlg.setAttribute("open", "");
-  }
-}
 
 export default function DashboardShell({
   role,
@@ -77,24 +68,6 @@ export default function DashboardShell({
           <span>GRAFIDU</span>
         </Link>
 
-        {role === "teacher" ? (
-          <div className="m-classes">
-            <button type="button" aria-label="Tambah kelas" onClick={openAddClassDialog}>
-              <Plus size={14} aria-hidden />
-            </button>
-            {(sidebar.classes ?? []).map((c) => (
-              <Link
-                key={c.id}
-                href={`/teacher/home/${c.id}`}
-                className={sidebar.activeClassId === c.id ? "on" : undefined}
-                onClick={() => sidebar.onSelectClass?.(c.id)}
-              >
-                {c.name}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
         <Link className="m-gear" href={settingsHref} aria-label="Pengaturan">
           <Settings size={19} aria-hidden />
         </Link>
@@ -122,4 +95,4 @@ export default function DashboardShell({
       {role === "teacher" ? <AddClassDialog /> : null}
     </div>
   );
-}
+} 
