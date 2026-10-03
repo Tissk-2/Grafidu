@@ -17,10 +17,10 @@ export type TaskCardTask = {
  */
 export function taskStatus(muridSelesai: number, total: number, completed: boolean) {
   if (muridSelesai >= total)
-    return { label: "Selesai", dot: "bg-[#16A34A]", chip: "bg-[#EAF7EF] text-[#15803D]" };
+    return { label: "Selesai", dot: "bg-[#16A34A]", chip: "bg-[#EAF7EF] text-[#15803D] dark:text-[#5BD98A]" };
   if (completed)
-    return { label: "Ditutup", dot: "bg-[#8A8A8A]", chip: "bg-[#F2F2F2] text-[#5F5B5D]" };
-  return { label: "Berjalan", dot: "bg-[#CA8A04]", chip: "bg-[#FDF6E3] text-[#96650A]" };
+    return { label: "Ditutup", dot: "bg-[#8A8A8A]", chip: "bg-[#F2F2F2] dark:bg-[#2A282D] text-[#5F5B5D] dark:text-[#A9A5AB]" };
+  return { label: "Berjalan", dot: "bg-[#CA8A04]", chip: "bg-[#FDF6E3] dark:bg-[#382C14] text-[#96650A] dark:text-[#E5B85C]" };
 }
 
 /**
@@ -36,18 +36,18 @@ export function TaskCard({ task, total }: { task: TaskCardTask; total: number })
   return (
     <Link
       href={`/teacher/tasks/${task.id}`}
-      className="group block rounded-sm border border-[#E5E5E5] bg-white p-4 transition-colors hover:border-[#DCD6F3] hover:bg-[#FDFCFF]"
+      className="group block rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] p-4 transition-colors hover:border-[#DCD6F3] dark:border-[#3B2F63] hover:bg-[#FDFCFF] dark:bg-[#1C1A1F]"
     >
       <div className="flex items-start gap-3.5">
-        <span className="mt-0.5 flex h-10 shrink-0 justify-center items-center rounded-sm bg-[#F4F1FE] aspect-square">
+        <span className="mt-0.5 flex h-10 shrink-0 justify-center items-center rounded-sm bg-[#F4F1FE] dark:bg-[#2C2150] aspect-square">
           <ClipboardCheck size={18} aria-hidden color="#5B3FD6" />
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-medium text-[#1A1A1A]">{task.name}</p>
-          <p className=" flex flex-wrap items-center gap-x-2 text-[13px] text-[#8A8A8A]">
+          <p className="truncate text-[15px] font-medium text-[#1A1A1A] dark:text-[#F2F0F2]">{task.name}</p>
+          <p className=" flex flex-wrap items-center gap-x-2 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             <span>Ditugaskan {task.ditugaskan}</span>
-            <span aria-hidden className="text-[#CFCFCF]">
+            <span aria-hidden className="text-[#CFCFCF] dark:text-[#4C484E]">
               •
             </span>
             <span>Tenggat {task.deadline}</span>
@@ -60,7 +60,7 @@ export function TaskCard({ task, total }: { task: TaskCardTask; total: number })
             <span className={`size-1.5 rounded-full ${s.dot}`} />
             {s.label}
           </span>
-          <span className="text-[12px] tabular-nums text-[#8A8A8A]">
+          <span className="text-[12px] tabular-nums text-[#8A8A8A] dark:text-[#8F8B91]">
             {task.muridSelesai}/{total}
           </span>
         </div>
@@ -68,7 +68,7 @@ export function TaskCard({ task, total }: { task: TaskCardTask; total: number })
         <ChevronRight
           size={16}
           aria-hidden
-          className="mt-1 shrink-0 text-[#CFCFCF] transition group-hover:translate-x-0.5 group-hover:text-[#9A93A5]"
+          className="mt-1 shrink-0 text-[#CFCFCF] dark:text-[#4C484E] transition group-hover:translate-x-0.5 group-hover:text-[#9A93A5] dark:text-[#8F8B91]"
         />
       </div>
     </Link>

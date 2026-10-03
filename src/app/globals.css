@@ -36,6 +36,8 @@
   --gray-5: #bebebe;
   --line: #e9e7eb;
   --line-soft: #efedef;
+  --surface: #ffffff;
+  --surface-2: #f4f3f5;
   --bg-blue: #f0f6ff;
   --stripe: #f9fafb;
   --track: #ececec;
@@ -78,6 +80,81 @@
 }
 
 /* ------------------------------------------------------------------
+   Mode gelap — token Grafidu + token shadcn, DI LUAR @layer.
+
+   Harus unlayered: blok :root di atas juga unlayered, dan per aturan
+   cascade CSS, gaya unlayered selalu mengalahkan gaya berlayer apa pun
+   specificity-nya. Taruh .dark di dalam @layer components dan nilai
+   terang dari :root akan terus menang (itu sebabnya blok .dark lama
+   di bawah file tidak pernah aktif).
+   ------------------------------------------------------------------ */
+.dark {
+  color-scheme: dark;
+
+  /* shadcn */
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.432 0.232 292.759);
+  --primary-foreground: oklch(0.969 0.016 293.756);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.606 0.25 292.717);
+  --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+
+  /* Grafidu — aksen (--purple, --coral, --green, dst.) sengaja tetap */
+  --ink: #f2f0f2;
+  --ink-2: #d9d6db;
+  --gray-1: #c6c2c8;
+  --gray-2: #a9a5ab;
+  --gray-3: #8f8b91;
+  --gray-4: #716d73;
+  --gray-5: #4c484e;
+  --line: #2d2b30;
+  --line-soft: #252328;
+  --surface: #1c1a1f;
+  --surface-2: #232126;
+  --bg-blue: #161a29;
+  --stripe: #201e23;
+  --track: #333136;
+  --purple-soft: #2c2150;
+  --purple-banner: #2b2454;
+  --purple-lav: #2b2148;
+  --blue-soft: #1d2742;
+  --green-soft: #16301f;
+  --green-circle: #17352a;
+  --red-soft: #3a1d1c;
+  --amber-soft: #382c14;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  /* Footer memakai namespace sendiri */
+  --f-ink: #f2f0f2;
+  --f-text: #c6c2c8;
+  --f-muted: #8f8b91;
+  --f-line: #2d2b30;
+  --f-paper: #171519;
+
+}
+
+/* ------------------------------------------------------------------
    Everything from here down is Grafidu's own design system.
 
    It MUST live in `@layer components`. Tailwind v4 emits its utilities
@@ -102,7 +179,7 @@
   body {
     font-family: var(--font);
     color: var(--ink);
-    background: #fff;
+    background: var(--surface);
     font-size: 15px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -136,7 +213,7 @@
 
   .container {
     width: 100%;
-    max-width: 936px;
+    max-width: 936px !important;
     margin: 0 auto;
     padding: 0 24px;
   }
@@ -187,7 +264,7 @@
     background: var(--purple-hover);
   }
   .btn-outline {
-    background: #fff;
+    background: var(--surface);
     color: var(--ink);
     border: 1px solid #ddd9de;
   }
@@ -210,6 +287,31 @@
     font-weight: 500;
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  /* theme toggle (landing nav + mobile sheet) */
+  .theme-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    flex: none;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+  }
+  .theme-toggle:hover {
+    color: var(--purple);
+    border-color: var(--purple);
+  }
+  .nav-sheet-head .theme-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
   }
 
   u,
@@ -238,7 +340,7 @@
     color: #b0504c;
   }
   .pill-gray {
-    background: #f4f4f5;
+    background: var(--surface-2);
     color: #71717a;
     border-color: #3f3f46;
   }
@@ -255,7 +357,7 @@
   .nav {
     height: 58px;
     border-bottom: 1px solid var(--line-soft);
-    background: #fff;
+    background: var(--surface);
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -398,7 +500,7 @@
   }
   .mock {
     width: 1150px;
-    background: #fff;
+    background: var(--surface);
     border: 1px solid #e4e2e6;
     border-radius: 18px;
     box-shadow:
@@ -410,7 +512,7 @@
   }
   .float-card {
     position: absolute;
-    background: #fff;
+    background: var(--surface);
     border-radius: 14px;
     box-shadow: var(--shadow-float);
     border: 1px solid #f0eef1;
@@ -429,7 +531,7 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: #fff3e0;
+    background: var(--amber-soft);
     display: grid;
     place-items: center;
     color: #e8930c;
@@ -593,11 +695,11 @@
     height: 11px;
     border: 1px solid #c9c7ce;
     border-radius: 3px;
-    background: #fff;
+    background: var(--surface);
     margin-top: 1px;
   }
   .mtask.done .box {
-    background: #fff;
+    background: var(--surface);
     border-color: #b9b7be;
     display: grid;
     place-items: center;
@@ -616,7 +718,7 @@
     border-color: transparent;
   }
   .mtask.t-pink {
-    background: #fde9f1;
+    background: var(--red-soft);
     border-color: transparent;
   }
   .mtask.t-blue {
@@ -840,7 +942,7 @@
     overflow: hidden;
   }
   .mtable th {
-    background: #f7f7f8;
+    background: var(--surface-2);
     font-size: 8px;
     font-weight: 600;
     text-align: left;
@@ -924,7 +1026,7 @@
     left: 50%;
     bottom: 14px;
     transform: translateX(-50%);
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--line-soft);
     border-radius: 12px;
     box-shadow: 0 10px 28px rgba(24, 21, 22, 0.14);
@@ -1060,7 +1162,7 @@
     align-items: center;
   }
   .grade-card {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid #e4e9f2;
     border-radius: 6px;
     overflow: hidden;
@@ -1276,7 +1378,7 @@
   /* start CTA */
   .start {
     border-top: 1px solid var(--line-soft);
-    padding: 88px 0 230px;
+    padding: 88px 0 96px;
   }
   .start .label-caps {
     display: block;
@@ -1317,6 +1419,368 @@
     padding-bottom: 6px;
   }
 
+  /* FAQ accordion */
+  .faq-list {
+    margin-top: 64px;
+    border-top: 1px solid var(--line);
+  }
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+  }
+  .faq-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 0;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    color: var(--purple);
+    flex: none;
+    transition:
+      transform 0.2s,
+      background 0.2s;
+  }
+  .faq-item[open] .faq-icon {
+    transform: rotate(45deg);
+    background: var(--purple-soft);
+  }
+  .faq-item .faq-a {
+    padding: 0 58px 24px 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--gray-3);
+    max-width: 640px;
+  }
+
+  /* contact band */
+  .contact {
+    background: var(--bg-blue);
+    padding: 104px 0;
+  }
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 88px;
+    align-items: start;
+  }
+  .contact-copy h2 {
+    font-family: var(--font-display);
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-top: 18px;
+  }
+  .contact-copy h2 .accent {
+    color: var(--purple);
+  }
+  .contact-copy h2 .u {
+    border-bottom-width: 2px;
+  }
+  .contact-copy p {
+    margin-top: 22px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--gray-3);
+    max-width: 460px;
+  }
+  .contact-channels {
+    list-style: none;
+    margin-top: 36px;
+    display: grid;
+    gap: 20px;
+  }
+  .contact-channels li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14.5px;
+  }
+  .contact-channels b {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-4);
+    margin-bottom: 2px;
+  }
+  .contact-channels a {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .contact-channels a:hover {
+    color: var(--purple);
+  }
+  .channel-ic {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    color: var(--purple);
+    flex: none;
+  }
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: var(--shadow-card);
+  }
+  .contact-card h3 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .contact-card > p {
+    margin-top: 6px;
+    font-size: 13.5px;
+    color: var(--gray-3);
+  }
+  .contact-form {
+    display: grid;
+    gap: 16px;
+    margin-top: 22px;
+  }
+  .contact-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-4);
+    margin-bottom: 6px;
+  }
+  .contact-field .opt {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    color: var(--gray-5);
+  }
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    background: var(--surface);
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .contact-form select {
+    appearance: none;
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2370696b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+  }
+  .contact-form select:invalid {
+    color: #7c7880;
+  }
+  .contact-form input:focus,
+  .contact-form select:focus,
+  .contact-form textarea:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(117, 30, 248, 0.12);
+  }
+  .contact-form textarea {
+    min-height: 108px;
+    resize: vertical;
+  }
+  .contact-form .btn {
+    width: 100%;
+  }
+  .contact-form .btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  /* testimoni */
+  .stats-row {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .stat {
+    padding: 26px 8px;
+    text-align: center;
+    display: grid;
+    gap: 6px;
+  }
+  .stat + .stat {
+    border-left: 1px solid var(--line);
+  }
+  .stat b {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .stat span {
+    font-size: 13px;
+    color: var(--gray-3);
+  }
+  .testi-grid {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .testi-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 26px 24px 24px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    box-shadow: var(--shadow-card);
+  }
+  .testi-card blockquote {
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--gray-1);
+    flex: 1;
+  }
+  .testi-who {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .testi-photo {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+  }
+  .testi-who > span {
+    display: grid;
+    gap: 1px;
+  }
+  .testi-who b {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .testi-who > span > span {
+    font-size: 12px;
+    color: var(--gray-3);
+  }
+
+  /* harga */
+  .price-grid {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: stretch;
+  }
+  .price-card {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px 26px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .price-card.featured {
+    border-color: var(--purple);
+    box-shadow: 0 12px 32px rgba(117, 30, 248, 0.14);
+  }
+  .plan-badge {
+    position: absolute;
+    top: -12px;
+    left: 24px;
+    background: var(--purple);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+  .plan-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-2);
+  }
+  .price {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .price span {
+    font-family: var(--font);
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--gray-4);
+    letter-spacing: 0;
+  }
+  .price-feat {
+    list-style: none;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+    flex: 1;
+  }
+  .price-feat li {
+    font-size: 13.5px;
+    color: var(--gray-2);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .price-feat li::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    flex: none;
+    margin-top: 1px;
+    border-radius: 50%;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23751ef8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+      center/10px no-repeat,
+      var(--purple-soft);
+  }
+  .price-card .btn {
+    width: 100%;
+  }
+
   /* (old black footer styles removed - replaced by .site-footer illustrated footer) */
 
   /* ============================================================
@@ -1337,7 +1801,7 @@
     flex-direction: column;
   }
   .auth-logo {
-    background: #fff;
+    background: var(--surface);
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(24, 21, 22, 0.05);
     padding: 11px 18px;
@@ -1381,7 +1845,7 @@
     position: absolute;
     top: 252px;
     right: 88px;
-    background: #fff;
+    background: var(--surface);
     border-radius: 14px;
     box-shadow: 0 14px 34px rgba(24, 21, 22, 0.1);
     padding: 13px 20px;
@@ -1411,7 +1875,7 @@
     left: 56px;
     bottom: 130px;
     width: 192px;
-    background: #fff;
+    background: var(--surface);
     border-radius: 12px;
     box-shadow: 0 14px 34px rgba(24, 21, 22, 0.1);
     padding: 12px 14px;
@@ -1476,7 +1940,7 @@
   .auth-tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: #f1f0f4;
+    background: var(--surface-2);
     border-radius: 12px;
     padding: 4px;
     margin-bottom: 34px;
@@ -1489,7 +1953,7 @@
     border-radius: 9px;
   }
   .auth-tab.on {
-    background: #fff;
+    background: var(--surface);
     color: var(--ink);
     box-shadow: 0 1px 4px rgba(24, 21, 22, 0.07);
     font-weight: 500;
@@ -1524,7 +1988,7 @@
     border-radius: 10px;
     padding: 0 14px;
     outline: none;
-    background: #fff;
+    background: var(--surface);
     transition:
       border-color 0.15s,
       box-shadow 0.15s;
@@ -1569,7 +2033,7 @@
     height: 16px;
     border: 1px solid #c9c7ce;
     border-radius: 4px;
-    background: #fff;
+    background: var(--surface);
     display: inline-grid;
     place-items: center;
     color: #fff;
@@ -1615,7 +2079,7 @@
   .btn-google {
     width: 100%;
     height: 46px;
-    background: #fff;
+    background: var(--surface);
     border: 1px solid #e2e0e5;
     border-radius: 10px;
     font-size: 14px;
@@ -1636,7 +2100,7 @@
     display: flex;
     min-width: 1356px;
     min-height: 100vh;
-    background: #fff;
+    background: var(--surface);
   }
 
   /* sidebar */
@@ -1759,7 +2223,7 @@
     border-radius: 12px;
     padding: 13px 14px;
     margin-bottom: 12px;
-    background: #fff;
+    background: var(--surface);
     cursor: pointer;
     transition: background 0.12s;
   }
@@ -1769,7 +2233,7 @@
     height: 22px;
     border: 1px solid #c9c7ce;
     border-radius: 6px;
-    background: #fff;
+    background: var(--surface);
     display: grid;
     place-items: center;
     color: var(--ink);
@@ -1815,7 +2279,7 @@
   }
   button.side-user {
     width: 100%;
-    background: #fff;
+    background: var(--surface);
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -1860,7 +2324,7 @@
     right: 0;
     bottom: calc(100% + 8px);
     z-index: 60;
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 6px;
@@ -1880,7 +2344,7 @@
   }
   .side-user-menu a:hover,
   .side-user-menu button:hover {
-    background: #f4f3f5;
+    background: var(--surface-2);
     color: var(--ink);
   }
   .side-user-menu .menu-danger {
@@ -1910,14 +2374,14 @@
     padding: 13px 14px;
     margin-bottom: 13px;
     cursor: pointer;
-    background: #fff;
+    background: var(--surface);
   }
   .class-card .cic {
     flex: none;
     width: 42px;
     height: 42px;
     border-radius: 10px;
-    background: #f5f4f6;
+    background: var(--surface-2);
     display: grid;
     place-items: center;
     color: var(--gray-3);
@@ -2059,7 +2523,7 @@
     height: 44px;
     border: 1px solid #e3e2e7;
     border-radius: 10px;
-    background: #fff;
+    background: var(--surface);
     padding: 0 40px 0 16px;
     outline: none;
     font-size: 14px;
@@ -2086,7 +2550,7 @@
     border: 1px solid #d9d8df;
     border-radius: 8px;
     padding: 8px 15px;
-    background: #fff;
+    background: var(--surface);
     transition: 0.12s;
   }
   .chip:hover {
@@ -2162,7 +2626,7 @@
     border: 1px solid var(--line-soft);
   }
   .rb-table th {
-    background: #f7f7f8;
+    background: var(--surface-2);
     font-size: 12.5px;
     font-weight: 500;
     color: var(--gray-2);
@@ -2236,7 +2700,7 @@
     background: var(--amber-soft);
   }
   .ann-item.gy {
-    background: #f4f4f5;
+    background: var(--surface-2);
   }
   .ann-item b {
     display: block;
@@ -2278,7 +2742,7 @@
     border-radius: 12px;
     padding: 13px 16px;
     margin-bottom: 14px;
-    background: #fff;
+    background: var(--surface);
   }
   .task-ic {
     flex: none;
@@ -2347,6 +2811,26 @@
     border: 1px solid var(--line);
     border-radius: 14px;
     padding: 24px 26px;
+  }
+
+  /* Lampiran materi pada detail tugas (guru & siswa) */
+  .task-material-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 14px;
+    background: var(--purple-soft);
+    color: var(--purple);
+    font-size: 13px;
+    font-weight: 500;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+  }
+  .task-material-link:hover {
+    border-color: var(--purple);
   }
   .detail-head {
     display: flex;
@@ -2487,7 +2971,7 @@
     background: var(--purple-hover);
   }
   .btn-remind {
-    background: #fff;
+    background: var(--surface);
     color: var(--gray-2);
     border: 1px solid var(--line);
     font-size: 13px;
@@ -2506,7 +2990,7 @@
     border: none;
   }
   .grade-table-wrap .sub-table tfoot td {
-    background: #faf9fc;
+    background: var(--surface-2);
     border-top: 1px solid var(--line);
   }
   .sub-table td.score-below {
@@ -2578,7 +3062,7 @@
     border-radius: 10px;
     padding: 12px 14px;
     outline: none;
-    background: #fff;
+    background: var(--surface);
   }
   .field-d .control select {
     height: 44px;
@@ -2609,7 +3093,7 @@
     border-radius: 9px;
     padding: 9px 20px;
     color: var(--gray-1);
-    background: #fff;
+    background: var(--surface);
   }
   .diff.on {
     background: var(--purple);
@@ -2670,7 +3154,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--purple-soft);
   }
   .quiz-row .info {
@@ -2869,7 +3353,7 @@
     padding: 13px 16px;
     font-size: 14px;
     line-height: 1.6;
-    background: #fff;
+    background: var(--surface);
     white-space: pre-line;
   }
   .typing {
@@ -2908,7 +3392,7 @@
     padding: 10px 15px;
     font-size: 13px;
     color: var(--gray-2);
-    background: #fff;
+    background: var(--surface);
   }
   .suggest:hover {
     border-color: var(--purple);
@@ -2959,7 +3443,7 @@
     height: 148px;
     border-radius: 50%;
     overflow: hidden;
-    background: #f1eff3;
+    background: var(--surface-2);
     position: relative;
   }
   .set-profile .avatar-wrap img {
@@ -3055,7 +3539,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--surface);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     transition: 0.18s;
   }
@@ -3384,7 +3868,7 @@
     flex: none;
   }
   .gdialog-close:hover {
-    background: #f4f3f5;
+    background: var(--surface-2);
     color: var(--ink);
   }
   .gdialog-body {
@@ -3448,7 +3932,7 @@
   }
   .acc-row.open {
     border-color: var(--purple-soft);
-    background: #fdfcff;
+    background: var(--surface-2);
   }
   .acc-row .chev svg {
     transition: transform 0.24s var(--ease-out);
@@ -3523,7 +4007,7 @@
   .btn-mini-ghost {
     border: 1px solid var(--line);
     color: var(--gray-2);
-    background: #fff;
+    background: var(--surface);
   }
   .btn-mini-ghost:hover {
     border-color: #c9c6ce;
@@ -3532,7 +4016,7 @@
   .btn-mini-danger {
     border: 1px solid #f3d2d0;
     color: #c0504d;
-    background: #fff;
+    background: var(--surface);
   }
   .btn-mini-danger:hover {
     background: var(--red-soft);
@@ -3540,7 +4024,7 @@
 
   /* ---------- inline grading (task detail rows) ---------- */
   tr.grade-row-open td {
-    background: #fdfcff;
+    background: var(--surface-2);
   }
   .grade-form {
     display: flex;
@@ -3655,7 +4139,7 @@
       right: 0;
       height: 100vh;
       z-index: calc(var(--z-dialog) - 1);
-      background: #fff;
+      background: var(--surface);
       box-shadow: -18px 0 48px rgba(24, 21, 22, 0.12);
       transform: translateX(100%);
       overflow-y: auto;
@@ -3693,7 +4177,7 @@
     border-radius: 8px;
     place-items: center;
     color: var(--gray-2);
-    background: #f4f3f5;
+    background: var(--surface-2);
   }
 
   @media (max-width: 940px) {
@@ -3825,6 +4309,21 @@
       grid-template-columns: 1fr;
       gap: 48px;
     }
+    .contact-grid {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+    .contact-card {
+      max-width: 560px;
+    }
+    .testi-grid,
+    .price-grid {
+      grid-template-columns: 1fr;
+    }
+    .testi-card,
+    .price-card {
+      max-width: 560px;
+    }
     .view-panel {
       grid-template-columns: 1fr;
       gap: 40px;
@@ -3867,6 +4366,33 @@
       flex-direction: column;
       gap: 6px;
       align-items: flex-start;
+    }
+    .contact {
+      padding: 72px 0;
+    }
+    .contact-copy h2 {
+      font-size: 36px;
+    }
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+    .stat + .stat {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+    .stat b {
+      font-size: 32px;
+    }
+    .faq-item summary {
+      font-size: 16px;
+      gap: 16px;
+    }
+    .faq-item .faq-a {
+      padding-right: 0;
+    }
+    .faq-icon {
+      width: 30px;
+      height: 30px;
     }
     .rows .row-item {
       grid-template-columns: 36px 1fr;
@@ -4126,7 +4652,7 @@
     width: 100%;
     max-width: 380px;
     border: 1px solid var(--f-line);
-    background: #fff;
+    background: var(--surface);
     padding: 0;
     margin: 0;
     border-radius: 10px;
@@ -4630,7 +5156,7 @@
     height: 40px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--surface);
     place-items: center;
     color: var(--ink);
     cursor: pointer;
@@ -4643,7 +5169,7 @@
     position: fixed;
     inset: 0;
     z-index: 200;
-    background: #fff;
+    background: var(--surface);
     display: flex;
     flex-direction: column;
     padding: 16px 24px 32px;
@@ -4672,7 +5198,7 @@
     height: 40px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--surface);
     display: grid;
     place-items: center;
     color: var(--ink);
@@ -4785,15 +5311,16 @@
   .demo-hint {
     font-size: 12px;
     color: var(--gray-3);
-    background: #f7f5ff;
-    border: 1px dashed #c9b4f2;
+    background: var(--purple-soft);
+    border: 1px dashed var(--purple);
     border-radius: 8px;
     padding: 8px 12px;
     margin-top: 16px;
     line-height: 1.5;
   }
+}
 
-  @theme inline {
+@theme inline {
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);
@@ -4836,40 +5363,7 @@
     --radius-4xl: calc(var(--radius) * 2.6);
   }
 
-  .dark {
-    --background: oklch(0.141 0.005 285.823);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.21 0.006 285.885);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.21 0.006 285.885);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.432 0.232 292.759);
-    --primary-foreground: oklch(0.969 0.016 293.756);
-    --secondary: oklch(0.274 0.006 286.033);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.274 0.006 286.033);
-    --muted-foreground: oklch(0.705 0.015 286.067);
-    --accent: oklch(0.274 0.006 286.033);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.552 0.016 285.938);
-    --chart-1: oklch(0.811 0.111 293.571);
-    --chart-2: oklch(0.606 0.25 292.717);
-    --chart-3: oklch(0.541 0.281 293.009);
-    --chart-4: oklch(0.491 0.27 292.581);
-    --chart-5: oklch(0.432 0.232 292.759);
-    --sidebar: oklch(0.21 0.006 285.885);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.606 0.25 292.717);
-    --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
-    --sidebar-accent: oklch(0.274 0.006 286.033);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.552 0.016 285.938);
-  }
-}
+
 
 @layer base {
   * {
@@ -4885,4 +5379,11 @@
   html {
     @apply font-sans;
   }
+}
+
+/* react-loading-skeleton mendefinisikan variabelnya di elemen sendiri —
+   override harus menarget kelasnya langsung, bukan mewarisi dari .dark. */
+.dark .react-loading-skeleton {
+  --base-color: #26242a;
+  --highlight-color: #312f36;
 }

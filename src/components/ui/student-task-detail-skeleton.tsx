@@ -11,7 +11,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
  */
 export function StudentTaskDetailSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       <div className="crumbs">
         <Skeleton width={15} height={15} />
         <Skeleton width={82} height={14} />

@@ -9,7 +9,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
  */
 export function RightbarSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       <div className="rb-head">
         <Skeleton width={110} height={16} />
         <Skeleton width={60} height={12} />

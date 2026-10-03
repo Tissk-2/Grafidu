@@ -11,7 +11,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
  */
 export function MainSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       <div className="profile-head">
         <Skeleton circle width={96} height={96} />
         <div style={{ flex: 1 }}>

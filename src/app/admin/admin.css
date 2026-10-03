@@ -4,7 +4,7 @@
    card radii. Admin-only classes are prefixed .adm-.
    ============================================================ */
 
-.adm-shell { display: flex; min-width: 1356px; min-height: 100vh; background: #fff; }
+.adm-shell { display: flex; min-width: 1356px; min-height: 100vh; background: var(--surface); }
 
 /* ---------- sidebar ---------- */
 .adm-sidebar {
@@ -67,7 +67,7 @@
 .adm-pick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; max-width: 860px; }
 .adm-pick {
   display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit;
-  border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: #fff;
+  border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: var(--surface);
   transition: border-color .12s, box-shadow .12s, transform .12s;
 }
 .adm-pick:hover { border-color: var(--purple); box-shadow: 0 10px 28px rgba(91, 63, 214, .10); transform: translateY(-1px); }
@@ -82,7 +82,7 @@
 /* Trigger error (field "Kelas" wajib diisi) — warna sama dengan .adm-inline-error. */
 .adm-combo-trigger.is-invalid { border-color: #D93843; }
 .adm-combo-trigger {
-  width: 100%; height: 44px; border: 1px solid #E3E2E7; border-radius: 10px; background: #fff;
+  width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
   padding: 0 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
   font-size: 14px; color: var(--ink); text-align: left;
 }
@@ -98,14 +98,14 @@
 .adm-combo-panel {
   position: fixed;
   z-index: 2147483000;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 8px;
   box-shadow: 0 12px 32px rgba(24, 21, 22, 0.14);
 }
 .adm-combo-panel input {
-  width: 100%; height: 36px; border: 1px solid #E3E2E7; border-radius: 8px;
+  width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 8px;
   padding: 0 10px; outline: none; font-size: 13.5px; color: var(--ink);
 }
 .adm-combo-panel input:focus { border-color: var(--purple); }
@@ -123,11 +123,11 @@
 .adm-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 22px; }
 .adm-toolbar .search-box { flex: 1 1 260px; }
 .adm-toolbar select {
-  height: 44px; border: 1px solid #E3E2E7; border-radius: 10px; padding: 0 12px; background: #fff; outline: none;
+  height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; background: var(--surface); outline: none;
 }
 .adm-toolbar select:focus { border-color: var(--purple); }
 
-.adm-table-wrap { border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; margin-top: 18px; background: #fff; }
+.adm-table-wrap { border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; margin-top: 18px; background: var(--surface); }
 .adm-table { width: 100%; border-collapse: collapse; min-width: 720px; }
 .adm-table th {
   text-align: left; font-size: 12px; font-weight: 600; color: var(--gray-3);
@@ -142,7 +142,7 @@
 
 .adm-pager { display: flex; align-items: center; gap: 12px; justify-content: flex-end; margin-top: 14px; font-size: 13px; color: var(--gray-3); }
 
-.btn-mini { font-size: 12.5px; font-weight: 600; color: var(--gray-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; background: #fff; transition: .12s; white-space: nowrap; }
+.btn-mini { font-size: 12.5px; font-weight: 600; color: var(--gray-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; background: var(--surface); transition: .12s; white-space: nowrap; }
 .btn-mini:hover { border-color: #C9C6CE; color: var(--ink); }
 .btn-mini-danger { color: var(--red); }
 .btn-mini-danger:hover { border-color: #E8C7C5; background: var(--red-soft); color: var(--red); }
@@ -168,7 +168,7 @@
 .adm-cred .row { display: flex; gap: 10px; margin-top: 12px; align-items: stretch; }
 .adm-cred input {
   flex: 1; height: 42px; border: 1px solid #D0BCF7; border-radius: 9px; padding: 0 12px;
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 13.5px; background: #fff; outline: none;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 13.5px; background: var(--surface); outline: none;
 }
 .adm-cred input:focus { border-color: var(--purple); }
 

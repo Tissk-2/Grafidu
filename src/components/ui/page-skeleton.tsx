@@ -11,7 +11,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
  */
 export function PageSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       <Skeleton width={200} height={26} />
       <Skeleton width={400} height={13} style={{ marginTop: 8 }} />
 

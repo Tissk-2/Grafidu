@@ -18,7 +18,7 @@ function Section({ dot, rows, grade }: { dot: string; rows: number; grade?: bool
         <Skeleton height={45} borderRadius={4} />
       </div>
 
-      <div className="mt-3.5 overflow-hidden rounded border border-[#DDD]">
+      <div className="mt-3.5 overflow-hidden rounded border border-[#DDD] dark:border-[#2D2B30]">
         <div className="flex h-7 items-center gap-3.5 px-3.5">
           <Skeleton width={20} height={9} />
           <Skeleton width={44} height={9} />
@@ -27,7 +27,7 @@ function Section({ dot, rows, grade }: { dot: string; rows: number; grade?: bool
           <Skeleton width={40} height={9} />
         </div>
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex h-11 items-center gap-3.5 border-t border-[#E5E5E5] px-3.5">
+          <div key={i} className="flex h-11 items-center gap-3.5 border-t border-[#E5E5E5] dark:border-[#2D2B30] px-3.5">
             <Skeleton width={16} height={12} />
             <Skeleton width={142} height={13} />
             <Skeleton width={118} height={12} />
@@ -47,7 +47,7 @@ function Section({ dot, rows, grade }: { dot: string; rows: number; grade?: bool
  */
 export function TaskDetailSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       {/* breadcrumb */}
       <nav className="flex items-center gap-2">
         <Skeleton width={16} height={16} />
@@ -80,7 +80,7 @@ export function TaskDetailSkeleton() {
           </div>
           <Skeleton width={40} height={14} />
         </div>
-        <div className="mt-6 h-px w-full bg-[#E5E5E5]" />
+        <div className="mt-6 h-px w-full bg-[#E5E5E5] dark:bg-[#333136]" />
       </section>
 
       {/* description */}

@@ -12,7 +12,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
  */
 export function TasksSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       {/* header */}
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div className="min-w-0">
@@ -33,7 +33,7 @@ export function TasksSkeleton() {
       {/* task cards */}
       <div className="mt-5 flex flex-col gap-2.5">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-sm border border-[#E5E5E5] bg-white p-4">
+          <div key={i} className="rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] p-4">
             <div className="flex items-start gap-3.5">
               <Skeleton width={40} height={40} borderRadius={8} />
               <div className="min-w-0 flex-1">

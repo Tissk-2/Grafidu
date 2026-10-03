@@ -11,18 +11,10 @@ import { useTeacherShellData } from "../teacher-shell-data";
 import type { MaterialRow } from "@/lib/teacher-model";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
-import MateriFormDialog, { type MateriFormValue } from "./materi-form-dialog";
-
-/** "/materi/eksposisi-modul.pdf" | "https://…" -> file label for the chip. */
-function fileLabel(path: string): string {
-  try {
-    const url = new URL(path, "https://contoh.id");
-    const last = url.pathname.split("/").filter(Boolean).pop();
-    return decodeURIComponent(last ?? path);
-  } catch {
-    return path;
-  }
-}
+import MateriFormDialog, {
+  fileLabel,
+  type MateriFormValue,
+} from "./materi-form-dialog";
 
 /**
  * Middle column only — the sidebar and rightbar come from the teacher layout.
@@ -62,17 +54,13 @@ export default function TeacherMateriPage() {
 
   async function handleSubmit(value: MateriFormValue) {
     if (busy) return;
-    const attachments = value.files
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
     setBusy(true);
     try {
       if (editing) {
         await updateMaterial(editing.id, {
           title: value.title,
           description: value.desc,
-          attachments,
+          attachments: value.files,
           status: editing.status,
         });
         window.gtoast?.("Materi berhasil diperbarui.");
@@ -81,7 +69,7 @@ export default function TeacherMateriPage() {
           classId: activeKelas.id,
           title: value.title,
           description: value.desc,
-          attachments,
+          attachments: value.files,
           status: "published",
         });
         window.gtoast?.("Materi berhasil dibagikan ke " + activeKelas.name + ".");
@@ -112,10 +100,10 @@ export default function TeacherMateriPage() {
 
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+          <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111] dark:text-[#F2F0F2]">
             Materi
           </h1>
-          <p className="mt-1 text-[14px] text-[#8A8A8A]">
+          <p className="mt-1 text-[14px] text-[#8A8A8A] dark:text-[#8F8B91]">
             Materi {kelas.name} yang bisa dipakai siswa — dan dijadikan bahan kuis oleh AI.
           </p>
         </div>
@@ -131,14 +119,14 @@ export default function TeacherMateriPage() {
           <Search
             size={16}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari materi…"
             aria-label="Cari materi"
-            className="h-11 w-full rounded-sm border border-[#E5E5E5] bg-white pr-4 pl-10 text-[14px] text-[#1A1A1A] transition outline-none placeholder:text-[#AFAFAF] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 w-full rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-4 pl-10 text-[14px] text-[#1A1A1A] dark:text-[#F2F0F2] transition outline-none placeholder:text-[#AFAFAF] dark:text-[#6E6A73] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           />
         </div>
 
@@ -147,7 +135,7 @@ export default function TeacherMateriPage() {
             value={sort}
             onChange={(e) => setSort(e.target.value as "terbaru" | "nama")}
             aria-label="Urutkan materi"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           >
             <option value="terbaru">Terbaru</option>
             <option value="nama">Nama A–Z</option>
@@ -155,21 +143,21 @@ export default function TeacherMateriPage() {
           <ChevronDown
             size={15}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
         </div>
       </div>
 
       {/* cards */}
       {filtered.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <span className="mx-auto grid size-11 place-items-center rounded-full bg-[#F4F1FE] text-[#5B3FD6]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <span className="mx-auto grid size-11 place-items-center rounded-full bg-[#F4F1FE] dark:bg-[#2C2150] text-[#5B3FD6] dark:text-[#A78BFA]">
             <Book size={18} aria-hidden />
           </span>
-          <p className="mt-3.5 text-[15px] font-medium text-[#222]">
+          <p className="mt-3.5 text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">
             {materials.length === 0 ? "Belum ada materi" : "Materi tidak ditemukan"}
           </p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             {materials.length === 0
               ? `Kelas ${kelas.name} belum punya materi. Klik "Bagikan Materi" untuk memulai.`
               : "Coba kata kunci lain atau pilih kelas berbeda."}
@@ -180,15 +168,15 @@ export default function TeacherMateriPage() {
           {filtered.map((m) => (
             <li
               key={m.id}
-              className="group flex flex-col rounded-lg border border-[#E5E5E5] bg-white p-5 transition hover:border-[#D5D2D8]"
+              className="group flex flex-col rounded-lg border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] p-5 transition hover:border-[#D5D2D8] dark:border-[#2D2B30]"
             >
               <div className="flex items-start gap-3.5">
                 <span className="task-ic">
                   <Book size={20} aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <b className="block text-[15px] font-semibold text-[#222]">{m.title}</b>
-                  <p className="mt-1.5 line-clamp-3 text-[13.5px] leading-relaxed text-[#8A8A8A]">
+                  <b className="block text-[15px] font-semibold text-[#222] dark:text-[#EDEBF0]">{m.title}</b>
+                  <p className="mt-1.5 line-clamp-3 text-[13.5px] leading-relaxed text-[#8A8A8A] dark:text-[#8F8B91]">
                     {m.description}
                   </p>
                 </div>
@@ -210,7 +198,7 @@ export default function TeacherMateriPage() {
               )}
 
               <div className="mt-4 flex items-center justify-between border-t border-[var(--line-soft)] pt-3.5">
-                <span className="text-[12px] text-[#8A8A8A]">
+                <span className="text-[12px] text-[#8A8A8A] dark:text-[#8F8B91]">
                   {m.attachments.length} lampiran
                 </span>
                 <span className="flex gap-2">
@@ -237,7 +225,7 @@ export default function TeacherMateriPage() {
         open={dialogOpen}
         initial={
           editing
-            ? { title: editing.title, desc: editing.description, files: editing.attachments.join(", ") }
+            ? { title: editing.title, desc: editing.description, files: editing.attachments }
             : undefined
         }
         kelasLabel={kelas.name}

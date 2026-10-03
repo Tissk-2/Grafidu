@@ -12,7 +12,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
  */
 export function ClassSearchSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       <div className="search-row">
         <div className="search-box">
           <Skeleton height={44} borderRadius={8} />

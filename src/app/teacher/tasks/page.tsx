@@ -26,7 +26,7 @@ export default function TeacherTasksPage() {
   // This page has no :id segment, so useRoutedClass falls back to the class
   // last picked on /teacher/home — the same one the shell is showing.
   const { kelas: active } = useRoutedClass();
-  const { tasks: liveTasks, classTotals, refresh } = useTeacherShellData();
+  const { tasks: liveTasks, classTotals, materials, refresh } = useTeacherShellData();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -71,10 +71,10 @@ export default function TeacherTasksPage() {
 
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+          <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111] dark:text-[#F2F0F2]">
             Daftar Tugas
           </h1>
-          <p className="mt-1 text-[14px] text-[#8A8A8A]">
+          <p className="mt-1 text-[14px] text-[#8A8A8A] dark:text-[#8F8B91]">
             Kelola tugas yang Anda serahkan kepada siswa.
           </p>
         </div>
@@ -87,10 +87,10 @@ export default function TeacherTasksPage() {
           Buat Tugas
         </button>
         {all.length > 0 && (
-          <p className="text-[13px] text-[#8A8A8A]">
-            <span className="font-medium tabular-nums text-[#222]">{all.length}</span> tugas
-            <span className="px-1.5 text-[#CFCFCF]">·</span>
-            <span className="font-medium tabular-nums text-[#222]">{submitted}</span> dari
+          <p className="text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
+            <span className="font-medium tabular-nums text-[#222] dark:text-[#EDEBF0]">{all.length}</span> tugas
+            <span className="px-1.5 text-[#CFCFCF] dark:text-[#4C484E]">·</span>
+            <span className="font-medium tabular-nums text-[#222] dark:text-[#EDEBF0]">{submitted}</span> dari
             <span className="tabular-nums"> {capacity}</span> pengumpulan
           </p>
         )}
@@ -102,14 +102,14 @@ export default function TeacherTasksPage() {
           <Search
             size={16}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari tugas…"
             aria-label="Cari tugas"
-            className="h-11 w-full rounded-sm border border-[#E5E5E5] bg-white pr-4 pl-10 text-[14px] text-[#1A1A1A] transition outline-none placeholder:text-[#AFAFAF] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 w-full rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-4 pl-10 text-[14px] text-[#1A1A1A] dark:text-[#F2F0F2] transition outline-none placeholder:text-[#AFAFAF] dark:text-[#6E6A73] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           />
         </div>
 
@@ -118,7 +118,7 @@ export default function TeacherTasksPage() {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label="Urutkan tugas"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           >
             {SORTS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -129,21 +129,21 @@ export default function TeacherTasksPage() {
           <ChevronDown
             size={15}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
         </div>
       </div>
 
       {/* list */}
       {tasks.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <span className="mx-auto grid size-11 place-items-center rounded-full bg-[#F4F1FE] text-[#5B3FD6]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <span className="mx-auto grid size-11 place-items-center rounded-full bg-[#F4F1FE] dark:bg-[#2C2150] text-[#5B3FD6] dark:text-[#A78BFA]">
             <ClipboardCheck size={18} aria-hidden />
           </span>
-          <p className="mt-3.5 text-[15px] font-medium text-[#222]">
+          <p className="mt-3.5 text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">
             {all.length === 0 ? "Belum ada tugas" : "Tugas tidak ditemukan"}
           </p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             {all.length === 0
               ? `Kelas ${active.name} belum punya tugas.`
               : "Coba kata kunci lain atau pilih kelas berbeda."}
@@ -152,9 +152,9 @@ export default function TeacherTasksPage() {
       ) : (
         <>
           {filtering && (
-            <p className="mt-5 text-[13px] text-[#8A8A8A]">
+            <p className="mt-5 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
               Menampilkan{" "}
-              <span className="font-medium tabular-nums text-[#222]">{tasks.length}</span> dari{" "}
+              <span className="font-medium tabular-nums text-[#222] dark:text-[#EDEBF0]">{tasks.length}</span> dari{" "}
               <span className="tabular-nums">{all.length}</span> tugas
             </p>
           )}
@@ -171,6 +171,9 @@ export default function TeacherTasksPage() {
       <TaskDialog
         open={dialogOpen}
         kelasLabel={active?.name ?? ""}
+        materials={materials
+          .filter((m) => m.status === "published")
+          .map((m) => ({ id: m.id, title: m.title }))}
         onClose={() => setDialogOpen(false)}
         onSubmit={async (value: TaskFormValue) => {
           if (!active || creating) return;
@@ -179,8 +182,9 @@ export default function TeacherTasksPage() {
             await createTask(active.id, {
               title: value.title,
               description: value.description,
-              subject: value.subject || active.subject,
+              subject: active.subject,
               dueAt: new Date(value.dueDate).toISOString(),
+              materialId: value.materialId || null,
             });
             refresh();
             window.gtoast?.("Tugas berhasil dibuat untuk " + active.name + ".");

@@ -9,7 +9,7 @@ import ClassSearchSkeleton from "./class-search-skeleton";
  */
 export function StudentTasksSkeleton() {
   return (
-    <SkeletonTheme baseColor="#efedef" highlightColor="#f7f6f8" duration={1.4}>
+    <SkeletonTheme baseColor="var(--line-soft)" highlightColor="var(--surface-2)" duration={1.4}>
       <Skeleton width={180} height={26} />
       <Skeleton width={420} height={13} style={{ marginTop: 8 }} />
 
