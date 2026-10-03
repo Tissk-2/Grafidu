@@ -51,7 +51,7 @@ export default function StudentTasksRightbar({
       <div className="rb-head">
         <h3>To–Do List Pribadi</h3>
       </div>
-      <div className="search-row" style={{ marginBottom: 16 }}>
+      <div className="search-row" style={{ display: "flex", flexDirection: "row", gap: 14, marginBottom: 16 }}>
         <div className="search-box">
           <input
             type="text"

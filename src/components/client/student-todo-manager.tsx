@@ -64,7 +64,7 @@ export default function StudentTodoManager() {
         </div>
       </div>
 
-      <div className="search-row" style={{ maxWidth: 640, marginTop: 22 }}>
+      <div className="search-row" style={{ display: "flex", flexDirection: "row", gap: 14, maxWidth: 640, marginTop: 22 }}>
         <div className="search-box">
           <input
             type="text"

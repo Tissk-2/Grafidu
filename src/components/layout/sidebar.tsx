@@ -148,22 +148,24 @@ function SidebarImpl({
           Calendar
         </h3>
       </div>
-      <Calendar
-        mode="single"
-        selected={selected}
-        onSelect={setSelected}
-        defaultMonth={selected}
-        locale={idLocale}
-        weekStartsOn={1}
-        showOutsideDays
-        className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-white [&_button[data-range-start=true]]:text-white [&_button[data-range-end=true]]:text-white "
-        modifiers={{ sunday: { dayOfWeek: [0] } }}
-        modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
-        classNames={{
-          today:
-            "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] font-semibold data-[selected-single=true]:bg-primary",
-        }}
-      />
+      <div className="cal-container">
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={setSelected}
+          defaultMonth={selected}
+          locale={idLocale}
+          weekStartsOn={1}
+          showOutsideDays
+          className="w-full bg-transparent p-0 [&_button[data-selected-single=true]]:text-white [&_button[data-range-start=true]]:text-white [&_button[data-range-end=true]]:text-white "
+          modifiers={{ sunday: { dayOfWeek: [0] } }}
+          modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
+          classNames={{
+            today:
+              "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] font-semibold data-[selected-single=true]:bg-primary",
+          }}
+        />
+      </div>
 
       {role === "student" ? (
         <>

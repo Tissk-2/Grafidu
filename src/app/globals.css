@@ -3697,6 +3697,9 @@
   }
 
   @media (max-width: 940px) {
+    .app {
+      grid-template-columns: 76px 1fr;
+    }
     .sidebar {
       width: 76px;
       padding: 20px 12px;
@@ -3706,7 +3709,7 @@
     .side-sec-title,
     .cal-head b,
     .cal-dow,
-    .cal-grid,
+    .cal-container,
     .side-list-head,
     .task-card span:not(.tbox),
     .class-card span:not(.cic),
@@ -4888,12 +4891,27 @@
      sehingga isinya tidak bisa diakses sama sekali. */
   @media (max-width: 1180px) {
     .app {
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 341px 1fr;
+      align-items: start;
+    }
+    .sidebar {
+      grid-row: 1 / span 2;
+      grid-column: 1;
+    }
+    .main {
+      grid-row: 1;
+      grid-column: 2;
+      padding-bottom: 24px !important;
+    }
+    body[data-page$="-ai"] .main {
+      padding-bottom: 120px !important;
     }
     .rightbar {
+      grid-row: 2;
+      grid-column: 2;
       position: static;
       transform: none;
-      flex: 0 0 100%;
       width: 100%;
       height: auto;
       overflow: visible;
@@ -4944,6 +4962,9 @@
   /* ---------- <= 600px: HP ---------- */
   @media (max-width: 600px) {
     /* dashboard */
+    .app {
+      grid-template-columns: 60px 1fr;
+    }
     .sidebar {
       width: 60px;
       padding-left: 6px;
