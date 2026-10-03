@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRequireUser } from "@/lib/auth";
-import { fetchClassTeachers, type ClassTeacher } from "@/lib/supabase/queries";
+import { fetchClassTeachers } from "@/app/actions/student";
+import type { ClassTeacher } from "@/lib/student-model";
 import { useTitle } from "@/lib/hooks";
 import { StatCard } from "@/components/ui/stat-card";
 import StudentHomeSkeleton from "@/components/ui/student-home-skeleton";
@@ -23,7 +24,7 @@ export default function StudentHomePage() {
   useEffect(() => {
     if (!u) return;
     let cancelled = false;
-    fetchClassTeachers(u.className).then((c) => {
+    fetchClassTeachers().then((c) => {
       if (!cancelled) setClasses(c);
     });
     return () => {

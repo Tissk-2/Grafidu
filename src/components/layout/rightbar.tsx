@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { dummyGuruData } from "@/lib/guru-demo";
 
 export type GradeRow = { subject: string; score: number; status: string };
 export type StudentRow = { name: string; avg: number };
 export type Announcement = { title: string; body: string; when: string; hl: boolean };
 
+/** KKM dipakai untuk warna pill nilai. */
+const KKM = 80;
+
 /**
  * Marks a score against the class average: green with an up chevron once it
- * reaches the KKM (Kriteria Ketuntasan Minimal, `dummyGuruData.kkm`), red with
- * a down chevron when it falls short. The label is fixed — the score alone
- * decides the tone, so callers no longer pass their own text.
+ * reaches the KKM (Kriteria Ketuntasan Minimal), red with a down chevron when
+ * it falls short. The label is fixed — the score alone decides the tone, so
+ * callers no longer pass their own text.
  */
 function PillMean({ score }: { score: number }) {
-  const meets = score >= dummyGuruData.kkm;
+  const meets = score >= KKM;
   return (
     <span
       className={`pill inline-flex items-center gap-1 ${meets ? "pill-green" : "pill-red"}`}
@@ -30,18 +32,23 @@ export function StudentRightbar({
   ctaHref,
   ctaLabel,
   announcements,
+  gradesHref = "/student/grades",
+  announcementsHref = "/student/announcements",
 }: {
   grades: GradeRow[];
   aiNote: string;
   ctaHref: string;
   ctaLabel: string;
   announcements?: Announcement[];
+  /** Where "Lihat Semua" points; the teacher slot overrides it. */
+  gradesHref?: string;
+  announcementsHref?: string;
 }) {
   return (
     <aside className="rightbar">
       <div className="rb-head">
         <h3>Nilai Terbaru</h3>
-        <Link className="link-underline" href="/student/grades">
+        <Link className="link-underline" href={gradesHref}>
           Lihat Semua
         </Link>
       </div>
@@ -54,8 +61,8 @@ export function StudentRightbar({
           </tr>
         </thead>
         <tbody>
-          {grades.map((g) => (
-            <tr key={g.subject}>
+          {grades.map((g, i) => (
+            <tr key={`${g.subject}-${i}`}>
               <td>{g.subject}</td>
               <td className="num">{g.score}</td>
               <td className="st">
@@ -70,12 +77,12 @@ export function StudentRightbar({
         <div className="ann-card">
           <div className="rb-head" style={{ marginBottom: 4 }}>
             <h3>Pengumuman</h3>
-            <Link className="link-underline" href="/student/announcements">
+            <Link className="link-underline" href={announcementsHref}>
               Lihat Semua
             </Link>
           </div>
-          {announcements.map((a) => (
-            <div key={a.title} className={"ann-item " + (a.hl ? "hl" : "gy")}>
+          {announcements.map((a, i) => (
+            <div key={`${a.title}-${i}`} className={"ann-item " + (a.hl ? "hl" : "gy")}>
               <b>{a.title}</b>
               <p>{a.body}</p>
               <time>{a.when}</time>
@@ -126,8 +133,8 @@ export function TeacherRightbar({
           </tr>
         </thead>
         <tbody>
-          {students.map((s) => (
-            <tr key={s.name}>
+          {students.map((s, i) => (
+            <tr key={`${s.name}-${i}`}>
               <td>{s.name}</td>
               <td className="num">{s.avg}</td>
               <td className="st">
@@ -158,8 +165,8 @@ export function TeacherRightbar({
             Lihat Semua
           </Link>
         </div>
-        {announcements.map((a) => (
-          <div key={a.title} className={"ann-item " + (a.hl ? "hl" : "gy")}>
+        {announcements.map((a, i) => (
+          <div key={`${a.title}-${i}`} className={"ann-item " + (a.hl ? "hl" : "gy")}>
             <b>{a.title}</b>
             <p>{a.body}</p>
             <time>{a.when}</time>

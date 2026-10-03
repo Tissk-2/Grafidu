@@ -1,15 +1,36 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import BodySync from "@/components/body-sync";
 import NavHeader from "@/components/landing/nav-header";
 import ViewTabs from "@/components/landing/view-tabs";
 import SiteFooter from "@/components/landing/footer";
 import ScrollReveal from "@/components/landing/scroll-reveal";
-import { transform } from "next/dist/build/swc";
+import AutoRedirect from "@/components/auth/auto-redirect";
+import { getSessionUser } from "@/lib/session";
 
-export default function LandingPage() {
+// Pastikan redirect server jalan tiap request, bukan hasil prerender statis.
+export const dynamic = "force-dynamic";
+
+function dashboardPath(role?: string | null): string {
+  if (role === "teacher") return "/teacher/home";
+  if (role === "admin") return "/admin";
+  return "/student/home";
+}
+
+export default async function LandingPage() {
+  // Auto auth (server): user yang sudah login tidak perlu lihat landing.
+  // Kalau gagal di sini, <AutoRedirect/> di bawah tetap coba via client.
+  try {
+    const user = await getSessionUser();
+    if (user) redirect(dashboardPath(user.role));
+  } catch {
+    // Abaikan — tampilkan landing seperti biasa.
+  }
+
   return (
     <>
+      <AutoRedirect />
       <BodySync className="landing" />
       <ScrollReveal />
       <a className="skip-link" href="#main">
@@ -53,6 +74,8 @@ export default function LandingPage() {
               src="/assets/hero-left.png"
               width={2704}
               height={1806}
+              sizes="(max-width: 900px) 100vw, 780px"
+              priority
               alt="Preview dashboard"
             ></Image>
           </div>

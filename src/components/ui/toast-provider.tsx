@@ -42,9 +42,12 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     // expose global for parity with the original window.gtoast calls
     (window as unknown as { gtoast?: (m: string, t?: "error") => void }).gtoast = toast;
+    // The Map instance is never reassigned, only mutated; capture it so the
+    // cleanup does not read the ref after this effect instance is torn down.
+    const timersMap = timers.current;
     return () => {
-      timers.current.forEach((t) => clearTimeout(t));
-      timers.current.clear();
+      timersMap.forEach((t) => clearTimeout(t));
+      timersMap.clear();
     };
   }, [toast]);
 

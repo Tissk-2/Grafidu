@@ -4,21 +4,25 @@ import Image from "next/image";
 import Link from "next/link";
 import AdminNav from "@/components/admin/admin-nav";
 import ToastProvider from "@/components/ui/toast-provider";
-import { demoAdmin } from "@/lib/admin-demo";
 
 /**
  * Admin shell: sidebar + the main column the pages render into.
  *
  * This is a client component on purpose. The layout stays a thin server
- * component (it owns `metadata` and the stylesheet) and delegates here, so the
- * shell is a single client instance that survives navigation between admin
- * pages — only the main column is re-rendered.
- *
- * It also means `demoAdmin` resolves to the real object. Read from the server
- * layout it was a client-reference proxy, so the nav rendered an empty name and
- * an undefined email.
+ * component (it owns `metadata`, the session guard, and the stylesheet) and
+ * delegates here, so the shell is a single client instance that survives
+ * navigation between admin pages — only the main column is re-rendered.
+ * The signed-in admin's name/email come from the server layout as props.
  */
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+  name,
+  email,
+}: {
+  children: React.ReactNode;
+  name: string;
+  email: string;
+}) {
   return (
     <ToastProvider>
       <div className="adm-shell">
@@ -28,7 +32,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <span>GRAFIDU</span>
           </Link>
           <span className="adm-role-tag">Staf Sekolah</span>
-          <AdminNav name={demoAdmin.name} email={demoAdmin.email} />
+          <AdminNav name={name} email={email} />
         </aside>
         <main className="adm-main">{children}</main>
       </div>

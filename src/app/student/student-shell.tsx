@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useRequireUser } from "@/lib/auth";
 import DashboardShell from "@/components/layout/dashboard-shell";
@@ -27,13 +28,14 @@ const NAV_LABEL: Record<string, string> = {
  */
 function StudentShellRightbar() {
   const pathname = usePathname();
-  const u = useRequireUser("student");
+  // Guard saja: sesi diverifikasi di sini walau identitas dipakai via context.
+  useRequireUser("student");
   const data = useStudentShellData();
 
   if (pathname.startsWith("/student/tasks")) {
     return (
       <StudentTasksRightbar
-        userId={u?.id ?? ""}
+        todos={data?.todos}
         aiNote="Selesaikan tugas dengan tenggat terdekat dulu."
       />
     );
@@ -64,19 +66,25 @@ function StudentShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const data = useStudentShellData();
 
+  // Stabil agar Sidebar yang di-memo tidak ikut re-render tiap navigasi.
+  const sidebar = useMemo(
+    () => ({
+      // The shell has to stay mounted before the session resolves, so fall
+      // back to the logo rather than blanking the sidebar.
+      user: {
+        name: u?.name ?? "Siswa",
+        sub: u?.className ?? "Siswa",
+        avatar: u?.avatar ?? "/assets/logo.png",
+      },
+      tasksToday: data?.tasksToday ?? [],
+    }),
+    [u?.name, u?.className, u?.avatar, data?.tasksToday],
+  );
+
   return (
     <DashboardShell
       role="student"
-      sidebar={{
-        // The shell has to stay mounted before the session resolves, so fall
-        // back to the logo rather than blanking the sidebar.
-        user: {
-          name: u?.name ?? "Siswa",
-          sub: u?.className ?? "Siswa",
-          avatar: u?.avatar ?? "/assets/logo.png",
-        },
-        tasksToday: data?.tasksToday ?? [],
-      }}
+      sidebar={sidebar}
       activeNav={NAV_LABEL[pathname.split("/")[2] ?? ""] ?? ""}
       rightbar={<StudentShellRightbar />}
     >

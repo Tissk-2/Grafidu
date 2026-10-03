@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { logout } from "@/lib/auth";
 
 const NAV_ITEMS = [
   { href: "/admin/home", label: "Ringkasan", icon: <HomeIcon /> },
@@ -22,10 +23,10 @@ export default function AdminNav({ name, email }: { name: string; email: string 
     return pathname.startsWith(href);
   }
 
-  async function logout() {
+  async function logoutToLogin() {
     if (busy) return;
     setBusy(true);
-    // Frontend-only: session clearing happens server-side in the real flow.
+    await logout();
     router.push("/login");
   }
 
@@ -54,7 +55,7 @@ export default function AdminNav({ name, email }: { name: string; email: string 
             <b>{name}</b>
             <span>{email}</span>
           </div>
-          <button type="button" className="adm-logout" onClick={logout} disabled={busy} aria-label="Keluar" title="Keluar">
+          <button type="button" className="adm-logout" onClick={logoutToLogin} disabled={busy} aria-label="Keluar" title="Keluar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <path d="m16 17 5-5-5-5" />

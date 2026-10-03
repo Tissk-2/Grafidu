@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "@/app/actions/auth";
+import { getSessionUser } from "@/lib/auth";
+
+function dashboardPath(role?: string | null): string {
+  if (role === "teacher") return "/teacher/home";
+  if (role === "admin") return "/admin";
+  return "/student/home";
+}
 
 export default function AuthForm() {
   const router = useRouter();
@@ -13,6 +20,29 @@ export default function AuthForm() {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // Auto auth: kalau sesi masih ada (sudah login), langsung lempar ke dashboard
+  // tanpa harus isi form lagi. Ini cover navigasi client-side / tombol back.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const user = await getSessionUser();
+        if (user && !cancelled) {
+          router.replace(dashboardPath(user.role));
+          return;
+        }
+      } catch {
+        // Abaikan — biarkan form tampil.
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,45 +65,17 @@ export default function AuthForm() {
 
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: em,
-        password: password,
-      });
-      if (error || !data.user) {
-        setError(`Login gagal: ${error?.message ?? "Email atau kata sandi salah."}`);
+      const result = await signIn(em, password);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
 
-      // Sumber kebenaran tunggal: tabel `profiles` di Supabase.
-      // Login hanya butuh `role`; kolom lain opsional agar tidak 400
-      // kalau skema tabel belum lengkap.
-      const { data: profile, error: profErr } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
-
-      if (profErr || !profile) {
-        await supabase.auth.signOut();
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[login:profile]", profErr?.code, profErr?.message);
-        }
-        // PGRST116 = baris tidak ada (user belum didaftarkan).
-        // Kode lain (mis. 400 / RLS) = masalah skema atau policy.
-        setError(
-          profErr?.code === "PGRST116"
-            ? "Akun ini belum terdaftar di database (tabel profiles). Hubungi admin sekolah untuk didaftarkan."
-            : `Gagal membaca data profil: ${profErr?.message ?? "unknown error"}. Periksa kolom tabel profiles dan RLS policy.`
-        );
-        return;
-      }
-
-      const role = (profile as { role: string }).role;
-      // Satu refresh setelah navigasi agar cookie sesi terbaca middleware.
-      if (role === "teacher") router.push("/teacher/home");
-      else if (role === "admin") router.push("/admin");
-      else router.push("/student/home");
+      // Satu refresh setelah navigasi agar layout server membaca session baru.
+      const target = result.mustChangePassword
+        ? "/change-password"
+        : dashboardPath(result.role);
+      router.push(target);
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
@@ -85,7 +87,9 @@ export default function AuthForm() {
   return (
     <div className="auth-box">
       <h2>Welcome back</h2>
-      <p className="sub">Sign in to see what needs attention today.</p>
+      <p className="sub">
+        {checking ? "Checking your session..." : "Sign in to see what needs attention today."}
+      </p>
 
       {error ? (
         <div

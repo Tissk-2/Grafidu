@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/session";
 import AdminShell from "./admin-shell";
 import "./admin.css";
 
@@ -5,12 +6,17 @@ export const metadata = {
   title: "Admin Sekolah — Grafidu",
 };
 
-// Frontend-only: the real implementation adds the admin session guard here
-// (server-side requireUser("admin") equivalent) before rendering children.
-//
-// Kept as a thin server component so it can own `metadata` and the stylesheet,
-// while the shell itself is a client component (see admin-shell.tsx) so it is
-// preserved across navigation.
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminShell>{children}</AdminShell>;
+/**
+ * Server-side guard: tanpa sesi → login; sesi bukan admin → dashboard
+ * rolenya sendiri. Nama/email admin diteruskan ke shell agar sidebar
+ * menampilkan identitas sungguhan.
+ */
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const user = await requireRole("admin");
+
+  return (
+    <AdminShell name={user.name} email={user.email}>
+      {children}
+    </AdminShell>
+  );
 }

@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { submitTask } from "@/lib/supabase/queries";
+import { submitTask } from "@/app/actions/student";
 
 export type StudentSubmissionProps = {
   taskId: string;
-  userId: string;
   isSubmitted: boolean;
   submittedAtStr?: string;
   grade?: number | null;
@@ -14,7 +13,6 @@ export type StudentSubmissionProps = {
 
 export default function StudentTaskSubmission({
   taskId,
-  userId,
   isSubmitted,
   submittedAtStr,
   grade,
@@ -34,7 +32,7 @@ export default function StudentTaskSubmission({
     }
     setSaving(true);
     try {
-      await submitTask(taskId, userId);
+      await submitTask(taskId);
       setSubmitted(true);
       setIsEditing(false);
       setAnswer("");

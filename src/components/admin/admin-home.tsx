@@ -1,29 +1,48 @@
 "use client";
 
 import Link from "next/link";
-import { useDB } from "@/lib/store";
-import { demoAdmin } from "@/lib/admin-demo";
+import { useEffect, useState } from "react";
+import { fetchOverview } from "@/app/actions/admin";
+import type { OverviewData } from "@/lib/admin-model";
+import { getSessionUser } from "@/lib/auth";
+import { relativeWhen } from "@/lib/student-model";
+import AdminSkeleton from "@/components/admin/admin-skeleton";
 
-/** Ringkasan Sekolah: honest counts + recent school announcements, straight
- *  from the in-browser store (frontend-only). */
+/** Ringkasan Sekolah: honest counts + recent school announcements, live from
+ *  Supabase. */
 export default function AdminHome() {
-  const db = useDB();
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [adminName, setAdminName] = useState("Admin");
 
-  const activeStudents = (db?.users ?? []).filter(
-    (u) => u.role === "student" && u.isActive !== false
-  ).length;
-  const activeTeachers = (db?.users ?? []).filter(
-    (u) => u.role === "teacher" && u.isActive !== false
-  ).length;
-  const classCount = db?.classes.length ?? 0;
+  useEffect(() => {
+    fetchOverview()
+      .then(setData)
+      .catch((err) => setLoadError((err as Error).message));
+    getSessionUser().then((u) => {
+      if (u?.name) setAdminName(u.name.split(" ")[0]);
+    });
+  }, []);
 
-  const recentAnnouncements = [...(db?.announcements ?? [])]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 4)
-    .map((a) => ({
-      ...a,
-      creator: a.createdBy ? db?.users.find((u) => u.id === a.createdBy) ?? null : null,
-    }));
+  if (!data) {
+    return loadError ? (
+      <p
+        role="alert"
+        style={{
+          marginTop: 22,
+          fontSize: 13.5,
+          padding: "10px 14px",
+          borderRadius: 10,
+          background: "var(--red-soft)",
+          color: "#B0504C",
+        }}
+      >
+        Gagal memuat ringkasan: {loadError}.
+      </p>
+    ) : (
+      <AdminSkeleton />
+    );
+  }
 
   return (
     <>
@@ -31,7 +50,7 @@ export default function AdminHome() {
         <div>
           <h1 className="page-title">Ringkasan Sekolah</h1>
           <p className="page-sub">
-            Kelola akun, kelas, dan pengumuman Grafidu untuk sekolah Anda, {demoAdmin.name.split(" ")[0]}.
+            Kelola akun, kelas, dan pengumuman Grafidu untuk sekolah Anda, {adminName}.
           </p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -55,7 +74,7 @@ export default function AdminHome() {
             </svg>
           </span>
           <div>
-            <b>{activeStudents}</b>
+            <b>{data.activeStudents}</b>
             <span>Siswa aktif</span>
           </div>
         </div>
@@ -67,7 +86,7 @@ export default function AdminHome() {
             </svg>
           </span>
           <div>
-            <b>{activeTeachers}</b>
+            <b>{data.activeTeachers}</b>
             <span>Guru aktif</span>
           </div>
         </div>
@@ -78,7 +97,7 @@ export default function AdminHome() {
             </svg>
           </span>
           <div>
-            <b>{classCount}</b>
+            <b>{data.classCount}</b>
             <span>Kelas terdaftar</span>
           </div>
         </div>
@@ -95,7 +114,7 @@ export default function AdminHome() {
           </Link>
         </div>
 
-        {recentAnnouncements.length === 0 ? (
+        {data.announcements.length === 0 ? (
           <div className="adm-empty">
             <span className="ic" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -111,12 +130,12 @@ export default function AdminHome() {
           </div>
         ) : (
           <div className="adm-announce-list">
-            {recentAnnouncements.map((a) => (
+            {data.announcements.map((a) => (
               <div key={a.id} className="adm-announce-item">
                 <b>{a.title}</b>
                 <span>
-                  {a.creator?.name ? `Oleh ${a.creator.name} • ` : ""}
-                  {a.createdLabel || "Pengumuman Sekolah"}
+                  {a.creatorName ? `Oleh ${a.creatorName} • ` : ""}
+                  {relativeWhen(a.createdAt)}
                 </span>
                 {a.body ? <p>{a.body}</p> : null}
               </div>

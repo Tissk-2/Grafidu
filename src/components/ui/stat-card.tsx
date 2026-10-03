@@ -1,6 +1,4 @@
-import { Pill } from "@/components/ui/pill";
-
-import { TickSquare, ArrowUp, MessageQuestion } from "iconsax-reactjs";
+import { ArrowUp } from "iconsax-reactjs";
 import { Check } from "lucide-react";
 
 const ICONS: Record<string, React.ReactNode> = {

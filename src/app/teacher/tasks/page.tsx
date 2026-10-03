@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import { ChevronDown, ClipboardCheck, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { parseIdDate, useRoutedClass } from "@/lib/guru";
+import { useRoutedClass } from "@/lib/guru";
+import { useTeacherShellData } from "../teacher-shell-data";
+import { createTask } from "@/app/actions/teacher";
+import TaskDialog, { type TaskFormValue } from "../task-dialog";
+import { fmtDate } from "@/lib/format";
 import TasksSkeleton from "@/components/ui/tasks-skeleton";
 import TaskCard from "@/components/ui/task-card";
 import BodySync from "@/components/body-sync";
@@ -18,31 +22,45 @@ const SORTS: { value: Sort; label: string }[] = [
 
 /** Middle column only — the sidebar and rightbar come from the teacher layout. */
 export default function TeacherTasksPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   // This page has no :id segment, so useRoutedClass falls back to the class
   // last picked on /teacher/home — the same one the shell is showing.
   const { kelas: active } = useRoutedClass();
+  const { tasks: liveTasks, classTotals, refresh } = useTeacherShellData();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   useTitle("Daftar Tugas — Grafidu");
 
-  const total = active.totalMurid;
+  const total = (active ? classTotals[active.id] : 0) ?? 0;
+
+  // View-model TaskCard: uuid id + tanggal terformat dari data live.
+  const all = useMemo(
+    () =>
+      liveTasks.map((t) => ({
+        id: t.id,
+        name: t.title,
+        ditugaskan: fmtDate(t.assignedAt),
+        deadline: fmtDate(t.dueAt),
+        completed: t.isCompleted,
+        muridSelesai: t.submitted,
+      })),
+    [liveTasks],
+  );
 
   const tasks = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return active.tugas
+    return all
       .filter((t) => t.name.toLowerCase().includes(q))
       .sort((a, b) => {
-        const diff = parseIdDate(b.deadline).getTime() - parseIdDate(a.deadline).getTime();
+        const diff = new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
         return sort === "newest" ? diff : -diff;
       });
-  }, [active, query, sort]);
+  }, [all, query, sort]);
 
-  if (!u) return <TasksSkeleton />;
+  if (!u || !active) return <TasksSkeleton />;
 
-  const all = active.tugas;
   const submitted = all.reduce((sum, t) => sum + t.muridSelesai, 0);
   const capacity = all.length * total;
   const filtering = query.trim().length > 0;
@@ -60,6 +78,14 @@ export default function TeacherTasksPage() {
             Kelola tugas yang Anda serahkan kepada siswa.
           </p>
         </div>
+        <button
+          className="btn btn-primary btn-sm"
+          type="button"
+          onClick={() => setDialogOpen(true)}
+          disabled={!active}
+        >
+          Buat Tugas
+        </button>
         {all.length > 0 && (
           <p className="text-[13px] text-[#8A8A8A]">
             <span className="font-medium tabular-nums text-[#222]">{all.length}</span> tugas
@@ -119,7 +145,7 @@ export default function TeacherTasksPage() {
           </p>
           <p className="mt-1 text-[13px] text-[#8A8A8A]">
             {all.length === 0
-              ? `Kelas ${active.kelas} belum punya tugas.`
+              ? `Kelas ${active.name} belum punya tugas.`
               : "Coba kata kunci lain atau pilih kelas berbeda."}
           </p>
         </div>
@@ -141,6 +167,31 @@ export default function TeacherTasksPage() {
           </ul>
         </>
       )}
+
+      <TaskDialog
+        open={dialogOpen}
+        kelasLabel={active?.name ?? ""}
+        onClose={() => setDialogOpen(false)}
+        onSubmit={async (value: TaskFormValue) => {
+          if (!active || creating) return;
+          setCreating(true);
+          try {
+            await createTask(active.id, {
+              title: value.title,
+              description: value.description,
+              subject: value.subject || active.subject,
+              dueAt: new Date(value.dueDate).toISOString(),
+            });
+            refresh();
+            window.gtoast?.("Tugas berhasil dibuat untuk " + active.name + ".");
+            setDialogOpen(false);
+          } catch (err) {
+            window.gtoast?.((err as Error).message, "error");
+          } finally {
+            setCreating(false);
+          }
+        }}
+      />
     </>
   );
 }

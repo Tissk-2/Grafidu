@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ClassCombobox from "./class-combobox";
 
-export type ClassOption = { id: number; name: string };
+export type ClassOption = { id: string; name: string };
 
 export type AccountFormValues = {
   role: "student" | "teacher";
@@ -24,7 +25,8 @@ export const emptyAccountValues: AccountFormValues = {
 
 /**
  * Labeled, keyboard-operable account form shared by the create and edit
- * dialogs. Validation errors are shown inline per field.
+ * dialogs. Validation errors are shown inline per field. With `fixedRole`
+ * (role-scoped pages) the role selector is hidden and the given role is kept.
  */
 export default function AccountForm({
   mode,
@@ -37,6 +39,7 @@ export default function AccountForm({
   submitLabel,
   formId,
   onCancel,
+  fixedRole = false,
 }: {
   mode: "create" | "edit";
   values: AccountFormValues;
@@ -48,8 +51,11 @@ export default function AccountForm({
   submitLabel: string;
   formId: string;
   onCancel?: () => void;
+  fixedRole?: boolean;
 }) {
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AccountFormValues, string>>>({});
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AccountFormValues, string>>>(
+    {},
+  );
 
   useEffect(() => {
     setFieldErrors({});
@@ -62,7 +68,8 @@ export default function AccountForm({
   function validate(): boolean {
     const errors: Partial<Record<keyof AccountFormValues, string>> = {};
     if (!values.name.trim()) errors.name = "Nama lengkap wajib diisi.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) errors.email = "Format email tidak valid.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
+      errors.email = "Format email tidak valid.";
     if (mode === "create" && values.role === "student" && !values.classId) {
       errors.classId = "Pilih kelas untuk siswa.";
     }
@@ -80,7 +87,7 @@ export default function AccountForm({
 
   return (
     <form id={formId} onSubmit={handleSubmit} noValidate>
-      {mode === "create" ? (
+      {mode === "create" && !fixedRole ? (
         <div className="field-d" style={{ marginTop: 0 }}>
           <label htmlFor={`${formId}-role`}>Peran Akun</label>
           <div className="control">
@@ -141,26 +148,21 @@ export default function AccountForm({
         </div>
       </div>
 
-      {mode === "create" && values.role === "student" ? (
+      {values.role === "student" ? (
         <div className="field-d">
           <label htmlFor={`${formId}-class`}>Kelas</label>
           <div className="control">
-            <select
+            <ClassCombobox
               id={`${formId}-class`}
               value={values.classId}
-              onChange={(e) => set("classId", e.target.value)}
-              required
-              aria-invalid={fieldErrors.classId ? true : undefined}
-            >
-              <option value="">Pilih kelas…</option>
-              {classes.map((c) => (
-                <option key={c.id} value={String(c.id)}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              options={classes}
+              onChange={(classId) => set("classId", classId)}
+              invalid={Boolean(fieldErrors.classId)}
+            />
           </div>
-          {fieldErrors.classId ? <span className="adm-inline-error">{fieldErrors.classId}</span> : null}
+          {fieldErrors.classId ? (
+            <span className="adm-inline-error">{fieldErrors.classId}</span>
+          ) : null}
         </div>
       ) : null}
 
@@ -193,7 +195,9 @@ export default function AccountForm({
               aria-invalid={fieldErrors.subject ? true : undefined}
             />
           </div>
-          {fieldErrors.subject ? <span className="adm-inline-error">{fieldErrors.subject}</span> : null}
+          {fieldErrors.subject ? (
+            <span className="adm-inline-error">{fieldErrors.subject}</span>
+          ) : null}
           <p className="adm-form-note">
             Penugasan guru ke kelas tertentu dikelola di halaman detail kelas.
           </p>
@@ -206,13 +210,25 @@ export default function AccountForm({
         </span>
       ) : null}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+      <div
+        className="mb-5"
+        style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}
+      >
         {onCancel ? (
-          <button type="button" className="btn btn-outline btn-sm" onClick={onCancel} disabled={busy}>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={onCancel}
+            disabled={busy}
+          >
             Batal
           </button>
         ) : null}
-        <button type="submit" className={"btn btn-primary btn-sm" + (busy ? " is-loading" : "")} disabled={busy}>
+        <button
+          type="submit"
+          className={"btn btn-primary btn-sm" + (busy ? " is-loading" : "")}
+          disabled={busy}
+        >
           {submitLabel}
         </button>
       </div>

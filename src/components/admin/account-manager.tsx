@@ -1,57 +1,56 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { update, useDB, type User as StoreUser } from "@/lib/store";
-import { generateTemporaryPassword } from "@/lib/admin-demo";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { listAccounts } from "@/app/actions/admin";
+import type { AdminAccount } from "@/lib/admin-model";
+import { generateTemporaryPassword } from "@/lib/password";
 import AccountForm, { emptyAccountValues, type AccountFormValues } from "./account-form";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
-export type ManagedAccount = {
-  id: number;
-  role: "student" | "teacher";
-  name: string;
-  email: string;
-  phone: string;
-  subject: string | null;
-  className: string | null;
-  isActive: boolean;
-  mustChangePassword: boolean;
-};
-
 type ListState = {
-  users: ManagedAccount[];
+  accounts: AdminAccount[];
   page: number;
   pageSize: number;
   total: number;
 };
 
 const PAGE_SIZE = 20;
-const DEFAULT_PREFS = '{"task":true,"deadline":true,"ai":false,"email":false}';
 
-function toManaged(u: StoreUser): ManagedAccount {
-  return {
-    id: u.id,
-    role: u.role,
-    name: u.name,
-    email: u.email,
-    phone: u.phone,
-    subject: u.subject,
-    className: u.className,
-    isActive: u.isActive !== false,
-    mustChangePassword: u.mustChangePassword === true,
-  };
+/**
+ * Kelas / Mapel guru dari teachings. Satu mapel untuk banyak kelas diringkas
+ * jadi "Kelas A, Kelas B • Mapel"; mapel campuran ditampilkan per amanah.
+ */
+function teachingLabel(u: AdminAccount): string {
+  if (u.teachings.length === 0) return u.subject ?? "—";
+  const classes = [...new Set(u.teachings.map((t) => t.className))];
+  const subjects = [...new Set(u.teachings.map((t) => t.subject))];
+  if (subjects.length === 1) return `${classes.join(", ")} • ${subjects[0]}`;
+  return u.teachings.map((t) => `${t.className} • ${t.subject}`).join(", ");
+}
+
+async function callAdminApi(input: string, init: RequestInit): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(input, init);
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) return { ok: false, error: body.error ?? `Gagal (${res.status}).` };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Tidak bisa menghubungi server." };
+  }
 }
 
 /**
- * Search, filter and paginate school accounts; create, edit, deactivate and
- * reset them. Frontend-only: every mutation runs against the in-browser store,
- * and the one-time temporary password is shown only inside a panel that
- * requires explicit dismissal and is never persisted.
+ * Search, filter and paginate school accounts of one role (students or
+ * teachers — the route decides); create, edit, deactivate and reset them.
+ * Data comes from the database (profiles/enrollments/teachings); creating an
+ * account also registers the auth user via /api/admin/users, and the one-time
+ * temporary password is shown only inside a panel that requires explicit
+ * dismissal and is never persisted.
  */
-export default function AccountManager() {
-  const db = useDB();
+export default function AccountManager({ role }: { role: "student" | "teacher" }) {
+  const [data, setData] = useState<Awaited<ReturnType<typeof listAccounts>> | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<"" | "student" | "teacher">("");
   const [classId, setClassId] = useState("");
   const [active, setActive] = useState<"" | "true" | "false">("");
   const [page, setPage] = useState(1);
@@ -64,7 +63,7 @@ export default function AccountManager() {
   const [credential, setCredential] = useState<{ name: string; email: string; role: string; temporaryPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [editTarget, setEditTarget] = useState<ManagedAccount | null>(null);
+  const [editTarget, setEditTarget] = useState<AdminAccount | null>(null);
   const [editValues, setEditValues] = useState<AccountFormValues>(emptyAccountValues);
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -73,31 +72,46 @@ export default function AccountManager() {
   const editDialogRef = useRef<HTMLDialogElement>(null);
   const lastActiveRef = useRef<HTMLElement | null>(null);
 
-  const classes = (db?.classes ?? [])
-    .map((c) => ({ id: c.id, name: c.name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const roleLabel = role === "teacher" ? "guru" : "siswa";
 
-  // Computed inline (not memoized on the db object): the store mutates in
-  // place, so the object identity never changes after mutations.
+  const reload = useCallback(async () => {
+    try {
+      const next = await listAccounts();
+      setData(next);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError((err as Error).message);
+    }
+  }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const classes = data?.classes ?? [];
+  // Nama kelas dari id enrollment — sumber yang sama dengan filter kelas.
+  const classNameById = new Map(classes.map((c) => [c.id, c.name]));
+
   const list: ListState | null = (() => {
-    if (!db) return null;
+    if (!data) return null;
     const needle = q.trim().toLowerCase();
-    const filtered = db.users
-      .map(toManaged)
-      .filter((u) => {
-        if (role && u.role !== role) return false;
-        if (active && u.isActive !== (active === "true")) return false;
-        if (needle && !u.name.toLowerCase().includes(needle) && !u.email.toLowerCase().includes(needle)) return false;
-        if (classId) {
-          const cid = Number(classId);
-          const enrolled = db.enrollments.some((e) => e.classId === cid && e.studentId === u.id);
-          if (!enrolled) return false;
-        }
-        return true;
-      });
+    const filtered = data.accounts.filter((u) => {
+      if (u.role !== role) return false;
+      if (active && u.isActive !== (active === "true")) return false;
+      if (needle && !u.name.toLowerCase().includes(needle) && !u.email.toLowerCase().includes(needle)) return false;
+      // Siswa dicocokkan lewat enrollments, guru lewat amanah mengajarnya.
+      if (
+        classId &&
+        data.classByStudent.get(u.id) !== classId &&
+        !u.teachings.some((t) => t.classId === classId)
+      ) {
+        return false;
+      }
+      return true;
+    });
     const total = filtered.length;
     const start = (page - 1) * PAGE_SIZE;
-    return { users: filtered.slice(start, start + PAGE_SIZE), page, pageSize: PAGE_SIZE, total };
+    return { accounts: filtered.slice(start, start + PAGE_SIZE), page, pageSize: PAGE_SIZE, total };
   })();
 
   const totalPages = list ? Math.max(1, Math.ceil(list.total / PAGE_SIZE)) : 1;
@@ -109,7 +123,7 @@ export default function AccountManager() {
 
   function openCreate() {
     lastActiveRef.current = document.activeElement as HTMLElement | null;
-    setCreateValues(emptyAccountValues);
+    setCreateValues({ ...emptyAccountValues, role });
     setCreateError(null);
     setCredential(null);
     requestAnimationFrame(() => createDialogRef.current?.showModal());
@@ -121,58 +135,40 @@ export default function AccountManager() {
     lastActiveRef.current?.focus();
   }
 
-  function handleCreate() {
+  async function handleCreate() {
     setCreateBusy(true);
     setCreateError(null);
-    try {
-      const email = createValues.email.trim().toLowerCase();
-      const temporaryPassword = generateTemporaryPassword();
-      const created = update((d) => {
-        if (d.users.some((u) => u.email.toLowerCase() === email)) {
-          throw new Error("Email sudah terdaftar.");
-        }
-        const cls =
-          createValues.role === "student"
-            ? d.classes.find((c) => c.id === Number(createValues.classId))
-            : undefined;
-        if (createValues.role === "student" && !cls) {
-          throw new Error("Pilih kelas yang valid untuk siswa.");
-        }
-        const user: StoreUser = {
-          id: d.nextId++,
-          role: createValues.role,
-          name: createValues.name.trim(),
-          email,
-          phone: createValues.phone.trim(),
-          password: temporaryPassword,
-          className: cls?.name ?? null,
-          subject: createValues.role === "teacher" ? createValues.subject.trim() : null,
-          avatar: "",
-          prefs: DEFAULT_PREFS,
-          isActive: true,
-          mustChangePassword: true,
-        };
-        d.users.push(user);
-        if (cls) d.enrollments.push({ classId: cls.id, studentId: user.id });
-        return user;
-      });
-      setCredential({
-        name: created.name,
-        email: created.email,
-        role: created.role,
-        temporaryPassword,
-      });
-      setCopied(false);
-      announce(`Akun ${created.name} berhasil dibuat.`);
-    } catch (err) {
-      // Inline error inside the dialog; a global notice would sit behind the overlay.
-      setCreateError((err as Error).message);
-    } finally {
-      setCreateBusy(false);
+    const temporaryPassword = generateTemporaryPassword();
+    const res = await callAdminApi("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role: createValues.role,
+        name: createValues.name.trim(),
+        email: createValues.email.trim().toLowerCase(),
+        phone: createValues.phone.trim(),
+        classId: createValues.role === "student" ? createValues.classId : undefined,
+        subject: createValues.role === "teacher" ? createValues.subject.trim() : undefined,
+        password: temporaryPassword,
+      }),
+    });
+    setCreateBusy(false);
+    if (!res.ok) {
+      setCreateError(res.error ?? "Gagal membuat akun.");
+      return;
     }
+    setCredential({
+      name: createValues.name.trim(),
+      email: createValues.email.trim().toLowerCase(),
+      role: createValues.role,
+      temporaryPassword,
+    });
+    setCopied(false);
+    announce(`Akun ${createValues.name.trim()} berhasil dibuat.`);
+    reload();
   }
 
-  function openEdit(u: ManagedAccount) {
+  function openEdit(u: AdminAccount) {
     lastActiveRef.current = document.activeElement as HTMLElement | null;
     setEditTarget(u);
     setEditValues({
@@ -180,8 +176,10 @@ export default function AccountManager() {
       name: u.name,
       email: u.email,
       phone: u.phone,
-      classId: "",
-      subject: u.subject ?? "",
+      // Kelas siswa saat ini dari enrollments — dasar deteksi "berubah".
+      classId: u.role === "student" ? data?.classByStudent.get(u.id) ?? "" : "",
+      // Mapel utama: profiles.subject bisa kosong — isi dari amanah mengajar.
+      subject: [...new Set(u.teachings.map((t) => t.subject))][0] ?? u.subject ?? "",
     });
     setEditError(null);
     requestAnimationFrame(() => editDialogRef.current?.showModal());
@@ -193,67 +191,71 @@ export default function AccountManager() {
     lastActiveRef.current?.focus();
   }
 
-  function handleEdit() {
+  async function handleEdit() {
     if (!editTarget) return;
     setEditBusy(true);
     setEditError(null);
-    try {
-      const email = editValues.email.trim().toLowerCase();
-      const updated = update((d) => {
-        if (d.users.some((u) => u.id !== editTarget.id && u.email.toLowerCase() === email)) {
-          throw new Error("Email sudah dipakai akun lain.");
-        }
-        const u = d.users.find((row) => row.id === editTarget.id);
-        if (!u) throw new Error("Pengguna tidak ditemukan.");
-        u.name = editValues.name.trim();
-        u.email = email;
-        u.phone = editValues.phone.trim();
-        if (editTarget.role === "teacher") u.subject = editValues.subject.trim();
-        return u;
-      });
-      setNotice({ kind: "ok", text: `Profil ${updated.name} diperbarui.` });
-      announce(`Profil ${updated.name} diperbarui.`);
-      closeEdit();
-    } catch (err) {
-      setEditError((err as Error).message);
-    } finally {
-      setEditBusy(false);
+    const res = await callAdminApi(`/api/admin/users/${editTarget.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: editValues.name.trim(),
+        email: editValues.email.trim().toLowerCase(),
+        phone: editValues.phone.trim(),
+        subject: editTarget.role === "teacher" ? editValues.subject.trim() : undefined,
+        // Kirim hanya bila kelas siswa benar-benar diganti.
+        classId:
+          editTarget.role === "student" &&
+          editValues.classId &&
+          editValues.classId !== (data?.classByStudent.get(editTarget.id) ?? "")
+            ? editValues.classId
+            : undefined,
+      }),
+    });
+    setEditBusy(false);
+    if (!res.ok) {
+      setEditError(res.error ?? "Gagal menyimpan perubahan.");
+      return;
     }
+    setNotice({ kind: "ok", text: `Profil ${editValues.name.trim()} diperbarui.` });
+    announce(`Profil ${editValues.name.trim()} diperbarui.`);
+    closeEdit();
+    reload();
   }
 
-  function toggleActive(u: ManagedAccount) {
+  async function toggleActive(u: AdminAccount) {
     const verb = u.isActive ? "menonaktifkan" : "mengaktifkan kembali";
     if (!confirm(`Yakin ${verb} akun ${u.name}?${u.isActive ? " Sesi yang sedang berjalan akan ditutup." : ""}`)) return;
-    try {
-      update((d) => {
-        const target = d.users.find((row) => row.id === u.id);
-        if (!target) throw new Error("Pengguna tidak ditemukan.");
-        target.isActive = !u.isActive;
-      });
-      setNotice({ kind: "ok", text: u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.` });
-      announce(u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.`);
-    } catch (err) {
-      setNotice({ kind: "error", text: (err as Error).message });
+    const res = await callAdminApi(`/api/admin/users/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !u.isActive }),
+    });
+    if (!res.ok) {
+      setNotice({ kind: "error", text: res.error ?? "Gagal mengubah status akun." });
+      return;
     }
+    setNotice({ kind: "ok", text: u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.` });
+    announce(u.isActive ? `${u.name} dinonaktifkan.` : `${u.name} diaktifkan kembali.`);
+    reload();
   }
 
-  function resetPassword(u: ManagedAccount) {
+  async function resetPassword(u: AdminAccount) {
     if (!confirm(`Terbitkan kata sandi sementara baru untuk ${u.name}? Sesi lama akan ditutup dan akun wajib mengganti sandi saat login berikutnya.`)) return;
-    try {
-      const temporaryPassword = generateTemporaryPassword();
-      update((d) => {
-        const target = d.users.find((row) => row.id === u.id);
-        if (!target) throw new Error("Pengguna tidak ditemukan.");
-        target.password = temporaryPassword;
-        target.mustChangePassword = true;
-      });
-      setCredential({ name: u.name, email: u.email, role: u.role, temporaryPassword });
-      setCopied(false);
-      requestAnimationFrame(() => createDialogRef.current?.showModal());
-      announce(`Kata sandi sementara baru diterbitkan untuk ${u.name}.`);
-    } catch (err) {
-      setNotice({ kind: "error", text: (err as Error).message });
+    const temporaryPassword = generateTemporaryPassword();
+    const res = await callAdminApi(`/api/admin/users/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: temporaryPassword }),
+    });
+    if (!res.ok) {
+      setNotice({ kind: "error", text: res.error ?? "Gagal menerbitkan kata sandi baru." });
+      return;
     }
+    setCredential({ name: u.name, email: u.email, role: u.role, temporaryPassword });
+    setCopied(false);
+    requestAnimationFrame(() => createDialogRef.current?.showModal());
+    announce(`Kata sandi sementara baru diterbitkan untuk ${u.name}.`);
   }
 
   async function copyCredential() {
@@ -269,10 +271,29 @@ export default function AccountManager() {
   const startItem = ((list?.page ?? 1) - 1) * PAGE_SIZE + 1;
   const endItem = list ? Math.min(list.total, list.page * PAGE_SIZE) : 0;
 
-  // The store fills in after mount; without this the table renders empty and
-  // then pops in. The admin shell lives in the route layout, so a skeleton
-  // here only affects the main column.
-  if (!db) return <AdminSkeleton />;
+  // Data diambil dari Supabase setelah mount; tanpa ini tabel render kosong
+  // lalu muncul mendadak. Shell admin ada di layout route, jadi skeleton di
+  // sini hanya memengaruhi kolom utama.
+  if (!data) {
+    return loadError ? (
+      <p
+        role="alert"
+        style={{
+          marginTop: 16,
+          fontSize: 13.5,
+          padding: "10px 14px",
+          borderRadius: 10,
+          background: "var(--red-soft)",
+          color: "#B0504C",
+        }}
+      >
+        Gagal memuat akun: {loadError}. Pastikan skema supabase/schema.sql sudah dijalankan
+        (kolom is_active pada profiles dan policy admin).
+      </p>
+    ) : (
+      <AdminSkeleton />
+    );
+  }
 
   return (
     <>
@@ -288,8 +309,8 @@ export default function AccountManager() {
           </svg>
           <input
             type="search"
-            placeholder="Cari nama atau email…"
-            aria-label="Cari akun"
+            placeholder={`Cari nama atau email ${roleLabel}…`}
+            aria-label={`Cari akun ${roleLabel}`}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
@@ -297,18 +318,6 @@ export default function AccountManager() {
             }}
           />
         </div>
-        <select
-          aria-label="Filter peran"
-          value={role}
-          onChange={(e) => {
-            setRole(e.target.value as "" | "student" | "teacher");
-            setPage(1);
-          }}
-        >
-          <option value="">Semua peran</option>
-          <option value="student">Siswa</option>
-          <option value="teacher">Guru</option>
-        </select>
         <select
           aria-label="Filter kelas"
           value={classId}
@@ -319,7 +328,7 @@ export default function AccountManager() {
         >
           <option value="">Semua kelas</option>
           {classes.map((c) => (
-            <option key={c.id} value={String(c.id)}>
+            <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
@@ -365,25 +374,25 @@ export default function AccountManager() {
           <thead>
             <tr>
               <th scope="col">Akun</th>
-              <th scope="col">Peran</th>
-              <th scope="col">Kelas / Mapel</th>
+              <th scope="col">{role === "teacher" ? "Kelas / Mapel" : "Kelas"}</th>
               <th scope="col">Status</th>
               <th scope="col" style={{ textAlign: "right" }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {list?.users.map((u) => (
+            {list?.accounts.map((u) => (
               <tr key={u.id}>
                 <td className="cell-main">
                   <b>{u.name}</b>
                   <span>{u.email}</span>
                 </td>
                 <td>
-                  <span className={"pill " + (u.role === "teacher" ? "pill-purple" : "pill-blue")}>
-                    {u.role === "teacher" ? "Guru" : "Siswa"}
-                  </span>
+                  {u.role === "teacher"
+                    ? teachingLabel(u)
+                    : classNameById.get(data.classByStudent.get(u.id) ?? "") ??
+                      u.className ??
+                      "—"}
                 </td>
-                <td>{u.role === "student" ? u.className ?? "—" : u.subject ?? "—"}</td>
                 <td>
                   <span className={"pill " + (u.isActive ? "pill-green" : "pill-red")}>
                     {u.isActive ? "Aktif" : "Nonaktif"}
@@ -407,7 +416,7 @@ export default function AccountManager() {
           </tbody>
         </table>
 
-        {list && list.users.length === 0 ? (
+        {list && list.accounts.length === 0 ? (
           <div className="adm-empty">
             <span className="ic" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -415,7 +424,7 @@ export default function AccountManager() {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </span>
-            <b>Tidak ada akun yang cocok</b>
+            <b>Tidak ada akun {roleLabel} yang cocok</b>
             <p>Ubah filter pencarian atau buat akun baru untuk sekolah ini.</p>
             <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
               Tambah akun
@@ -427,7 +436,7 @@ export default function AccountManager() {
       {list && list.total > 0 ? (
         <div className="adm-pager">
           <span>
-            Menampilkan {startItem}–{endItem} dari {list.total} akun
+            Menampilkan {startItem}–{endItem} dari {list.total} akun {roleLabel}
           </span>
           <button type="button" className="btn-mini" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             ‹ Sebelumnya
@@ -445,11 +454,11 @@ export default function AccountManager() {
       <dialog className="gdialog" ref={createDialogRef} onClose={closeCreate}>
         <div className="gdialog-head">
           <div>
-            <h3>{credential ? "Kata Sandi Sementara" : "Tambah Akun"}</h3>
+            <h3>{credential ? "Kata Sandi Sementara" : `Tambah Akun ${role === "teacher" ? "Guru" : "Siswa"}`}</h3>
             <p>
               {credential
                 ? "Bagikan melalui saluran komunikasi sekolah. Kata sandi ini hanya ditampilkan sekali."
-                : "Buat akun siswa atau guru dengan kata sandi sementara."}
+                : `Buat akun ${roleLabel} dengan kata sandi sementara.`}
             </p>
           </div>
           <button className="gdialog-close" aria-label="Tutup" onClick={closeCreate}>
@@ -488,27 +497,26 @@ export default function AccountManager() {
             </div>
           </div>
         ) : (
-          <>
-            <div className="gdialog-body" style={{ paddingBottom: 0 }}>
-              <AccountForm
-                mode="create"
-                formId="form-create-account"
-                values={createValues}
-                onChange={setCreateValues}
-                classes={classes}
-                busy={createBusy}
-                serverError={createError}
-                onSubmit={handleCreate}
-                submitLabel={createBusy ? "Membuat…" : "Buat akun"}
-                onCancel={closeCreate}
-              />
-            </div>
-          </>
+          <div className="gdialog-body" style={{ paddingBottom: 0 }}>
+            <AccountForm
+              mode="create"
+              formId="form-create-account"
+              values={createValues}
+              onChange={setCreateValues}
+              classes={classes}
+              busy={createBusy}
+              serverError={createError}
+              onSubmit={handleCreate}
+              submitLabel={createBusy ? "Membuat…" : "Buat akun"}
+              onCancel={closeCreate}
+              fixedRole
+            />
+          </div>
         )}
       </dialog>
 
       {/* edit dialog */}
-      <dialog className="gdialog" ref={editDialogRef} onClose={() => setEditTarget(null)}>
+      <dialog className="gdialog" ref={editDialogRef} onClose={closeEdit}>
         <div className="gdialog-head">
           <div>
             <h3>Ubah Akun</h3>

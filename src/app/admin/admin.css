@@ -61,6 +61,64 @@
 .adm-card > h2 { font-size: 16px; font-weight: 600; }
 .adm-card > .sub { font-size: 13px; color: var(--gray-3); margin-top: 3px; }
 
+/* ---------- pemilih peran akun (Manajemen Akun) ---------- */
+.adm-backlink { display: inline-block; margin-bottom: 6px; font-size: 13px; color: var(--gray-3); text-decoration: none; }
+.adm-backlink:hover { color: var(--purple); }
+.adm-pick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; max-width: 860px; }
+.adm-pick {
+  display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit;
+  border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: #fff;
+  transition: border-color .12s, box-shadow .12s, transform .12s;
+}
+.adm-pick:hover { border-color: var(--purple); box-shadow: 0 10px 28px rgba(91, 63, 214, .10); transform: translateY(-1px); }
+.adm-pick .ic { width: 52px; height: 52px; border-radius: 50%; background: var(--purple-soft); color: var(--purple); display: grid; place-items: center; flex: none; }
+.adm-pick .pick-text { min-width: 0; }
+.adm-pick .pick-text b { display: block; font-size: 15.5px; font-weight: 600; }
+.adm-pick .pick-text span { display: block; margin-top: 3px; font-size: 13px; color: var(--gray-3); }
+.adm-pick .count { margin-left: auto; font-size: 26px; font-weight: 600; color: var(--purple); letter-spacing: -0.02em; padding-left: 12px; }
+
+/* ---------- combobox kelas (cari di dalam panel) ---------- */
+.adm-combo { position: relative; }
+/* Trigger error (field "Kelas" wajib diisi) — warna sama dengan .adm-inline-error. */
+.adm-combo-trigger.is-invalid { border-color: #D93843; }
+.adm-combo-trigger {
+  width: 100%; height: 44px; border: 1px solid #E3E2E7; border-radius: 10px; background: #fff;
+  padding: 0 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+  font-size: 14px; color: var(--ink); text-align: left;
+}
+.adm-combo-trigger:focus-visible, .adm-combo.open .adm-combo-trigger { border-color: var(--purple); }
+.adm-combo-trigger .val { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-combo-trigger .val.placeholder { color: var(--gray-4); }
+.adm-combo-trigger svg { flex: none; color: #AFAFAF; transition: transform .12s; }
+.adm-combo.open .adm-combo-trigger svg { transform: rotate(180deg); }
+/* Panel dropdown — di-render via portal ke <dialog>, jadi posisinya fixing ke
+   viewport (left/top/bottom/width di-inline dari JS). Tidak lagi in-flow:
+   tidak mendorong field lain dan tidak terpotong overflow form/dialog.
+   z-index ekstrem karena panel adalah anak <dialog> top-layer. */
+.adm-combo-panel {
+  position: fixed;
+  z-index: 2147483000;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 12px 32px rgba(24, 21, 22, 0.14);
+}
+.adm-combo-panel input {
+  width: 100%; height: 36px; border: 1px solid #E3E2E7; border-radius: 8px;
+  padding: 0 10px; outline: none; font-size: 13.5px; color: var(--ink);
+}
+.adm-combo-panel input:focus { border-color: var(--purple); }
+.adm-combo-list { margin-top: 6px; max-height: 180px; overflow-y: auto; display: grid; gap: 2px; }
+.adm-combo-opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  padding: 9px 10px; border-radius: 8px; font-size: 13.5px; text-align: left;
+  background: none; border: none; cursor: pointer; color: var(--ink);
+}
+.adm-combo-opt:hover, .adm-combo-opt.hi { background: var(--purple-soft); }
+.adm-combo-opt.on { color: var(--purple); font-weight: 600; }
+.adm-combo-empty { padding: 10px; font-size: 13px; color: var(--gray-3); text-align: center; }
+
 /* ---------- toolbar + table ---------- */
 .adm-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 22px; }
 .adm-toolbar .search-box { flex: 1 1 260px; }

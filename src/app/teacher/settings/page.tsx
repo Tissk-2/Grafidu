@@ -1,13 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRequireUser, type SessionUser } from "@/lib/auth";
-import {
-  fetchTasksToday,
-  fetchSubjectScores,
-  aiNoteFromScores,
-  type SidebarTask,
-} from "@/lib/supabase/queries";
+import { useRequireUser } from "@/lib/auth";
+import { fetchTasksToday, fetchSubjectScores } from "@/app/actions/student";
+import { aiNoteFromScores, type SidebarTask } from "@/lib/student-model";
 import { useTitle } from "@/lib/hooks";
 import type { GradeRow } from "@/components/layout/rightbar";
 import PageSkeleton from "@/components/ui/page-skeleton";
@@ -20,10 +16,10 @@ type SettingsPageData = {
   aiNote: string;
 };
 
-async function loadSettingsPage(u: SessionUser): Promise<SettingsPageData> {
+async function loadSettingsPage(): Promise<SettingsPageData> {
   const [tasksToday, scores] = await Promise.all([
-    fetchTasksToday(u),
-    fetchSubjectScores(u.id),
+    fetchTasksToday(),
+    fetchSubjectScores(),
   ]);
   return {
     tasksToday,
@@ -33,16 +29,14 @@ async function loadSettingsPage(u: SessionUser): Promise<SettingsPageData> {
 }
 
 export default function StudentSettingsPage() {
-  // Prototipe: guard role dimatikan supaya halaman bisa diakses tanpa login
-  // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
-  const u = useRequireUser();
+  const u = useRequireUser("teacher");
   const [data, setData] = useState<SettingsPageData | null>(null);
   useTitle("Pengaturan Profil — Grafidu");
 
   useEffect(() => {
     if (!u) return;
     let cancelled = false;
-    loadSettingsPage(u).then((d) => {
+    loadSettingsPage().then((d) => {
       if (!cancelled) setData(d);
     });
     return () => {

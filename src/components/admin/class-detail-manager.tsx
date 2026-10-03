@@ -1,21 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { update, useDB } from "@/lib/store";
+import { useCallback, useEffect, useState } from "react";
+import {
+  assignTeaching,
+  fetchClassDetail,
+  moveStudent,
+  removeTeaching,
+  renameClass,
+} from "@/app/actions/admin";
+import type { ClassDetailData } from "@/lib/admin-model";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /**
- * Manages one class: rename (syncs legacy class names), move students in
- * (with an explicit old → new confirmation), and manage teacher/subject
- * assignments. Frontend-only: everything derives from the in-browser store,
+ * Manages one class: rename (syncs the class label on user profiles), move
+ * students in (with an explicit old → new confirmation), and manage
+ * teacher/subject assignments. Everything reads and writes Supabase directly,
  * so counts stay honest after every mutation.
  */
-export default function ClassDetailManager({ classId }: { classId: number }) {
-  const db = useDB();
-  const clsFound = db?.classes.find((c) => c.id === classId) ?? null;
+export default function ClassDetailManager({ classId }: { classId: string }) {
+  const [data, setData] = useState<ClassDetailData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  const [newName, setNewName] = useState(clsFound?.name ?? "");
+  const [newName, setNewName] = useState("");
   const [renameBusy, setRenameBusy] = useState(false);
   const [renameError, setRenameError] = useState<string | null>(null);
 
@@ -31,65 +39,69 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
   const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [liveMessage, setLiveMessage] = useState("");
 
-  // The store fills in after mount, so keep the input in sync once the class
-  // is known (and after a successful rename saves a new name).
-  const loadedId = clsFound?.id ?? null;
-  const loadedName = clsFound?.name ?? null;
+  const reload = useCallback(async () => {
+    try {
+      const next = await fetchClassDetail(classId);
+      if (!next) {
+        setNotFound(true);
+        return;
+      }
+      setData(next);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError((err as Error).message);
+    }
+  }, [classId]);
+
   useEffect(() => {
-    if (loadedId !== null && loadedName !== null) setNewName(loadedName);
-  }, [loadedId, loadedName]);
+    reload();
+  }, [reload]);
 
-  // The store fills in after mount. The admin shell lives in the route layout,
-  // so showing a skeleton here only affects the main column.
-  if (!db) return <AdminSkeleton />;
+  // Nama kelas diketahui setelah data tiba; sinkronkan input rename.
+  const loadedName = data?.cls.name ?? null;
+  useEffect(() => {
+    if (loadedName !== null) setNewName(loadedName);
+  }, [loadedName]);
 
-  if (!clsFound) {
-    return (
-      <div className="adm-card" style={{ marginTop: 22 }}>
-        <div className="adm-empty">
-          <b>Kelas tidak ditemukan</b>
-          <p>Kelas ini mungkin baru dibuat atau sudah tidak tersedia di sesi ini.</p>
-          <Link className="btn btn-primary btn-sm" href="/admin/classes">
-            Kembali ke semua kelas
-          </Link>
+  if (!data || notFound) {
+    if (notFound) {
+      return (
+        <div className="adm-card" style={{ marginTop: 22 }}>
+          <div className="adm-empty">
+            <b>Kelas tidak ditemukan</b>
+            <p>Kelas ini mungkin sudah dihapus atau tautannya tidak valid.</p>
+            <Link className="btn btn-primary btn-sm" href="/admin/classes">
+              Kembali ke semua kelas
+            </Link>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    if (loadError) {
+      return (
+        <p
+          role="alert"
+          style={{
+            marginTop: 22,
+            fontSize: 13.5,
+            padding: "10px 14px",
+            borderRadius: 10,
+            background: "var(--red-soft)",
+            color: "#B0504C",
+          }}
+        >
+          Gagal memuat kelas: {loadError}.
+        </p>
+      );
+    }
+    return <AdminSkeleton />;
   }
 
-  const cls = clsFound;
-
-  const students = db.enrollments
-    .filter((e) => e.classId === cls.id)
-    .map((e) => db.users.find((u) => u.id === e.studentId))
-    .filter((u): u is NonNullable<typeof u> => Boolean(u))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((s) => ({ id: s.id, name: s.name, email: s.email, isActive: s.isActive !== false }));
-
-  const assignments = db.teachings
-    .filter((t) => t.classId === cls.id)
-    .map((t) => {
-      const teacher = db.users.find((u) => u.id === t.teacherId);
-      return {
-        teacherId: t.teacherId,
-        teacherName: teacher?.name ?? "Guru",
-        subject: t.subject,
-        isActive: teacher ? teacher.isActive !== false : true,
-      };
-    })
-    .sort((a, b) => a.subject.localeCompare(b.subject) || a.teacherName.localeCompare(b.teacherName));
-
-  const teachers = db.users
-    .filter((u) => u.role === "teacher" && u.isActive !== false)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((t) => ({ id: t.id, name: t.name, subject: t.subject }));
-
-  const allStudents = db.users
-    .filter((u) => u.role === "student")
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((s) => ({ id: s.id, name: s.name, className: s.className }));
-
-  const moveCandidates = allStudents.filter((s) => !students.some((d) => d.id === s.id));
+  const cls = data.cls;
+  const students = data.students;
+  const assignments = data.assignments;
+  const teachers = data.teachers;
+  const moveCandidates = data.allStudents.filter((s) => !students.some((d) => d.id === s.id));
 
   async function handleRename(e: React.FormEvent) {
     e.preventDefault();
@@ -97,27 +109,11 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
     setRenameBusy(true);
     setRenameError(null);
     try {
-      const saved = update((d) => {
-        const target = d.classes.find((c) => c.id === cls.id);
-        if (!target) throw new Error("Kelas tidak ditemukan.");
-        if (!newName.trim()) throw new Error("Nama kelas wajib diisi.");
-        const duplicate = d.classes.some(
-          (c) => c.id !== cls.id && c.name.toLowerCase() === newName.trim().toLowerCase()
-        );
-        if (duplicate) throw new Error("Nama kelas sudah dipakai.");
-        const old = target.name;
-        const next = newName.trim();
-        if (old !== next) {
-          target.name = next;
-          // Keep the legacy class-name label on user profiles consistent.
-          for (const u of d.users) {
-            if (u.className === old) u.className = next;
-          }
-        }
-        return next;
-      });
-      setNotice({ kind: "ok", text: `Nama kelas diubah menjadi ${saved}. Nama kelas lama pada profil pengguna juga diperbarui.` });
-      setLiveMessage(`Nama kelas diubah menjadi ${saved}.`);
+      if (!newName.trim()) throw new Error("Nama kelas wajib diisi.");
+      await renameClass(cls.id, cls.name, newName.trim());
+      setNotice({ kind: "ok", text: `Nama kelas diubah menjadi ${newName.trim()}. Nama kelas lama pada profil pengguna juga diperbarui.` });
+      setLiveMessage(`Nama kelas diubah menjadi ${newName.trim()}.`);
+      await reload();
     } catch (err) {
       setRenameError((err as Error).message);
       setNotice({ kind: "error", text: (err as Error).message });
@@ -129,7 +125,7 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
   async function handleMove(e: React.FormEvent) {
     e.preventDefault();
     if (moveBusy || !studentId) return;
-    const target = allStudents.find((s) => String(s.id) === studentId);
+    const target = data!.allStudents.find((s) => s.id === studentId);
     if (!target) return;
     const fromName = target.className ?? "tanpa kelas";
     const confirmed = confirm(
@@ -139,15 +135,11 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
     setMoveBusy(true);
     setMoveError(null);
     try {
-      update((d) => {
-        d.enrollments = d.enrollments.filter((en) => en.studentId !== target.id);
-        d.enrollments.push({ classId: cls.id, studentId: target.id });
-        const u = d.users.find((row) => row.id === target.id);
-        if (u) u.className = cls.name;
-      });
+      await moveStudent(target.id, cls.id, cls.name);
       setNotice({ kind: "ok", text: `${target.name} dipindahkan ke ${cls.name}.` });
       setLiveMessage(`${target.name} dipindahkan ke ${cls.name}.`);
       setStudentId("");
+      await reload();
     } catch (err) {
       setMoveError((err as Error).message);
       setNotice({ kind: "error", text: (err as Error).message });
@@ -162,18 +154,13 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
     setAssignBusy(true);
     setAssignError(null);
     try {
-      const teacher = teachers.find((t) => String(t.id) === teacherId);
-      update((d) => {
-        const duplicate = d.teachings.some(
-          (t) => t.classId === cls.id && t.teacherId === Number(teacherId) && t.subject === subject.trim()
-        );
-        if (duplicate) throw new Error("Guru sudah ditugaskan untuk mapel tersebut di kelas ini.");
-        d.teachings.push({ classId: cls.id, teacherId: Number(teacherId), subject: subject.trim() });
-      });
+      const teacher = teachers.find((t) => t.id === teacherId);
+      await assignTeaching(cls.id, teacherId, subject.trim());
       setNotice({ kind: "ok", text: `${teacher?.name ?? "Guru"} ditugaskan mengajar ${subject.trim()}.` });
       setLiveMessage(`${teacher?.name ?? "Guru"} ditugaskan mengajar ${subject.trim()}.`);
       setTeacherId("");
       setSubject("");
+      await reload();
     } catch (err) {
       setAssignError((err as Error).message);
       setNotice({ kind: "error", text: (err as Error).message });
@@ -182,16 +169,13 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
     }
   }
 
-  async function handleRemove(teacherIdToRemove: number, teacherName: string, subjectToRemove: string) {
+  async function handleRemove(teacherIdToRemove: string, teacherName: string, subjectToRemove: string) {
     if (!confirm(`Hapus penugasan ${teacherName} untuk mapel ${subjectToRemove} di kelas ini?`)) return;
     try {
-      update((d) => {
-        d.teachings = d.teachings.filter(
-          (t) => !(t.classId === cls.id && t.teacherId === teacherIdToRemove && t.subject === subjectToRemove)
-        );
-      });
+      await removeTeaching(cls.id, teacherIdToRemove, subjectToRemove);
       setNotice({ kind: "ok", text: `Penugasan ${teacherName} (${subjectToRemove}) dihapus.` });
       setLiveMessage(`Penugasan ${teacherName} dihapus.`);
+      await reload();
     } catch (err) {
       setNotice({ kind: "error", text: (err as Error).message });
     }
@@ -259,7 +243,7 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
             >
               <option value="">Pilih siswa…</option>
               {moveCandidates.map((s) => (
-                <option key={s.id} value={String(s.id)}>
+                <option key={s.id} value={s.id}>
                   {s.name} — {s.className ?? "tanpa kelas"}
                 </option>
               ))}
@@ -312,7 +296,7 @@ export default function ClassDetailManager({ classId }: { classId: number }) {
             <select id="assign-teacher" value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
               <option value="">Pilih guru aktif…</option>
               {teachers.map((t) => (
-                <option key={t.id} value={String(t.id)}>
+                <option key={t.id} value={t.id}>
                   {t.name}
                   {t.subject ? ` — ${t.subject}` : ""}
                 </option>

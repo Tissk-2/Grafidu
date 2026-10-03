@@ -1,30 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
-import { update, useDB } from "@/lib/store";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createClass, listClassesDetailed } from "@/app/actions/admin";
+import type { ClassSummary } from "@/lib/admin-model";
+import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /**
  * Lists every class with student/teaching counts and creates new classes.
- * Duplicate names are rejected (case-insensitive); the error is surfaced inline.
- * Frontend-only: reads and writes the in-browser store.
+ * Duplicate names are rejected (unique constraint in the database); the error
+ * is surfaced inline. Reads and writes go straight to Supabase.
  */
 export default function ClassManager() {
-  const db = useDB();
+  const [classes, setClasses] = useState<ClassSummary[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const classes = (db?.classes ?? [])
-    .map((c) => ({
-      id: c.id,
-      name: c.name,
-      studentCount: db!.enrollments.filter((e) => e.classId === c.id).length,
-      teachingCount: db!.teachings.filter((t) => t.classId === c.id).length,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const reload = useCallback(async () => {
+    try {
+      setClasses(await listClassesDetailed());
+      setLoadError(null);
+    } catch (err) {
+      setLoadError((err as Error).message);
+    }
+  }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -32,21 +39,36 @@ export default function ClassManager() {
     setBusy(true);
     setError(null);
     try {
-      const created = update((d) => {
-        const duplicate = d.classes.some((c) => c.name.toLowerCase() === name.trim().toLowerCase());
-        if (duplicate) throw new Error("Nama kelas sudah dipakai.");
-        const cls = { id: d.nextId++, name: name.trim() };
-        d.classes.push(cls);
-        return cls;
-      });
+      const created = await createClass(name.trim());
       setNotice(`Kelas ${created.name} berhasil dibuat.`);
       setName("");
       inputRef.current?.focus();
+      await reload();
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!classes) {
+    return loadError ? (
+      <p
+        role="alert"
+        style={{
+          marginTop: 22,
+          fontSize: 13.5,
+          padding: "10px 14px",
+          borderRadius: 10,
+          background: "var(--red-soft)",
+          color: "#B0504C",
+        }}
+      >
+        Gagal memuat kelas: {loadError}.
+      </p>
+    ) : (
+      <AdminSkeleton />
+    );
   }
 
   return (

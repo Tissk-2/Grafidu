@@ -1,8 +1,34 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+/**
+ * Satpam tipis di edge: cukup cek ADA/TIDAKNYA cookie session.
+ * Verifikasi token & role dilakukan di server (layout guard + server actions)
+ * karena edge runtime tidak bisa mengakses Postgres.
+ *
+ * - Belum login + mau ke /student, /teacher, /admin -> tendang ke /login.
+ * - Sudah login tapi buka /, /login, /signup, /forgot-password -> halaman
+ *   server-nya sendiri yang me-redirect ke dashboard per role.
+ * - Salah kamar (student ke /admin) -> layout area tersebut yang menendang.
+ */
+const SESSION_COOKIE = "grafidu_session";
+
+export function middleware(request: NextRequest) {
+  const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
+  const path = request.nextUrl.pathname;
+
+  const isProtected =
+    path.startsWith("/student") ||
+    path.startsWith("/teacher") ||
+    path.startsWith("/admin");
+
+  if (!hasSession && isProtected) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

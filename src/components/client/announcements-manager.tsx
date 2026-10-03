@@ -1,72 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { getCurrentUser } from "@/lib/auth";
-import { update, useDB } from "@/lib/store";
+import { useCallback, useEffect, useState } from "react";
+import {
+  createAnnouncement,
+  deleteAnnouncement,
+  listAnnouncements,
+} from "@/app/actions/admin";
+import type { AnnouncementRow } from "@/lib/admin-model";
+import { getSessionUser } from "@/lib/auth";
+import { relativeWhen } from "@/lib/student-model";
 
 export default function AnnouncementsManager({
   role,
 }: {
   role: "student" | "teacher" | "admin";
 }) {
-  const db = useDB();
+  const [items, setItems] = useState<AnnouncementRow[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [search, setSearch] = useState("");
-  const user = getCurrentUser();
+  const [busy, setBusy] = useState(false);
   const canManage = role === "teacher" || role === "admin";
 
-  const list = [...(db?.announcements ?? [])]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .map((a) => {
-      const creator = a.createdBy ? db?.users.find((u) => u.id === a.createdBy) : null;
-      return {
-        id: a.id,
-        title: a.title,
-        body: a.body,
-        createdLabel: a.createdLabel,
-        creator: creator ? { name: creator.name, role: creator.role } : null,
-      };
-    });
+  const reload = useCallback(async () => {
+    try {
+      setItems(await listAnnouncements());
+      setLoadError(null);
+    } catch (err) {
+      setLoadError((err as Error).message);
+    }
+  }, []);
 
-  const filtered = list.filter(
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const filtered = (items ?? []).filter(
     (a) =>
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.body.toLowerCase().includes(search.toLowerCase())
   );
 
-  function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     if (!title.trim()) {
       window.gtoast?.("Judul pengumuman wajib diisi.", "error");
       return;
     }
-    update((d) => {
-      // Store users have numeric ids; a Supabase session id (UUID) never
-      // matches one, so no creator label is shown in that case.
-      const numericId = Number(user?.id);
-      d.announcements.push({
-        id: d.nextId++,
-        title: title.trim(),
-        body: body.trim(),
-        createdBy: user && Number.isFinite(numericId) ? numericId : null,
-        createdLabel: "Baru saja",
-        createdAt: new Date().toISOString(),
-      });
-    });
-    setTitle("");
-    setBody("");
-    setShowModal(false);
-    window.gtoast?.("Pengumuman berhasil diterbitkan!");
+    setBusy(true);
+    try {
+      const user = await getSessionUser();
+      if (!user) {
+        window.gtoast?.("Sesi berakhir. Silakan login ulang.", "error");
+        return;
+      }
+      await createAnnouncement(title.trim(), body.trim());
+      setTitle("");
+      setBody("");
+      setShowModal(false);
+      window.gtoast?.("Pengumuman berhasil diterbitkan!");
+      await reload();
+    } catch (err) {
+      window.gtoast?.((err as Error).message || "Gagal menerbitkan pengumuman.", "error");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     if (!confirm("Hapus pengumuman ini?")) return;
-    update((d) => {
-      d.announcements = d.announcements.filter((a) => a.id !== id);
-    });
-    window.gtoast?.("Pengumuman telah dihapus.");
+    try {
+      await deleteAnnouncement(id);
+      window.gtoast?.("Pengumuman telah dihapus.");
+      await reload();
+    } catch (err) {
+      window.gtoast?.((err as Error).message || "Gagal menghapus pengumuman.", "error");
+    }
   }
 
   return (
@@ -107,6 +119,22 @@ export default function AnnouncementsManager({
         </div>
       </div>
 
+      {loadError ? (
+        <p
+          role="alert"
+          style={{
+            marginTop: 18,
+            fontSize: 13.5,
+            padding: "10px 14px",
+            borderRadius: 10,
+            background: "var(--red-soft)",
+            color: "#B0504C",
+          }}
+        >
+          Gagal memuat pengumuman: {loadError}.
+        </p>
+      ) : null}
+
       <div style={{ display: "grid", gap: 14, marginTop: 20 }}>
         {filtered.map((a, i) => (
           <div
@@ -128,8 +156,8 @@ export default function AnnouncementsManager({
                   )}
                 </div>
                 <span style={{ fontSize: 12.5, color: "var(--gray-4)", display: "block" }}>
-                  {a.creator?.name ? `Oleh ${a.creator.name} • ` : ""}
-                  {a.createdLabel || "Pengumuman Sekolah"}
+                  {a.creatorName ? `Oleh ${a.creatorName} • ` : ""}
+                  {relativeWhen(a.createdAt)}
                 </span>
               </div>
 
@@ -151,7 +179,7 @@ export default function AnnouncementsManager({
           </div>
         ))}
 
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !loadError && (
           <div className="empty-state" style={{ display: "block" }}>
             <span className="es-ic">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -159,8 +187,12 @@ export default function AnnouncementsManager({
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </span>
-            <b>Tidak ada pengumuman</b>
-            <span>Tidak ada pengumuman yang cocok dengan pencarianmu.</span>
+            <b>{items === null ? "Memuat pengumuman…" : "Tidak ada pengumuman"}</b>
+            <span>
+              {items === null
+                ? "Mengambil papan pengumuman sekolah."
+                : "Tidak ada pengumuman yang cocok dengan pencarianmu."}
+            </span>
           </div>
         )}
       </div>
@@ -236,14 +268,16 @@ export default function AnnouncementsManager({
                   type="button"
                   className="btn btn-outline btn-sm"
                   onClick={() => setShowModal(false)}
+                  disabled={busy}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm"
+                  disabled={busy}
                 >
-                  Terbitkan Sekarang
+                  {busy ? "Menerbitkan…" : "Terbitkan Sekarang"}
                 </button>
               </div>
             </form>

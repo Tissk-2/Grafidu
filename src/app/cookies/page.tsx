@@ -60,7 +60,7 @@ export default function CookiesPage() {
               2. Cookie pada Versi Demo Ini
             </h2>
             <p>
-              Versi demo Grafidu ini <b>tidak menggunakan cookie sama sekali</b> — baik cookie wajib, fungsional, maupun analitik. Kami juga tidak menggunakan localStorage, sessionStorage, atau mekanisme penyimpanan peramban lainnya.
+              Grafidu memakai <b>satu cookie wajib</b> (<code>grafidu_session</code>) untuk menjaga sesi login Anda — httpOnly, sehingga tidak bisa dibaca JavaScript. Cookie ini hilang otomatis saat Anda logout atau sesi kedaluwarsa (30 hari).
             </p>
             <p style={{ marginTop: 8 }}>
               Seluruh data yang Anda lihat (akun demo, nilai, tugas, kuis, dan preferensi) hanya berada di memori peramban selama sesi berlangsung. Memuat ulang halaman akan mengembalikan aplikasi ke kondisi awal, dan tidak ada data yang meninggalkan perangkat Anda.
