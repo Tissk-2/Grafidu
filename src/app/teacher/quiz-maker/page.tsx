@@ -23,36 +23,6 @@ const CHEVRON = (
   </svg>
 );
 
-/**
- * Prototipe AI lokal: soal disusun dari template per tingkat kesulitan, {t}
- * diganti topik yang diketik guru. Cukup untuk demo sebelum backend AI siap.
- * Kuis jadi tersimpan ke tabel quizzes/quiz_questions lewat server action.
- */
-const SOAL_TEMPLATES: Record<string, string[]> = {
-  Mudah: [
-    "Apa yang dimaksud dengan {t}?",
-    "Sebutkan dua contoh {t} yang kamu ketahui.",
-    "Apa fungsi utama {t}?",
-    "Sebutkan ciri dasar dari {t}.",
-    "Apa manfaat mempelajari {t}?",
-    "Jelaskan pengertian {t} dengan bahasamu sendiri.",
-  ],
-  Sedang: [
-    "Jelaskan perbedaan {t} dengan konsep yang mirip dengannya.",
-    "Analisislah contoh {t} berikut, lalu tentukan bagian-bagiannya.",
-    "Diberikan teks tentang {t}, tentukan strukturnya.",
-    "Mengapa {t} penting dalam keseharian? Berikan dua alasan.",
-    "Bandingkan dua pendekatan dalam memahami {t}.",
-    "Temukan kesalahan dalam contoh {t} berikut dan jelaskan.",
-  ],
-  Sulit: [
-    "Evaluasilah penerapan {t} pada studi kasus yang diberikan guru.",
-    "Buatlah analisis kritis mengenai {t} beserta argumen pendukung.",
-    "Rancang sebuah karya/teks {t} atau turunannya, lalu jelaskan alasannya.",
-    "Simpulkan benang merah dari materi {t} yang telah dipelajari.",
-  ],
-};
-
 /** Contoh soal statis untuk panel Pratinjau Soal sebelum kuis dibuat. */
 const PREVIEW_SOAL = [
   "Apa yang dimaksud dengan gagasan pokok dalam sebuah teks?",
@@ -108,17 +78,36 @@ export default function TeacherQuizMakerPage() {
     setInvalidTopic(false);
     setGenerating(true);
 
+    const label = rawTopic.split("—")[0].trim().replace(/-+$/, "").trim() || rawTopic;
+
     try {
-      const label = rawTopic.split("—")[0].trim().replace(/-+$/, "").trim() || rawTopic;
-      const templates = SOAL_TEMPLATES[difficulty] ?? SOAL_TEMPLATES.Sedang;
-      const soal: string[] = [];
-      for (let i = 0; i < numQuestions; i++) {
-        soal.push(templates[i % templates.length].replace(/\{t\}/g, label));
+      const res = await fetch("/api/ai/quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          classId: selectedClass.id,
+          topic: rawTopic,
+          num: numQuestions,
+          difficulty,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        title?: unknown;
+        questions?: unknown;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.ok || !Array.isArray(data.questions) || !data.questions.length) {
+        throw new Error(data?.error ?? "Layanan AI sedang tidak terjangkau. Coba lagi sebentar.");
       }
+
+      const soal = data.questions.map(String);
+      const judul =
+        typeof data.title === "string" && data.title.trim() ? data.title.trim() : `Kuis: ${label}`;
 
       await createQuiz({
         classId: selectedClass.id,
-        title: `Kuis: ${label}`,
+        title: judul,
         topic: rawTopic,
         difficulty,
         durationMin: Math.max(10, soal.length * 2),
@@ -271,7 +260,7 @@ export default function TeacherQuizMakerPage() {
               </div>
             ))}
           </div>
-          <div className="preview-note">Soal lengkap beserta kunci jawaban otomatis tersimpan saat kuis dibuat.</div>
+          <div className="preview-note">Soal tersimpan otomatis sebagai draft — tinjau dulu sebelum ditayangkan ke siswa.</div>
         </div>
       </div>
 

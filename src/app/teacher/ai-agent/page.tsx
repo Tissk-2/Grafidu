@@ -4,98 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { classAvg, studentsWithStatus, useRoutedClass } from "@/lib/guru";
+import { useRoutedClass } from "@/lib/guru";
 import { useTeacherShellData } from "../teacher-shell-data";
-import { fmtDate } from "@/lib/format";
-import type { MaterialRow, RosterRow, TeacherTask } from "@/lib/teacher-model";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
 
 type Msg = { role: "user" | "ai"; text: string };
 
 const SUGGESTIONS = [
-  "Buatkan rencana belajar Seni Budaya",
-  "Materi apa yang harus saya pelajari?",
-  "Ringkas nilai saya semester ini",
-  "Buatkan latihan soal Fisika",
+  "Siswa mana yang perlu perhatian?",
+  "Ringkas nilai kelas saya",
+  "Apa tenggat tugas ke depan?",
+  "Buatkan rencana belajar kelas ini",
 ];
 
-/** Data kelas aktif yang jadi konteks jawaban AI (live dari shell). */
-type AiClassContext = {
-  className: string;
-  materials: MaterialRow[];
-  tasks: TeacherTask[];
-  roster: RosterRow[];
-};
-
-/**
- * Prototipe AI lokal: jawaban deterministik dari keyword + data kelas aktif
- * LIVE dari database (rata-rata, siswa terlemah, materi, tenggat) supaya chat
- * terasa hidup tanpa backend. Ganti dengan pemanggilan model saat production.
- */
-function teacherAiReply(text: string, kelas: AiClassContext): string {
-  const t = text.toLowerCase();
-  const students = studentsWithStatus(kelas.roster); // terlemah dulu
-  const lowest = students[0];
-  const avg = classAvg(kelas.roster);
-
-  if (/(rencana|plan)/.test(t)) {
-    const m1 = kelas.materials[0]?.title ?? "materi kelas";
-    const m2 = kelas.materials[1]?.title ?? m1;
-    return (
-      `Siap! Rencana seminggu untuk ${kelas.className}:\n` +
-      `1. Review materi "${m1}" 20 menit per hari.\n` +
-      `2. Kuis pendek "${m2}" tiap Rabu.\n` +
-      `3. Pendampingan khusus ${lowest?.nama ?? "siswa terlemah"} (rata-rata ${lowest?.rata ?? 0}).`
-    );
-  }
-  if (/(materi|pelajari)/.test(t)) {
-    return (
-      `Materi yang sudah kamu bagikan di ${kelas.className}:\n` +
-      kelas.materials.map((m, i) => `${i + 1}. ${m.title}`).join("\n") +
-      `\n\nMau kubuatkan kuis dari salah satunya?`
-    );
-  }
-  if (/(nilai|ringkas|semester)/.test(t)) {
-    const dua = students
-      .slice(0, 2)
-      .map((s) => `${s.nama} (${s.rata})`)
-      .join(" dan ");
-    return (
-      `Rata-rata ${kelas.className} semester ini ${avg}/100. ` +
-      `Yang paling perlu perhatian: ${dua}. Mau kubuatkan kuis tambahan untuk mereka?`
-    );
-  }
-  if (/(latihan|soal|kuis|quiz)/.test(t)) {
-    return (
-      "Buka menu Quiz Maker: pilih kelas, tulis topik materimu, lalu tekan Generate. " +
-      "Aku susunkan soal beserta kunci jawabannya otomatis."
-    );
-  }
-  if (/(tenggat|jadwal|deadline|agenda)/.test(t)) {
-    const rows = [...kelas.tasks]
-      .sort((a, b) => new Date(b.dueAt).getTime() - new Date(a.dueAt).getTime())
-      .slice(0, 3);
-    return (
-      `Tenggat tugas ${kelas.className} terdekat:\n` +
-      rows.map((r) => `- ${r.title}: ${fmtDate(r.dueAt)}`).join("\n")
-    );
-  }
-  if (/(siswa|perhatian|rendah|remedial)/.test(t)) {
-    return (
-      `Siswa yang perlu pendampingan di ${kelas.className}: ` +
-      students
-        .slice(0, 3)
-        .map((s) => `${s.nama} (${s.rata})`)
-        .join(", ") +
-      ". Mau kubuatkan kuis remedial?"
-    );
-  }
-  return (
-    "Mau mulai dari mana: cek siswa yang perlu perhatian, lihat jadwal tenggat, " +
-    'atau bilang "buatkan kuis tentang [topik]"?'
-  );
-}
+const AI_UNAVAILABLE = "Layanan AI sedang tidak terjangkau. Coba kirim ulang sebentar lagi.";
 
 /** Middle column only — the sidebar and rightbar come from the teacher layout. */
 export default function TeacherAiAgentPage() {
@@ -124,28 +47,50 @@ export default function TeacherAiAgentPage() {
   // TS narrowing tidak menembus closure setTimeout — kunci di konstanta lokal.
   const activeKelas = kelas;
 
-  function send(text?: string) {
+  async function send(text?: string) {
     const t = (text ?? input).trim();
     if (!t || busy) return;
     setInput("");
     setBusy(true);
+    // Riwayat diambil sebelum pesan user masuk (maks 10 giliran terakhir).
+    const history = messages.slice(-10).map((m) => ({ role: m.role, text: m.text }));
     setMessages((prev) => [...prev, { role: "user", text: t }]);
-    // Jeda singkat supaya indikator mengetik terbaca.
-    window.setTimeout(() => {
-      let reply: string;
-      try {
-        reply = teacherAiReply(t, {
-        className: activeKelas.name,
-        materials,
-        tasks,
-        roster,
+
+    let answer: string | null = null;
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: t,
+          history,
+          context: {
+            className: activeKelas.name,
+            materials: materials.slice(0, 10).map((m) => ({
+              title: m.title,
+              description: m.description,
+            })),
+            tasks: tasks.slice(0, 8).map((x) => ({
+              title: x.title,
+              dueAt: x.dueAt,
+              submitted: x.submitted,
+              total: x.total,
+            })),
+            roster: roster.map((r) => ({ nama: r.name, rata: r.avg })),
+          },
+        }),
       });
-      } catch {
-        reply = "Maaf, aku tidak bisa menjawab sekarang.";
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok || typeof data.reply !== "string" || !data.reply.trim()) {
+        throw new Error("ai-unavailable");
       }
-      setMessages((prev) => [...prev, { role: "ai", text: reply }]);
-      setBusy(false);
-    }, 600);
+      answer = data.reply.trim();
+    } catch {
+      answer = null;
+    }
+
+    setMessages((prev) => [...prev, { role: "ai", text: answer ?? AI_UNAVAILABLE }]);
+    setBusy(false);
   }
 
   return (

@@ -153,7 +153,7 @@ export function TeacherRightbar({
           Rekomendasi AI Untukmu
         </div>
         <div className="ai-note">{aiNote}</div>
-        <Link className="btn btn-primary" href="/teacher/quiz">
+        <Link className="btn btn-primary" href="/teacher/quiz-maker">
           Buat Kuis
         </Link>
       </div>

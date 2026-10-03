@@ -121,8 +121,22 @@ export default function KeamananPage() {
               Rekomendasi belajar dan kuis latihan dihasilkan dari data akademik siswa (riwayat
               nilai, status tugas) yang digabungkan dengan materi yang dibagikan guru pengampu.
               Hasil AI bersifat pendamping — bukan penentu — dan selalu dapat ditinjau oleh guru.
-              Kami mencantumkan prosesor AI pihak ketiga yang digunakan beserta jaminan bahwa
-              datanya tidak digunakan untuk melatih model umum di halaman{" "}
+            </p>
+            <p>
+              Prosesor AI yang kami gunakan: permintaan AI Grafidu diteruskan melalui{" "}
+              <a
+                href="https://9router.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--purple)", fontWeight: 500 }}
+              >
+                9Router
+              </a>
+              , gateway model yang kami jalankan sendiri di server kami, ke penyedia model bahasa
+              pihak ketiga. Konteks akademik yang diperlukan (nilai, status tugas, dan materi
+              kelas) dikirim ke penyedia model untuk menghasilkan jawaban; data tersebut tidak
+              kami pergunakan untuk melatih model umum. Rincian pemrosesan data tersedia di
+              halaman{" "}
               <Link href="/privacy" style={{ color: "var(--purple)", fontWeight: 500 }}>
                 Kebijakan Privasi
               </Link>

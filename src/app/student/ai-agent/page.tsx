@@ -5,10 +5,10 @@ import { Sparkles } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { type SchoolTask, type SubjectScore } from "@/lib/student-model";
-import { fmtDate } from "@/lib/format";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import BodySync from "@/components/body-sync";
 import { useStudentShellData } from "../student-shell-data";
+import { addTodo } from "@/app/actions/student";
 
 type Msg = { role: "user" | "ai"; text: string };
 type PageData = { tasks: SchoolTask[]; subjects: SubjectScore[] };
@@ -20,85 +20,7 @@ const SUGGESTIONS = [
   "Mapel apa yang perlu aku fokuskan?",
 ];
 
-/**
- * Prototipe AI lokal untuk siswa: jawaban deterministik dari keyword + data
- * asli siswa (tugas & nilai dari Supabase). Ganti dengan pemanggilan model
- * saat production.
- */
-function studentAiReply(text: string, data: PageData): string {
-  const t = text.toLowerCase();
-  const undone = data.tasks
-    .filter((x) => !x.done)
-    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
-  const graded = data.tasks.filter((x) => x.grade != null);
-  const taskAvg = graded.length
-    ? Math.round(graded.reduce((acc, x) => acc + (x.grade ?? 0), 0) / graded.length)
-    : null;
-  const byScore = [...data.subjects].sort((a, b) => a.score - b.score);
-  const weakest = byScore[0];
-  const strongest = byScore[byScore.length - 1];
-
-  if (/(tenggat|jadwal|deadline|agenda|kapan)/.test(t)) {
-    if (!undone.length)
-      return "Tidak ada tenggat yang akan datang. Waktunya santai, atau minta latihan soal tambahan?";
-    return (
-      "Tenggat tugasmu ke depan:\n" +
-      undone
-        .slice(0, 4)
-        .map((x) => `- ${x.title} (${x.subject || "Umum"}): ${fmtDate(x.dueAt)}`)
-        .join("\n")
-    );
-  }
-  if (/(rencana|plan)/.test(t)) {
-    if (!byScore.length)
-      return "Belum ada nilai tercatat, jadi aku belum bisa menyusun rencana. Mulai dari mengerjakan tugas yang ada ya!";
-    return (
-      `Siap! Rencana minggu ini:\n` +
-      `1. Review materi ${weakest.subject} 20 menit per hari.\n` +
-      (byScore[1] ? `2. Latihan soal ${byScore[1].subject} dua kali seminggu.\n` : "") +
-      (strongest ? `3. Jaga nilai ${strongest.subject} dengan kuis singkat tiap Jumat.` : "")
-    );
-  }
-  if (/(nilai|ringkas|semester)/.test(t)) {
-    if (!byScore.length && taskAvg == null)
-      return "Belum ada nilai yang bisa kuringkas. Minta gurumu mengisi nilai dulu ya.";
-    const bagian: string[] = [];
-    if (taskAvg != null) bagian.push(`Rata-rata tugasmu ${taskAvg}/100`);
-    if (byScore.length)
-      bagian.push(
-        `paling kuat di ${strongest.subject} (${strongest.score}), paling perlu perhatian di ${weakest.subject} (${weakest.score})`,
-      );
-    return bagian.join(", ") + ". Mau kubuatkan rencana belajar?";
-  }
-  if (/(fokus|lemah|perhatian)/.test(t)) {
-    if (!byScore.length) return "Belum ada nilai per mapel. Setelah dinilai, aku bisa tunjukkan prioritas belajarmu.";
-    return (
-      "Prioritas belajarmu:\n" +
-      byScore
-        .slice(0, 3)
-        .map((s, i) => `${i + 1}. ${s.subject} (${s.score})`)
-        .join("\n")
-    );
-  }
-  if (/(latihan|soal|kuis|quiz)/.test(t)) {
-    return (
-      `Aku rekomendasikan latihan kuis untuk ${weakest?.subject ?? "pelajaran terbaru"}. ` +
-      "Kerjakan pelan-pelan, satu topik per hari."
-    );
-  }
-  if (/(tugas|hari ini|PR)/.test(t)) {
-    if (!data.tasks.length) return "Belum ada tugas dari gurumu. Nikmati dulu waktunya!";
-    if (!undone.length) return "Semua tugas sudah selesai. Keren, pertahankan! 🎉";
-    return (
-      "Tugas yang belum selesai:\n" +
-      undone
-        .slice(0, 3)
-        .map((x) => `- ${x.title} (${x.subject || "Umum"}): ${fmtDate(x.dueAt)}`)
-        .join("\n")
-    );
-  }
-  return 'Mau mulai dari mana: lihat tenggat tugas, ringkas nilai, atau minta rencana belajar? Bilang saja "buatkan to-do list" kalau mau kususunkan.';
-}
+const AI_UNAVAILABLE = "Layanan AI sedang tidak terjangkau. Coba kirim ulang sebentar lagi.";
 
 /** Middle column only — the sidebar and rightbar come from the student layout. */
 export default function StudentAiAgentPage() {
@@ -136,23 +58,66 @@ export default function StudentAiAgentPage() {
 
   if (!u || !shell) return <PageSkeleton />;
 
-  function send(text?: string) {
+  async function send(text?: string) {
     const t = (text ?? input).trim();
     if (!t || busy) return;
     setInput("");
     setBusy(true);
+    // Riwayat diambil sebelum pesan user masuk (maks 10 giliran terakhir).
+    const history = messages.slice(-10).map((m) => ({ role: m.role, text: m.text }));
     setMessages((prev) => [...prev, { role: "user", text: t }]);
-    // Jeda singkat supaya indikator mengetik terbaca.
-    window.setTimeout(() => {
-      let reply: string;
-      try {
-        reply = studentAiReply(t, dataRef.current ?? { tasks: [], subjects: [] });
-      } catch {
-        reply = "Maaf, aku tidak bisa menjawab sekarang.";
+
+    let answer: string | null = null;
+    let todoItems: { title: string; subtitle?: string }[] = [];
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: t,
+          history,
+          context: {
+            tasks: (dataRef.current?.tasks ?? []).slice(0, 12).map((x) => ({
+              title: x.title,
+              subject: x.subject,
+              dueAt: x.dueAt,
+              done: x.done,
+              grade: x.grade ?? null,
+            })),
+            subjects: dataRef.current?.subjects ?? [],
+          },
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok || typeof data.reply !== "string" || !data.reply.trim()) {
+        throw new Error("ai-unavailable");
       }
-      setMessages((prev) => [...prev, { role: "ai", text: reply }]);
+      answer = data.reply.trim();
+      if (data.type === "create_todos" && Array.isArray(data.items)) {
+        todoItems = data.items.slice(0, 5);
+      }
+    } catch {
+      answer = null;
+    }
+
+    if (answer == null) {
+      setMessages((prev) => [...prev, { role: "ai", text: AI_UNAVAILABLE }]);
       setBusy(false);
-    }, 600);
+      return;
+    }
+
+    // Aksi create_todos dieksekusi langsung via server action milik siswa.
+    for (const item of todoItems) {
+      try {
+        await addTodo(item.title, item.subtitle);
+      } catch {
+        // Satu item gagal tidak menggagalkan sisanya.
+      }
+    }
+
+    setMessages((prev) => [...prev, { role: "ai", text: answer }]);
+    setBusy(false);
   }
 
   return (

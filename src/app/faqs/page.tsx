@@ -21,7 +21,7 @@ const FAQS_DATA = [
   },
   {
     q: "Bagaimana cara guru membuat dan menerbitkan kuis otomatis?",
-    a: "Guru cukup membuka menu Quiz Maker, memilih kelas tujuan, memasukkan topik materi (misal Teks Eksposisi atau Algoritma), memilih tingkat kesulitan, lalu menekan tombol 'Generate Kuis dengan AI'. Soal dan kunci jawaban akan dibuat dalam hitungan detik dan dapat langsung ditayangkan ke siswa.",
+    a: "Guru cukup membuka menu Quiz Maker, memilih kelas tujuan, memasukkan topik materi (misal Teks Eksposisi atau Algoritma), memilih tingkat kesulitan, lalu menekan tombol 'Generate Kuis dengan AI'. Soal disusun dalam hitungan detik berdasarkan materi yang telah dibagikan, tersimpan sebagai draft, dan dapat ditayangkan ke siswa setelah guru meninjaunya.",
   },
   {
     q: "Apakah data nilai dan informasi siswa aman di Grafidu?",

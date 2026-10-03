@@ -43,11 +43,9 @@ function databaseUrl() {
 function findWindowsPgBin() {
   const base = "C:\\Program Files\\PostgreSQL";
   if (!existsSync(base)) return null;
-  const versions = existsSync(`${base}\\17\\bin\\pg_dump.exe`)
-    ? ["17", "16", "15"]
-    : existsSync(`${base}\\16\\bin\\pg_dump.exe`)
-      ? ["16", "17", "15"]
-      : ["15", "16", "17"];
+  const KNOWN = ["19", "18", "17", "16", "15"];
+  const installed = KNOWN.filter((v) => existsSync(`${base}\\${v}\\bin\\pg_dump.exe`));
+  const versions = installed.length ? installed : ["17", "16", "15"];
   for (const v of versions) {
     if (existsSync(`${base}\\${v}\\bin\\pg_dump.exe`)) return `${base}\\${v}\\bin`;
   }

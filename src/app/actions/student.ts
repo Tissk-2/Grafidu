@@ -246,12 +246,19 @@ export async function fetchTodos(): Promise<TodoItem[]> {
   }
 }
 
-export async function addTodo(title: string): Promise<TodoItem | null> {
+export async function addTodo(title: string, subtitle?: string): Promise<TodoItem | null> {
   const user = await getSessionUser();
   if (!user) throw new Error("Sesi berakhir. Silakan login ulang.");
+  const cleanTitle = title.trim();
+  if (!cleanTitle) return null;
   const rows = await sql<TodoItem[]>`
     INSERT INTO public.todos (user_id, title, subtitle, done)
-    VALUES (${user.id}, ${title}, 'Kegiatan pribadi', false)
+    VALUES (
+      ${user.id},
+      ${cleanTitle.slice(0, 120)},
+      ${(subtitle ?? "").trim().slice(0, 160) || "Kegiatan pribadi"},
+      false
+    )
     RETURNING id, title, subtitle, done
   `;
   return rows[0] ?? null;
