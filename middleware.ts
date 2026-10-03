@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * karena edge runtime tidak bisa mengakses Postgres.
  *
  * - Belum login + mau ke /student, /teacher, /admin -> tendang ke /login.
- * - Sudah login tapi buka /, /login, /signup, /forgot-password -> halaman
+ * - Sudah login tapi buka /, /login, /forgot-password -> halaman
  *   server-nya sendiri yang me-redirect ke dashboard per role.
  * - Salah kamar (student ke /admin) -> layout area tersebut yang menendang.
  */
