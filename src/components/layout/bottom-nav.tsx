@@ -10,6 +10,7 @@ export function BottomNav({ role, active }: { role: "student" | "teacher"; activ
       ? [
           { label: "Home", href: "/student/home", icon: <Home /> },
           { label: "Tasks", href: "/student/tasks", icon: <TaskSquare /> },
+          { label: "Materi", href: "/student/materi", icon: <Book /> },
           { label: "Grades", href: "/student/grades", icon: <Graph /> },
           { label: "AI Agent", href: "/student/ai-agent", icon: <Sparkles /> },
         ]
@@ -23,7 +24,7 @@ export function BottomNav({ role, active }: { role: "student" | "teacher"; activ
         ];
 
   return (
-    <nav className="z-50 fixed bottom-8 left-[50%] flex p-4 rounded border border-[#DDD] -translate-x-[50%] gap-8 bg-white">
+    <nav className="z-50 fixed bottom-8 left-[50%] flex p-4 rounded border border-[#DDD] dark:border-[#2D2B30] -translate-x-[50%] gap-8 bg-white dark:bg-[#1C1A1F]">
       {items.map((it) => (
         <Link
           key={it.href}

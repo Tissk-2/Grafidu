@@ -86,9 +86,9 @@ export default function AuthForm() {
 
   return (
     <div className="auth-box">
-      <h2>Welcome back</h2>
+      <h2>Selamat datang kembali</h2>
       <p className="sub">
-        {checking ? "Checking your session..." : "Sign in to see what needs attention today."}
+        {checking ? "Memeriksa sesi..." : "Masuk untuk melihat apa yang perlu diperhatikan hari ini."}
       </p>
 
       {error ? (
@@ -121,14 +121,14 @@ export default function AuthForm() {
         </div>
 
         <div className="field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Kata sandi</label>
           <div className="control">
             <input
               id="password"
               name="password"
               type={showPw ? "text" : "password"}
               autoComplete={remember ? "current-password" : "off"}
-              placeholder="Enter your password"
+              placeholder="Masukkan kata sandi"
               required
               minLength={8}
               value={password}
@@ -136,7 +136,7 @@ export default function AuthForm() {
               disabled={loading}
             />
             <button type="button" className="show-pw" onClick={() => setShowPw((s) => !s)} tabIndex={-1}>
-              {showPw ? "Hide" : "Show"}
+              {showPw ? "Sembunyikan" : "Tampilkan"}
             </button>
           </div>
         </div>
@@ -160,13 +160,13 @@ export default function AuthForm() {
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </span>
-            Remember me
+            Ingat saya
           </label>
           <span className="spacer"></span>
-          <Link href="/forgot-password">Forgot password?</Link>
+          <Link href="/forgot-password">Lupa kata sandi?</Link>
         </div>
         <button className="btn-auth" type="submit" disabled={loading} aria-busy={loading}>
-          {loading ? "Memproses..." : "Sign in"}
+          {loading ? "Memproses..." : "Masuk"}
         </button>
       </form>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function dashboardPath(role?: string | null): string {
   if (role === "teacher") return "/teacher/home";
@@ -17,7 +18,7 @@ export default function NavHeader() {
   const [dashboardHref, setDashboardHref] = useState<string | null>(null);
 
   useEffect(() => {
-    const sections = ["platform", "students", "teachers", "ai"];
+    const sections = ["platform", "students", "teachers", "ai", "testimoni", "harga", "faq", "contact"];
     const handleScroll = () => {
       const scrollPos = window.scrollY + 200;
       for (const id of sections) {
@@ -66,28 +67,38 @@ export default function NavHeader() {
               Platform
             </a>
             <a href="#students" className={activeHash === "#students" ? "active" : ""}>
-              Students
+              Siswa
             </a>
             <a href="#teachers" className={activeHash === "#teachers" ? "active" : ""}>
-              Teachers
+              Guru
             </a>
             <a href="#ai" className={activeHash === "#ai" ? "active" : ""}>
               AI
             </a>
+            <a href="#harga" className={activeHash === "#harga" ? "active" : ""}>
+              Harga
+            </a>
+            <a href="#faq" className={activeHash === "#faq" ? "active" : ""}>
+              FAQ
+            </a>
+            <a href="#contact" className={activeHash === "#contact" ? "active" : ""}>
+              Kontak
+            </a>
           </nav>
           <div className="nav-right">
+            <ThemeToggle />
             {dashboardHref ? (
               <Link className="btn btn-primary btn-sm" href={dashboardHref}>
-                Go to Dashboard
+                Buka Dashboard
               </Link>
             ) : (
               <>
                 <Link className="signin" href="/login">
-                  Sign in
+                  Masuk
                 </Link>
-                <Link className="btn btn-primary btn-sm" href="/signup">
-                  Try Grafidu
-                </Link>
+                <a className="btn btn-primary btn-sm" href="#contact">
+                  Coba Grafidu
+                </a>
               </>
             )}
             <button
@@ -112,31 +123,37 @@ export default function NavHeader() {
             <Image src="/assets/logo.png" alt="Grafidu" width={20} height={20} />
             <span>GRAFIDU</span>
           </Link>
-          <button className="nav-sheet-close" aria-label="Close menu" onClick={() => setMobileOpen(false)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <ThemeToggle />
+            <button className="nav-sheet-close" aria-label="Close menu" onClick={() => setMobileOpen(false)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
         <nav aria-label="Mobile">
           <a href="#platform" onClick={() => setMobileOpen(false)}>Platform</a>
-          <a href="#students" onClick={() => setMobileOpen(false)}>Students</a>
-          <a href="#teachers" onClick={() => setMobileOpen(false)}>Teachers</a>
+          <a href="#students" onClick={() => setMobileOpen(false)}>Siswa</a>
+          <a href="#teachers" onClick={() => setMobileOpen(false)}>Guru</a>
           <a href="#ai" onClick={() => setMobileOpen(false)}>AI</a>
+          <a href="#harga" onClick={() => setMobileOpen(false)}>Harga</a>
+          <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
+          <a href="#contact" onClick={() => setMobileOpen(false)}>Kontak</a>
         </nav>
         <div className="nav-sheet-ctas">
           {dashboardHref ? (
             <Link className="btn btn-primary" href={dashboardHref} onClick={() => setMobileOpen(false)}>
-              Go to Dashboard
+              Buka Dashboard
             </Link>
           ) : (
             <>
               <Link className="btn btn-outline" href="/login" onClick={() => setMobileOpen(false)}>
-                Sign in
+                Masuk
               </Link>
-              <Link className="btn btn-primary" href="/signup" onClick={() => setMobileOpen(false)}>
-                Try Grafidu
-              </Link>
+              <a className="btn btn-primary" href="#contact" onClick={() => setMobileOpen(false)}>
+                Coba Grafidu
+              </a>
             </>
           )}
         </div>

@@ -5,34 +5,38 @@ import { X } from "lucide-react";
 
 export type TaskFormValue = {
   title: string;
-  subject: string;
   dueDate: string; // yyyy-mm-dd untuk <input type="date">
   description: string;
+  materialId: string; // "" = tanpa lampiran materi
 };
 
 /**
  * Dialog buat/edit tugas guru. Props-driven seperti materi-form-dialog,
  * memakai style .gdialog yang sama. dueDate dikonversi ke ISO oleh pemanggil.
+ * Mata pelajaran tidak diminta di sini — sudah terikat pada amanah guru
+ * (teachings); yang bisa dipilih adalah materi (Lampiran) dari halaman Materi.
  */
 export default function TaskDialog({
   open,
   initial,
   kelasLabel,
+  materials,
   onClose,
   onSubmit,
 }: {
   open: boolean;
   initial?: TaskFormValue;
   kelasLabel: string;
+  materials: { id: string; title: string }[];
   onClose: () => void;
   onSubmit: (value: TaskFormValue) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [value, setValue] = useState<TaskFormValue>({
     title: "",
-    subject: "",
     dueDate: "",
     description: "",
+    materialId: "",
   });
 
   useEffect(() => {
@@ -42,9 +46,9 @@ export default function TaskDialog({
       setValue(
         initial ?? {
           title: "",
-          subject: "",
           dueDate: new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10),
           description: "",
+          materialId: "",
         },
       );
       if (typeof el.showModal === "function") el.showModal();
@@ -95,14 +99,20 @@ export default function TaskDialog({
         </div>
         <div className="f2">
           <div className="field-d">
-            <label htmlFor="task-subject">Mata Pelajaran</label>
+            <label htmlFor="task-material">Lampiran (materi)</label>
             <div className="control">
-              <input
-                id="task-subject"
-                type="text"
-                value={value.subject}
-                onChange={(e) => setValue((v) => ({ ...v, subject: e.target.value }))}
-              />
+              <select
+                id="task-material"
+                value={value.materialId}
+                onChange={(e) => setValue((v) => ({ ...v, materialId: e.target.value }))}
+              >
+                <option value="">Tanpa lampiran</option>
+                {materials.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.title}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="field-d">

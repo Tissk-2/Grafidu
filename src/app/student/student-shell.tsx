@@ -17,6 +17,7 @@ const NAV_LABEL: Record<string, string> = {
   home: "Home",
   tasks: "Tasks",
   todo: "Tasks",
+  materi: "Materi",
   grades: "Grades",
   "ai-agent": "AI Agent",
 };

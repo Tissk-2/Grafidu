@@ -4,7 +4,10 @@ import BodySync from "@/components/body-sync";
 import SiteFooter from "@/components/landing/footer";
 
 export const metadata = {
-  title: "Syarat & Ketentuan — Grafidu",
+  title: "Syarat & Ketentuan",
+  description:
+    "Ketentuan penggunaan platform Grafidu: akun, materi ajar, langganan sekolah, dan hukum yang berlaku.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {
@@ -20,8 +23,8 @@ export default function TermsPage() {
             <span>GRAFIDU</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link className="signin" href="/login">Sign in</Link>
-            <Link className="btn btn-primary btn-sm" href="/signup">Try Grafidu</Link>
+            <Link className="signin" href="/login">Masuk</Link>
+            <Link className="btn btn-primary btn-sm" href="/#contact">Coba Grafidu</Link>
           </div>
         </div>
       </header>
@@ -35,15 +38,15 @@ export default function TermsPage() {
             Beranda
           </Link>
           <span className="sep">/</span>
-          <b>Terms &amp; Policies</b>
+          <b>Syarat &amp; Ketentuan</b>
         </div>
 
         <div className="eyebrow" style={{ marginBottom: 12 }}>Ketentuan Resmi &amp; Penggunaan Layanan</div>
         <h1 style={{ fontSize: "clamp(32px, 5vw, 42px)", fontWeight: 700, letterSpacing: "-0.025em", margin: "0 0 12px" }}>
-          Syarat &amp; Kebijakan Layanan (Terms &amp; Policies)
+          Syarat &amp; Ketentuan
         </h1>
         <span style={{ fontSize: 13, color: "var(--gray-4)", display: "block", marginBottom: 36 }}>
-          Terakhir diperbarui: 15 September 2026
+          Terakhir diperbarui: 3 Oktober 2026
         </span>
 
         <div style={{ display: "grid", gap: 28, fontSize: 15, lineHeight: 1.75, color: "var(--gray-1)" }}>
@@ -85,10 +88,50 @@ export default function TermsPage() {
 
           <section>
             <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>
-              5. Perubahan Ketentuan
+              5. Langganan dan Pembayaran
             </h2>
             <p>
-              Grafidu berhak memperbarui ketentuan ini dari waktu ke waktu. Setiap perubahan substansial akan diumumkan melalui papan pengumuman resmi platform.
+              Layanan Grafidu disediakan berdasarkan perjanjian langganan antara Grafidu dan
+              sekolah/institusi sebagai pelanggan. Rincian biaya, siklus penagihan, dan metode
+              pembayaran mengikuti penawaran atau kontrak yang disepakati masing-masing sekolah.
+              Sekolah bertanggung jawab mengelola lisensi akun yang diberikan kepada siswa dan
+              guru di bawah langganannya; keterlambatan pembayaran dapat mengakibatkan penangguhan
+              akses sesuai ketentuan kontrak.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>
+              6. Batasan Tanggung Jawab
+            </h2>
+            <p>
+              Grafidu disediakan "sebagaimana adanya" dan merupakan alat bantu proses
+              belajar-mengajar. Grafidu tidak bertanggung jawab atas keputusan akademik, kelulusan,
+              maupun kerugian tidak langsung yang timbul dari penggunaan platform. Sesuai bagian 4,
+              hasil dari Asisten AI bersifat pendamping dan tetap memerlukan evaluasi guru
+              pengampu.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>
+              7. Hukum yang Berlaku
+            </h2>
+            <p>
+              Syarat dan Ketentuan ini tunduk pada hukum Republik Indonesia. Segala sengketa yang
+              timbul akan diupayakan penyelesaiannya terlebih dahulu melalui musyawarah; apabila
+              tidak tercapai, sengketa diselesaikan melalui pengadilan yang berwenang sesuai
+              domisili hukum yang ditentukan dalam kontrak sekolah.
+            </p>
+          </section>
+
+          <section>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink)", marginBottom: 10 }}>
+              8. Perubahan Ketentuan
+            </h2>
+            <p>
+              Grafidu berhak memperbarui ketentuan ini dari waktu ke waktu. Setiap perubahan
+              substansial akan diumumkan melalui papan pengumuman resmi platform.
             </p>
           </section>
         </div>

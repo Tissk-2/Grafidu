@@ -4,7 +4,10 @@ import BodySync from "@/components/body-sync";
 import SiteFooter from "@/components/landing/footer";
 
 export const metadata = {
-  title: "Pertanyaan Umum (FAQs) — Grafidu",
+  title: "Pertanyaan Umum (FAQ)",
+  description:
+    "Jawaban seputar platform Grafidu: rekomendasi AI, keamanan data, onboard sekolah, dan akses ponsel.",
+  alternates: { canonical: "/faqs" },
 };
 
 const FAQS_DATA = [
@@ -26,7 +29,7 @@ const FAQS_DATA = [
   },
   {
     q: "Bagaimana cara bergabung jika sekolah saya belum terdaftar?",
-    a: "Guru atau koordinator kurikulum sekolah dapat membuat akun demonstrasi melalui menu pendaftaran atau menghubungi tim kami melalui care@grafidu.com untuk integrasi kelas massal.",
+    a: "Akun Grafidu dibuat oleh admin sekolah melalui dashboard administrasi — baik akun siswa maupun guru. Jika sekolah Anda belum menjadi mitra, hubungi tim kami melalui halaman kontak untuk menjadwalkan demo dan proses onboarding.",
   },
   {
     q: "Apakah Grafidu dapat diakses melalui ponsel?",
@@ -47,8 +50,8 @@ export default function FAQsPage() {
             <span>GRAFIDU</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link className="signin" href="/login">Sign in</Link>
-            <Link className="btn btn-primary btn-sm" href="/signup">Try Grafidu</Link>
+            <Link className="signin" href="/login">Masuk</Link>
+            <Link className="btn btn-primary btn-sm" href="/#contact">Coba Grafidu</Link>
           </div>
         </div>
       </header>
@@ -67,7 +70,7 @@ export default function FAQsPage() {
 
         <div className="eyebrow" style={{ marginBottom: 12 }}>Pusat Bantuan &amp; Informasi</div>
         <h1 style={{ fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 700, letterSpacing: "-0.025em", margin: "0 0 16px" }}>
-          Pertanyaan yang Sering Diajukan (FAQs)
+          Pertanyaan yang Sering Diajukan
         </h1>
         <p style={{ fontSize: 16, color: "var(--gray-3)", lineHeight: 1.65, marginBottom: 40 }}>
           Temukan jawaban seputar penggunaan Grafidu, sistem penilaian terintegrasi, generator kuis AI, dan akun pembelajaran.
@@ -112,9 +115,9 @@ export default function FAQsPage() {
               Tim pendamping dan support teknis Grafidu siap membantumu setiap saat.
             </span>
           </div>
-          <a href="mailto:care@grafidu.com" className="btn btn-primary btn-sm">
+          <Link href="/#contact" className="btn btn-primary btn-sm">
             Hubungi Tim Dukungan
-          </a>
+          </Link>
         </div>
       </main>
 

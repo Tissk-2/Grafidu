@@ -158,10 +158,10 @@ export default function TeacherQuizMakerPage() {
       <BodySync dataPage="teacher-quiz" />
 
       <header>
-        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111] dark:text-[#F2F0F2]">
           Quiz Maker
         </h1>
-        <p className="mt-1 text-[14px] text-[#8A8A8A]">
+        <p className="mt-1 text-[14px] text-[#8A8A8A] dark:text-[#8F8B91]">
           Buat kuis dari materi yang sudah kamu bagikan — praktik tetap nyambung dengan apa yang
           diajarkan.
         </p>
@@ -283,9 +283,9 @@ export default function TeacherQuizMakerPage() {
       </div>
 
       {quizzes.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <p className="text-[15px] font-medium text-[#222]">Belum ada kuis</p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">Belum ada kuis</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             Isi topik di atas lalu Generate — kuis buatan AI muncul di sini.
           </p>
         </div>

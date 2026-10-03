@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Calendar, ChevronLeft, ClipboardCheck, Clock, Search, X } from "lucide-react";
+import { Calendar, ChevronLeft, ClipboardCheck, Clock, FileText, Search, X } from "lucide-react";
 import { useTitle } from "@/lib/hooks";
 import { fetchTask, fetchTaskSubmissions, saveGrade } from "@/app/actions/teacher";
 import { useTeacherShellData } from "../../teacher-shell-data";
@@ -37,13 +37,13 @@ function SearchField({
       <Search
         size={16}
         aria-hidden
-        className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[#AAA]"
+        className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[#AAA] dark:text-[#6E6A73]"
       />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-[45px] w-full rounded border border-[#CCC] bg-white pr-4 pl-[46px] text-[15px] text-[#222] outline-none placeholder:text-[#AAA] focus:border-[#5B48D0]"
+        className="h-[45px] w-full rounded border border-[#CCC] dark:border-[#333136] bg-white dark:bg-[#1C1A1F] pr-4 pl-[46px] text-[15px] text-[#222] dark:text-[#EDEBF0] outline-none placeholder:text-[#AAA] dark:text-[#6E6A73] focus:border-[#5B48D0]"
       />
     </div>
   );
@@ -162,75 +162,86 @@ export default function TeacherTaskDetailPage() {
       <nav className="flex items-center gap-2 text-[15px]">
         <Link
           href="/teacher/tasks"
-          className="flex items-center gap-1 font-medium text-[#222] hover:text-[#5B48D0]"
+          className="flex items-center gap-1 font-medium text-[#222] dark:text-[#EDEBF0] hover:text-[#5B48D0] dark:text-[#A78BFA]"
         >
           <ChevronLeft size={16} aria-hidden />
           Daftar Tugas
         </Link>
-        <span className="text-[#999]">/</span>
-        <span className="text-[#999]">Detail Tugas</span>
+        <span className="text-[#999] dark:text-[#716D73]">/</span>
+        <span className="text-[#999] dark:text-[#716D73]">Detail Tugas</span>
       </nav>
 
       {/* 3.2 header */}
       <header className="mt-4.5 flex items-center gap-3.5">
-        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#E9DDFB] text-[#5B3FD6]">
+        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#E9DDFB] text-[#5B3FD6] dark:text-[#A78BFA]">
           <ClipboardCheck size={22} aria-hidden />
         </span>
-        <h1 className="text-[32px] leading-tight font-medium tracking-[-0.01em] text-[#111]">
+        <h1 className="text-[32px] leading-tight font-medium tracking-[-0.01em] text-[#111] dark:text-[#F2F0F2]">
           {task.title}
         </h1>
       </header>
 
       {/* 3.3 meta row */}
-      <p className="mt-2.5 flex flex-wrap items-center gap-2 text-[14px] text-[#666]">
+      <p className="mt-2.5 flex flex-wrap items-center gap-2 text-[14px] text-[#666] dark:text-[#A9A5AB]">
         <span className="flex items-center gap-2">
-          <Calendar size={16} aria-hidden className="text-[#888]" />
+          <Calendar size={16} aria-hidden className="text-[#888] dark:text-[#8F8B91]" />
           Ditugaskan {fmtDate(task.assignedAt)}
         </span>
-        <span className="px-1 text-[#999]">•</span>
+        <span className="px-1 text-[#999] dark:text-[#716D73]">•</span>
         <span className="flex items-center gap-2">
-          <Clock size={16} aria-hidden className="text-[#888]" />
+          <Clock size={16} aria-hidden className="text-[#888] dark:text-[#8F8B91]" />
           Tenggat: {fmtDate(task.dueAt)}
         </span>
       </p>
 
       {/* 3.4 progress + divider */}
       <section className="mt-8">
-        <div className="text-[14px] font-medium text-[#222]">Progres Pengumpulan</div>
+        <div className="text-[14px] font-medium text-[#222] dark:text-[#EDEBF0]">Progres Pengumpulan</div>
         <div className="flex items-center gap-5">
           <div className="flex-1">
             <div className="mt-2 h-[7px] w-full overflow-hidden rounded-full bg-[#E6E3F8]">
               <div className="h-full rounded-full bg-[#5B3FD6]" style={{ width: `${pct}%` }} />
             </div>
           </div>
-          <div className="w-10 text-right text-[14px] text-[#222] whitespace-nowrap">
+          <div className="w-10 text-right text-[14px] text-[#222] dark:text-[#EDEBF0] whitespace-nowrap">
             {done} / {total}
           </div>
         </div>
-        <div className="mt-6 h-px w-full bg-[#E5E5E5]" />
+        <div className="mt-6 h-px w-full bg-[#E5E5E5] dark:bg-[#333136]" />
       </section>
 
       {/* 3.5 description */}
       <section className="mt-6">
-        <h2 className="text-[12px] font-medium tracking-[0.05em] text-[#888] uppercase">
+        <h2 className="text-[12px] font-medium tracking-[0.05em] text-[#888] dark:text-[#8F8B91] uppercase">
           Deskripsi Tugas
         </h2>
-        <p className="mt-3 text-[15px] leading-[1.63] text-[#555]">{task.description}</p>
+        <p className="mt-3 text-[15px] leading-[1.63] text-[#555] dark:text-[#A9A5AB]">{task.description}</p>
+        {task.material ? (
+          <a
+            href={task.material.url ?? "#"}
+            target={task.material.url?.startsWith("http") ? "_blank" : undefined}
+            rel="noreferrer"
+            className="task-material-link mt-4"
+          >
+            <FileText size={14} aria-hidden />
+            Lampiran: {task.material.title}
+          </a>
+        ) : null}
       </section>
 
       {/* 3.6 submitted */}
       <section className="mt-10.5">
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2.5 text-[17px] font-medium text-[#222]">
+          <h2 className="flex items-center gap-2.5 text-[17px] font-medium text-[#222] dark:text-[#EDEBF0]">
             <span className="size-2.5 rounded-full bg-[#16A34A]" />
             Sudah Mengumpulkan
           </h2>
-          <span className="text-[14px] text-[#888]">{done} siswa</span>
+          <span className="text-[14px] text-[#888] dark:text-[#8F8B91]">{done} siswa</span>
         </div>
 
         <SearchField value={qDone} onChange={setQDone} placeholder="Cari Siswa…" />
 
-        <table className="mt-3.5 w-full table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
+        <table className="mt-3.5 w-full table-fixed border border-[#DDD] dark:border-[#2D2B30] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
@@ -238,7 +249,7 @@ export default function TeacherTaskDetailPage() {
             <col />
           </colgroup>
           <thead>
-            <tr className="h-7 bg-[#F2F2F2] text-[12px] tracking-[0.04em] text-[#888] uppercase">
+            <tr className="h-7 bg-[#F2F2F2] dark:bg-[#2A282D] text-[12px] tracking-[0.04em] text-[#888] dark:text-[#8F8B91] uppercase">
               <th className="px-3.5 text-left font-medium">No</th>
               <th className="px-3.5 text-left font-medium">Siswa</th>
               <th className="px-3.5 text-left font-medium">Turned In Date</th>
@@ -247,17 +258,17 @@ export default function TeacherTaskDetailPage() {
           </thead>
           <tbody>
             {shownDone.map((r) => (
-              <tr key={r.sub.id} className="h-11 border-t border-[#E5E5E5] text-[15px]">
-                <td className="px-3.5 text-[#888]">{r.no}</td>
-                <td className="px-3.5 font-medium text-[#222]">
+              <tr key={r.sub.id} className="h-11 border-t border-[#E5E5E5] dark:border-[#2D2B30] text-[15px]">
+                <td className="px-3.5 text-[#888] dark:text-[#8F8B91]">{r.no}</td>
+                <td className="px-3.5 font-medium text-[#222] dark:text-[#EDEBF0]">
                   {r.nama}
                   {r.sub.grade != null && (
-                    <span className="ml-2 text-[12px] tabular-nums text-[#5B3FD6]">
+                    <span className="ml-2 text-[12px] tabular-nums text-[#5B3FD6] dark:text-[#A78BFA]">
                       {r.sub.grade}
                     </span>
                   )}
                 </td>
-                <td className="px-3.5 text-[#555]">{r.tanggal}</td>
+                <td className="px-3.5 text-[#555] dark:text-[#A9A5AB]">{r.tanggal}</td>
                 <td className="px-3.5 text-right">
                   <button
                     type="button"
@@ -271,7 +282,7 @@ export default function TeacherTaskDetailPage() {
             ))}
             {shownDone.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3.5 py-8 text-center text-[14px] text-[#999]">
+                <td colSpan={4} className="px-3.5 py-8 text-center text-[14px] text-[#999] dark:text-[#716D73]">
                   Tidak ada siswa yang cocok.
                 </td>
               </tr>
@@ -283,16 +294,16 @@ export default function TeacherTaskDetailPage() {
       {/* 3.7 not submitted */}
       <section className="mt-[42px] pb-40">
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2.5 text-[17px] font-medium text-[#222]">
+          <h2 className="flex items-center gap-2.5 text-[17px] font-medium text-[#222] dark:text-[#EDEBF0]">
             <span className="size-2.5 rounded-full bg-[#B91C1C]" />
             Belum Mengumpulkan
           </h2>
-          <span className="text-[14px] text-[#888]">{rowsMiss.length} siswa</span>
+          <span className="text-[14px] text-[#888] dark:text-[#8F8B91]">{rowsMiss.length} siswa</span>
         </div>
 
         <SearchField value={qMiss} onChange={setQMiss} placeholder="Cari Siswa…" />
 
-        <table className="mt-3.5 w-full table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
+        <table className="mt-3.5 w-full table-fixed border border-[#DDD] dark:border-[#2D2B30] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
@@ -300,7 +311,7 @@ export default function TeacherTaskDetailPage() {
             <col />
           </colgroup>
           <thead>
-            <tr className="h-7 bg-[#F2F2F2] text-[12px] tracking-[0.04em] text-[#888] uppercase">
+            <tr className="h-7 bg-[#F2F2F2] dark:bg-[#2A282D] text-[12px] tracking-[0.04em] text-[#888] dark:text-[#8F8B91] uppercase">
               <th className="px-3.5 text-left font-medium">No</th>
               <th className="px-3.5 text-left font-medium">Siswa</th>
               <th className="px-3.5 text-left font-medium">Keterangan</th>
@@ -309,16 +320,16 @@ export default function TeacherTaskDetailPage() {
           </thead>
           <tbody>
             {shownMiss.map((r) => (
-              <tr key={r.nama} className="h-11 border-t border-[#E5E5E5] text-[15px]">
-                <td className="px-3.5 text-[#888]">{r.no}</td>
-                <td className="px-3.5 font-medium text-[#222]">{r.nama}</td>
-                <td className="px-3.5 text-[#999]">Belum mengumpulkan</td>
+              <tr key={r.nama} className="h-11 border-t border-[#E5E5E5] dark:border-[#2D2B30] text-[15px]">
+                <td className="px-3.5 text-[#888] dark:text-[#8F8B91]">{r.no}</td>
+                <td className="px-3.5 font-medium text-[#222] dark:text-[#EDEBF0]">{r.nama}</td>
+                <td className="px-3.5 text-[#999] dark:text-[#716D73]">Belum mengumpulkan</td>
                 <td />
               </tr>
             ))}
             {shownMiss.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3.5 py-8 text-center text-[14px] text-[#999]">
+                <td colSpan={4} className="px-3.5 py-8 text-center text-[14px] text-[#999] dark:text-[#716D73]">
                   {rowsMiss.length === 0
                     ? "Semua siswa sudah mengumpulkan."
                     : "Tidak ada siswa yang cocok."}

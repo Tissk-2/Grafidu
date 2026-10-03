@@ -2,6 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { getSessionUser, type SessionUser } from "@/lib/session";
+import { relativeWhen, type TeacherAnnouncement } from "@/lib/student-model";
 import type {
   MaterialRow,
   QuizRow,
@@ -205,7 +206,7 @@ export async function createMaterial(input: {
       (class_id, teacher_id, title, description, attachments, status, pages)
     VALUES
       (${input.classId}, ${user.id}, ${input.title}, ${input.description},
-       ${sql.json(input.attachments)}, ${input.status}, 0)
+       ${input.attachments}, ${input.status}, 0)
   `;
 }
 
@@ -219,7 +220,7 @@ export async function updateMaterial(
     UPDATE public.materials SET
       title = ${patch.title},
       description = ${patch.description},
-      attachments = ${sql.json(patch.attachments)},
+      attachments = ${patch.attachments},
       status = ${patch.status}
     WHERE id = ${id}
       AND class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
@@ -248,12 +249,17 @@ export async function fetchTask(taskId: string): Promise<TaskDetail | null> {
         assigned_at: Date;
         due_at: Date;
         is_completed: boolean;
+        material_id: string | null;
+        material_title: string | null;
+        material_url: string | null;
       }[]
     >`
-      SELECT id, title, description, subject, assigned_at, due_at, is_completed
-      FROM public.tasks
-      WHERE id = ${taskId}
-        AND class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
+      SELECT t.id, t.title, t.description, t.subject, t.assigned_at, t.due_at, t.is_completed,
+             m.id AS material_id, m.title AS material_title, m.attachments[1] AS material_url
+      FROM public.tasks t
+      LEFT JOIN public.materials m ON m.id = t.material_id
+      WHERE t.id = ${taskId}
+        AND t.class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
       LIMIT 1
     `;
     const t = rows[0];
@@ -266,6 +272,13 @@ export async function fetchTask(taskId: string): Promise<TaskDetail | null> {
       assignedAt: t.assigned_at.toISOString(),
       dueAt: t.due_at.toISOString(),
       isCompleted: t.is_completed,
+      material: t.material_id
+        ? {
+            id: t.material_id,
+            title: t.material_title ?? "Materi",
+            url: t.material_url,
+          }
+        : null,
     };
   } catch {
     return null;
@@ -315,21 +328,42 @@ export async function fetchTaskSubmissions(taskId: string): Promise<SubmissionRo
   }
 }
 
-/** Simpan nilai + umpan balik ke task_statuses (persisten, bukan store). */
+/** Simpan nilai + umpan balik ke task_statuses, lalu sinkron ke tabel grades. */
 export async function saveGrade(
   submissionId: string,
   score: number,
   feedback: string,
 ): Promise<void> {
   const user = await requireTeacher();
-  await sql`
-    UPDATE public.task_statuses ts
-    SET grade = ${score}, feedback = ${feedback}
+
+  // Konteks submission + otorisasi: tugas harus milik kelas yang diampu.
+  const rows = await sql<
+    { task_id: string; student_id: string; class_id: string; subject: string }[]
+  >`
+    SELECT ts.task_id, ts.student_id, t.class_id, t.subject
+    FROM public.task_statuses ts
+    JOIN public.tasks t ON t.id = ts.task_id
     WHERE ts.id = ${submissionId}
-      AND ts.task_id IN (
-        SELECT id FROM public.tasks
-        WHERE class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
-      )
+      AND t.class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return;
+
+  await sql`
+    UPDATE public.task_statuses
+    SET grade = ${score}, feedback = ${feedback}
+    WHERE id = ${submissionId}
+  `;
+
+  // Satu sumber kebenaran: nilai tugas ikut tercatat di tabel grades agar
+  // rata-rata per mapel (dashboard siswa & guru) dan matriks nilai tetap
+  // sinkron dengan penilaian tugas.
+  await sql`
+    INSERT INTO public.grades (class_id, task_id, student_id, subject, kind, score)
+    VALUES (${row.class_id}, ${row.task_id}, ${row.student_id}, ${row.subject}, 'Tugas', ${score})
+    ON CONFLICT (task_id, student_id)
+    DO UPDATE SET score = EXCLUDED.score
   `;
 }
 
@@ -338,10 +372,10 @@ export async function createTask(classId: string, input: TaskInput): Promise<voi
   await requireTeaching(user, classId);
   await sql`
     INSERT INTO public.tasks
-      (class_id, created_by, title, description, subject, due_at, is_completed)
+      (class_id, created_by, title, description, subject, due_at, is_completed, material_id)
     VALUES
       (${classId}, ${user.id}, ${input.title}, ${input.description},
-       ${input.subject}, ${input.dueAt}, false)
+       ${input.subject}, ${input.dueAt}, false, ${input.materialId ?? null})
   `;
 }
 
@@ -352,7 +386,8 @@ export async function updateTask(id: string, input: TaskInput): Promise<void> {
       title = ${input.title},
       description = ${input.description},
       subject = ${input.subject},
-      due_at = ${input.dueAt}
+      due_at = ${input.dueAt},
+      material_id = ${input.materialId ?? null}
     WHERE id = ${id}
       AND class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
   `;
@@ -491,6 +526,51 @@ export async function createClassAnnouncement(
   `;
 }
 
+/**
+ * Daftar pengumuman untuk guru: sekolah-wide + yang ditujukan ke kelas yang
+ * dia ampu. `mine` menandai postingan yang bisa dia hapus.
+ */
+export async function fetchTeacherAnnouncements(): Promise<TeacherAnnouncement[]> {
+  try {
+    const user = await requireTeacher();
+    const rows = await sql<
+      {
+        id: string;
+        title: string;
+        body: string;
+        created_at: Date;
+        class_name: string | null;
+        author: string | null;
+        mine: boolean;
+      }[]
+    >`
+      SELECT a.id, a.title, a.body, a.created_at, c.name AS class_name,
+             p.name AS author, (a.created_by = ${user.id}) AS mine
+      FROM public.announcements a
+      LEFT JOIN public.classes c ON c.id = a.class_id
+      LEFT JOIN public.profiles p ON p.id = a.created_by
+      WHERE a.class_id IS NULL
+         OR a.class_id IN (SELECT class_id FROM public.teachings WHERE teacher_id = ${user.id})
+      ORDER BY a.created_at DESC
+    `;
+    return rows.map((a) => {
+      const iso = a.created_at.toISOString();
+      return {
+        id: a.id,
+        title: a.title,
+        body: a.body,
+        when: relativeWhen(iso),
+        date: iso,
+        className: a.class_name,
+        mine: a.mine,
+        author: a.author ?? "Sekolah",
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function deleteClassAnnouncement(id: string): Promise<void> {
   const user = await requireTeacher();
   await sql`
@@ -545,7 +625,7 @@ export async function fetchClassGradeRows(classId: string): Promise<GradeCell[]>
     await requireTeaching(user, classId);
     return await sql<GradeCell[]>`
       SELECT DISTINCT ON (g.student_id, g.subject)
-        g.student_id, p.name AS name, g.subject, g.score
+        g.student_id AS "studentId", p.name AS name, g.subject, g.score
       FROM public.grades g
       JOIN public.profiles p ON p.id = g.student_id
       WHERE g.class_id = ${classId}

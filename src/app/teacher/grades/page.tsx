@@ -119,10 +119,10 @@ export default function TeacherGradesPage() {
       <BodySync dataPage="teacher-grades" />
 
       <header className="mb-5">
-        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111] dark:text-[#F2F0F2]">
           Grades
         </h1>
-        <p className="mt-1 text-[14px] text-[#8A8A8A]">
+        <p className="mt-1 text-[14px] text-[#8A8A8A] dark:text-[#8F8B91]">
           Rekap nilai siswa {kelas.name} terhadap KKM {kkm}.
         </p>
       </header>
@@ -139,14 +139,14 @@ export default function TeacherGradesPage() {
           <Search
             size={16}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari siswa…"
             aria-label="Cari siswa"
-            className="h-11 w-full rounded-sm border border-[#E5E5E5] bg-white pr-4 pl-10 text-[14px] text-[#1A1A1A] transition outline-none placeholder:text-[#AFAFAF] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 w-full rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-4 pl-10 text-[14px] text-[#1A1A1A] dark:text-[#F2F0F2] transition outline-none placeholder:text-[#AFAFAF] dark:text-[#6E6A73] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           />
         </div>
 
@@ -155,7 +155,7 @@ export default function TeacherGradesPage() {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label="Urutkan siswa"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           >
             {SORTS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -166,18 +166,18 @@ export default function TeacherGradesPage() {
           <ChevronDown
             size={15}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
         </div>
       </div>
 
       {/* table */}
       {rows.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <p className="text-[15px] font-medium text-[#222]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">
             {allRows.length === 0 ? "Belum ada nilai" : "Siswa tidak ditemukan"}
           </p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             {allRows.length === 0
               ? `Kelas ${kelas.name} belum punya nilai tercatat.`
               : "Coba kata kunci lain atau pilih kelas berbeda."}
@@ -186,9 +186,9 @@ export default function TeacherGradesPage() {
       ) : (
         <>
           {filtering && (
-            <p className="mt-5 text-[13px] text-[#8A8A8A]">
+            <p className="mt-5 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
               Menampilkan{" "}
-              <span className="font-medium tabular-nums text-[#222]">{rows.length}</span> dari{" "}
+              <span className="font-medium tabular-nums text-[#222] dark:text-[#EDEBF0]">{rows.length}</span> dari{" "}
               <span className="tabular-nums">{allRows.length}</span> siswa
             </p>
           )}

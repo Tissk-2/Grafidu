@@ -74,10 +74,10 @@ export default function AnnouncementsView() {
   return (
     <>
       <header>
-        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111] dark:text-[#F2F0F2]">
           Pengumuman
         </h1>
-        <p className="mt-1 text-[14px] text-[#8A8A8A]">
+        <p className="mt-1 text-[14px] text-[#8A8A8A] dark:text-[#8F8B91]">
           Informasi dan pengumuman terbaru dari sekolah{u.role === "teacher" ? " untuk kelas yang kamu ampu" : " serta gurumu"}.
         </p>
       </header>
@@ -88,14 +88,14 @@ export default function AnnouncementsView() {
           <Search
             size={16}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari pengumuman…"
             aria-label="Cari pengumuman"
-            className="h-11 w-full rounded-sm border border-[#E5E5E5] bg-white pr-4 pl-10 text-[14px] text-[#1A1A1A] transition outline-none placeholder:text-[#AFAFAF] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 w-full rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-4 pl-10 text-[14px] text-[#1A1A1A] dark:text-[#F2F0F2] transition outline-none placeholder:text-[#AFAFAF] dark:text-[#6E6A73] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           />
         </div>
 
@@ -104,7 +104,7 @@ export default function AnnouncementsView() {
             value={range}
             onChange={(e) => setRange(e.target.value as Range)}
             aria-label="Filter waktu"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           >
             {RANGES.map((o) => (
               <option key={o.value} value={o.value}>
@@ -115,7 +115,7 @@ export default function AnnouncementsView() {
           <ChevronDown
             size={15}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
         </div>
 
@@ -124,7 +124,7 @@ export default function AnnouncementsView() {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label="Urutkan pengumuman"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           >
             {SORTS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -135,34 +135,34 @@ export default function AnnouncementsView() {
           <ChevronDown
             size={15}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
         </div>
       </div>
 
       {/* list */}
       {items.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <span className="mx-auto grid size-11 place-items-center rounded-full bg-[#F4F1FE] text-[#5B3FD6]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <span className="mx-auto grid size-11 place-items-center rounded-full bg-[#F4F1FE] dark:bg-[#2C2150] text-[#5B3FD6] dark:text-[#A78BFA]">
             <Megaphone size={18} aria-hidden />
           </span>
-          <p className="mt-3.5 text-[15px] font-medium text-[#222]">Belum ada pengumuman</p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+          <p className="mt-3.5 text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">Belum ada pengumuman</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             Pengumuman dari sekolah akan muncul di sini.
           </p>
         </div>
       ) : rows.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <p className="text-[15px] font-medium text-[#222]">Pengumuman tidak ditemukan</p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">Pengumuman tidak ditemukan</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             Coba kata kunci lain atau ubah filter waktu.
           </p>
         </div>
       ) : (
         <>
           {filtering && (
-            <p className="mt-5 text-[13px] text-[#8A8A8A]">
-              Menampilkan <span className="font-medium tabular-nums text-[#222]">{rows.length}</span>{" "}
+            <p className="mt-5 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
+              Menampilkan <span className="font-medium tabular-nums text-[#222] dark:text-[#EDEBF0]">{rows.length}</span>{" "}
               dari <span className="tabular-nums">{items.length}</span> pengumuman
             </p>
           )}
@@ -171,22 +171,23 @@ export default function AnnouncementsView() {
               <li
                 key={`${a.title}-${i}`}
                 className={
-                  "rounded-lg border bg-white p-5 transition " +
+                  "rounded-lg border bg-white dark:bg-[#1C1A1F] p-5 transition " +
                   (i === 0 && sort === "terbaru" && !filtering
-                    ? "border-[var(--purple-soft)] bg-[#fdfcff]"
-                    : "border-[#E5E5E5] hover:border-[#D5D2D8]")
+                    ? "border-[var(--purple-soft)] bg-[#fdfcff] dark:bg-[#1C1A1F]"
+                    : "border-[#E5E5E5] dark:border-[#2D2B30] hover:border-[#D5D2D8] dark:border-[#2D2B30]")
                 }
               >
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-                  <b className="text-[15.5px] font-semibold text-[#222]">{a.title}</b>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#8A8A8A]">
+                  <b className="text-[15.5px] font-semibold text-[#222] dark:text-[#EDEBF0]">{a.title}</b>
+                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#8A8A8A] dark:text-[#8F8B91]">
                     <CalendarDays size={13} aria-hidden />
                     {a.when}
-                    <span className="text-[#CFCFCF]">·</span>
+                    <span className="text-[#CFCFCF] dark:text-[#4C484E]">·</span>
                     {fmtDate(a.date)}
                   </span>
                 </div>
-                <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#8A8A8A]">{a.body}</p>
+                <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#8A8A8A] dark:text-[#8F8B91]">{a.body}</p>
+                <p className="mt-2 text-[12.5px] text-[#AFAFAF] dark:text-[#6E6A73]">Dari: {a.author}</p>
               </li>
             ))}
           </ul>

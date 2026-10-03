@@ -14,8 +14,7 @@ function dashboardPath(role?: string | null): string {
 
 /**
  * Atur ulang kata sandi. Pemulihan lewat email (SMTP) belum tersedia di
- * infrastruktur self-hosted — alur lama Supabase mengandalkan email link
- * dan memang belum lengkap. Untuk saat ini reset dilakukan admin sekolah
+ * infrastruktur self-hosted. Untuk saat ini reset dilakukan admin sekolah
  * lewat panel Akun (sandi sementara + wajib ganti di login berikutnya).
  */
 export default function ForgotPasswordPage() {
@@ -52,7 +51,7 @@ export default function ForgotPasswordPage() {
       <main className="auth-right">
         <div className="auth-box">
           <div className="auth-switch">
-            Remembered your password? <Link href="/login">Sign in</Link>
+            Sudah ingat kata sandi? <Link href="/login">Masuk</Link>
           </div>
 
           <h2>Atur Ulang Kata Sandi</h2>

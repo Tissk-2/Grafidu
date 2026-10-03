@@ -66,10 +66,10 @@ export default function StudentGradesPage() {
       <BodySync dataPage="student-grades" />
 
       <header>
-        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111]">
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.015em] text-[#111] dark:text-[#F2F0F2]">
           Grades
         </h1>
-        <p className="mt-1 text-[14px] text-[#8A8A8A]">
+        <p className="mt-1 text-[14px] text-[#8A8A8A] dark:text-[#8F8B91]">
           Rekap nilai tiap tugasmu{u.className ? ` di ${u.className}` : ""}.
         </p>
       </header>
@@ -86,14 +86,14 @@ export default function StudentGradesPage() {
           <Search
             size={16}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari tugas…"
             aria-label="Cari tugas"
-            className="h-11 w-full rounded-sm border border-[#E5E5E5] bg-white pr-4 pl-10 text-[14px] text-[#1A1A1A] transition outline-none placeholder:text-[#AFAFAF] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 w-full rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-4 pl-10 text-[14px] text-[#1A1A1A] dark:text-[#F2F0F2] transition outline-none placeholder:text-[#AFAFAF] dark:text-[#6E6A73] focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           />
         </div>
 
@@ -102,7 +102,7 @@ export default function StudentGradesPage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value as Filter)}
             aria-label="Filter nilai"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] bg-white pr-9 pl-3.5 text-[14px] text-[#222] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
+            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
           >
             {FILTERS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -113,29 +113,29 @@ export default function StudentGradesPage() {
           <ChevronDown
             size={15}
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
           />
         </div>
       </div>
 
       {/* table */}
       {tasks.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <p className="text-[15px] font-medium text-[#222]">Belum ada tugas</p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">Belum ada tugas</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
             Nilai per tugas akan muncul di sini begitu gurumu membagikan tugas.
           </p>
         </div>
       ) : rows.length === 0 ? (
-        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] px-6 py-14 text-center">
-          <p className="text-[15px] font-medium text-[#222]">Tugas tidak ditemukan</p>
-          <p className="mt-1 text-[13px] text-[#8A8A8A]">Coba kata kunci atau filter lain.</p>
+        <div className="mt-5 rounded-sm border border-dashed border-[#E5E5E5] dark:border-[#2D2B30] px-6 py-14 text-center">
+          <p className="text-[15px] font-medium text-[#222] dark:text-[#EDEBF0]">Tugas tidak ditemukan</p>
+          <p className="mt-1 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">Coba kata kunci atau filter lain.</p>
         </div>
       ) : (
         <>
           {filtering && (
-            <p className="mt-5 text-[13px] text-[#8A8A8A]">
-              Menampilkan <span className="font-medium tabular-nums text-[#222]">{rows.length}</span>{" "}
+            <p className="mt-5 text-[13px] text-[#8A8A8A] dark:text-[#8F8B91]">
+              Menampilkan <span className="font-medium tabular-nums text-[#222] dark:text-[#EDEBF0]">{rows.length}</span>{" "}
               dari <span className="tabular-nums">{tasks.length}</span> tugas
             </p>
           )}
@@ -208,7 +208,7 @@ export default function StudentGradesPage() {
           <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
             {subjects.map((s) => (
               <div key={s.subject} className="flex items-center gap-4">
-                <span className="w-40 shrink-0 truncate text-[14px] font-medium text-[#222]">
+                <span className="w-40 shrink-0 truncate text-[14px] font-medium text-[#222] dark:text-[#EDEBF0]">
                   {s.subject}
                 </span>
                 <span className="score-bar" style={{ width: 140 }} aria-hidden>

@@ -9,25 +9,25 @@ export default function AuthLeft() {
         <b>GRAFIDU</b>
       </Link>
       <div className="auth-hero">
-        <div className="eyebrow">A clearer way to learn</div>
+        <div className="eyebrow">Cara belajar yang lebih jelas</div>
         <h1>
-          Know where you are.
+          Tahu di mana kamu
           <br />
-          Know{" "}
+          berada. Tahu{" "}
           <span className="accent">
-            what to do
+            langkah
             <br />
-            next.
+            berikutnya.
           </span>
         </h1>
         <p>
-          Grades, materials, and AI recommendations in one place — so every login starts with
-          something useful.
+          Nilai, materi, dan rekomendasi AI dalam satu tempat — setiap login dimulai dengan
+          sesuatu yang berguna.
         </p>
       </div>
 
       {/* Panel ilustratif generik — bukan data user/demo dari database.
-          Data asli hanya tampil setelah login, diambil dari Supabase. */}
+          Data asli hanya tampil setelah login, diambil dari database. */}
       <div className="auth-float-score" aria-hidden="true">
         <span className="ic">
           <svg
@@ -68,8 +68,8 @@ export default function AuthLeft() {
 
       <nav>
         <Link href="/#platform">Platform</Link>
-        <Link href="/#students">Students</Link>
-        <Link href="/#teachers">Teachers</Link>
+        <Link href="/#students">Siswa</Link>
+        <Link href="/#teachers">Guru</Link>
         <Link href="/#ai">AI</Link>
       </nav>
     </aside>

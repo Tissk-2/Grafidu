@@ -4,7 +4,10 @@ import BodySync from "@/components/body-sync";
 import SiteFooter from "@/components/landing/footer";
 
 export const metadata = {
-  title: "Kebijakan Privasi — Grafidu",
+  title: "Kebijakan Privasi",
+  description:
+    "Cara Grafidu mengumpulkan, menggunakan, dan melindungi data siswa, guru, dan sekolah mitra.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
@@ -20,8 +23,8 @@ export default function PrivacyPage() {
             <span>GRAFIDU</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link className="signin" href="/login">Sign in</Link>
-            <Link className="btn btn-primary btn-sm" href="/signup">Try Grafidu</Link>
+            <Link className="signin" href="/login">Masuk</Link>
+            <Link className="btn btn-primary btn-sm" href="/#contact">Coba Grafidu</Link>
           </div>
         </div>
       </header>
@@ -35,15 +38,15 @@ export default function PrivacyPage() {
             Beranda
           </Link>
           <span className="sep">/</span>
-          <b>Privacy Notice</b>
+          <b>Kebijakan Privasi</b>
         </div>
 
         <div className="eyebrow" style={{ marginBottom: 12 }}>Ketentuan Resmi &amp; Keamanan Data</div>
         <h1 style={{ fontSize: "clamp(32px, 5vw, 42px)", fontWeight: 700, letterSpacing: "-0.025em", margin: "0 0 12px" }}>
-          Kebijakan Privasi (Privacy Notice)
+          Kebijakan Privasi
         </h1>
         <span style={{ fontSize: 13, color: "var(--gray-4)", display: "block", marginBottom: 36 }}>
-          Terakhir diperbarui: 15 September 2026
+          Terakhir diperbarui: 3 Oktober 2026
         </span>
 
         <div style={{ display: "grid", gap: 28, fontSize: 15, lineHeight: 1.75, color: "var(--gray-1)" }}>
@@ -87,7 +90,12 @@ export default function PrivacyPage() {
               4. Keamanan dan Penyimpanan Data
             </h2>
             <p>
-              Kami menerapkan standar keamanan berlapis: pembatasan otorisasi berbasis peran (Role-Based Access Control) yang memisahkan akses akun siswa dan guru secara ketat. Versi demo ini tidak menyimpan data apa pun — seluruh informasi hanya berada di memori peramban selama sesi berlangsung dan hilang saat halaman dimuat ulang.
+              Kami menerapkan standar keamanan berlapis: kata sandi disimpan sebagai hash bcrypt,
+              sesi login dijaga oleh cookie httpOnly (<code>grafidu_session</code>) yang tidak
+              dapat dibaca JavaScript, dan pembatasan otorisasi berbasis peran (Role-Based Access
+              Control) memisahkan akses akun siswa, guru, dan admin sekolah secara ketat. Data
+              akademik tersimpan pada basis data yang dikelola untuk sekolah mitra dan hanya
+              diproses untuk tujuan edukatif sebagaimana dijelaskan pada bagian 3.
             </p>
           </section>
 

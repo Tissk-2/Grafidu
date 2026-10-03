@@ -13,13 +13,13 @@ export default function ViewTabs() {
           className={"viewtab" + (view === "student" ? " on" : "")}
           onClick={() => setView("student")}
         >
-          Student view
+          Sisi siswa
         </button>
         <button
           className={"viewtab" + (view === "teacher" ? " on" : "")}
           onClick={() => setView("teacher")}
         >
-          Teacher view
+          Sisi guru
         </button>
       </div>
 
@@ -31,30 +31,30 @@ export default function ViewTabs() {
         style={{ display: view === "student" ? "" : "none" }}
       >
         <div className="view-copy">
-          <span className="label-caps">Student</span>
+          <span className="label-caps">Siswa</span>
           <h2>
-            Less guessing.
+            Lebih sedikit menebak.
             <br />
-            More
+            Lebih banyak
             <br />
-            <span className="accent u">focused practice</span>.
+            <span className="accent u">latihan terfokus</span>.
           </h2>
           <p>
-            Students see progress by subject, get recommendations based on weak areas, and can turn
-            teacher materials into practice.
+            Siswa melihat progres per mapel, mendapat rekomendasi berbasis area lemah, dan bisa
+            mengubah materi guru menjadi latihan pribadi.
           </p>
           <Link className="btn btn-outline" href="/student/home">
-            Explore the student side
+            Jelajahi sisi siswa
           </Link>
         </div>
         <div className="overview-box">
           <div className="ov-left">
             <div className="ov-head">
-              <span>My learning overview</span>
-              <span>August 2026</span>
+              <span>Ringkasan belajarku</span>
+              <span>Agustus 2026</span>
             </div>
             <div className="ov-score">87</div>
-            <div className="ov-sub">average score / 100</div>
+            <div className="ov-sub">rata-rata nilai / 100</div>
             <div className="ov-bars">
               <div className="ov-bar">
                 <span>Matematika</span>
@@ -89,14 +89,14 @@ export default function ViewTabs() {
           <div className="ov-right">
             <div className="ov-mini">
               <b>3</b>
-              <span>weak subjects to review</span>
+              <span>mapel lemah untuk ditinjau</span>
             </div>
             <div className="ov-mini">
               <b>8</b>
-              <span>new tasks</span>
+              <span>tugas baru</span>
             </div>
             <div className="ov-mini ov-note">
-              AI suggests a short Seni Budaya review before your next quiz.
+              AI menyarankan review Seni Budaya singkat sebelum kuis berikutnya.
             </div>
           </div>
         </div>
@@ -110,34 +110,30 @@ export default function ViewTabs() {
         style={{ display: view === "teacher" ? "" : "none" }}
       >
         <div className="view-copy">
-          <span className="label-caps">Teacher</span>
+          <span className="label-caps">Guru</span>
           <h2>
-            See the class
+            Lihat kelas
             <br />
-            clearly. Plan
+            dengan jelas. Rencanakan
             <br />
-            <span className="accent u">what comes next</span>.
+            <span className="accent u">langkah berikutnya</span>.
           </h2>
           <p>
-            Teachers can spot class-wide patterns, share materials in one place, and follow up on
-            students who need a closer look.
+            Guru bisa melihat pola kelas, membagikan materi di satu tempat, dan menindaklanjuti
+            siswa yang butuh perhatian lebih.
           </p>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={() => window.gtoast?.("Dashboard guru sedang dalam pengembangan — belum tersedia di versi ini.")}
-          >
-            Explore the teacher side
-          </button>
+          <a className="btn btn-outline" href="#contact">
+            Jadwalkan demo untuk guru
+          </a>
         </div>
         <div className="overview-box">
           <div className="ov-left">
             <div className="ov-head">
-              <span>My class overview</span>
+              <span>Ringkasan kelas</span>
               <span>XI RPL A</span>
             </div>
             <div className="ov-score">85</div>
-            <div className="ov-sub">class average / 100</div>
+            <div className="ov-sub">rata-rata kelas / 100</div>
             <div className="ov-bars">
               <div className="ov-bar">
                 <span>Arfan D.</span>
@@ -172,13 +168,15 @@ export default function ViewTabs() {
           <div className="ov-right">
             <div className="ov-mini">
               <b>27/32</b>
-              <span>submissions collected</span>
+              <span>pengumpulan terkumpul</span>
             </div>
             <div className="ov-mini">
               <b>5</b>
-              <span>students need follow-up</span>
+              <span>siswa perlu ditindaklanjuti</span>
             </div>
-            <div className="ov-mini ov-note">AI prepares extra quizzes to help Joko catch up.</div>
+            <div className="ov-mini ov-note">
+              AI menyiapkan kuis tambahan agar Joko bisa menyusul.
+            </div>
           </div>
         </div>
       </div>

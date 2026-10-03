@@ -12,7 +12,28 @@ export type SubjectScore = {
   status: "Atas Rata Rata" | "Bawah Rata Rata";
 };
 
-export type AnnouncementItem = { title: string; body: string; when: string; hl: boolean };
+export type StudentMaterial = {
+  id: string;
+  title: string;
+  description: string;
+  attachments: string[];
+  teacherName: string;
+  views: number;
+  createdAt: string;
+};
+
+export type AnnouncementItem = { title: string; body: string; when: string; hl: boolean; author: string };
+
+export type TeacherAnnouncement = {
+  id: string;
+  title: string;
+  body: string;
+  when: string;
+  date: string;
+  className: string | null;
+  mine: boolean;
+  author: string;
+};
 
 export type TodoItem = { id: string; title: string; subtitle: string; done: boolean };
 
@@ -33,6 +54,7 @@ export type TaskDetail = {
   assignedAt: string;
   dueAt: string;
   creatorName: string;
+  material: { id: string; title: string; url: string | null } | null;
 };
 
 export type TaskStatus = {
@@ -44,7 +66,7 @@ export type TaskStatus = {
 
 export type ClassTeacher = { teacher: string; subject: string; avatar: string };
 
-export type AnnouncementPageItem = { title: string; body: string; when: string; date: string };
+export type AnnouncementPageItem = { title: string; body: string; when: string; date: string; author: string };
 
 export function pill(score: number): "Atas Rata Rata" | "Bawah Rata Rata" {
   return score >= 70 ? "Atas Rata Rata" : "Bawah Rata Rata";

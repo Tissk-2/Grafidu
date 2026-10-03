@@ -122,6 +122,22 @@ export default function StudentTaskDetailPage() {
         <p className="desc-text" style={{ whiteSpace: "pre-line" }}>
           {data.task.description || "Tidak ada instruksi tambahan untuk tugas ini."}
         </p>
+        {data.task.material ? (
+          <a
+            className="task-material-link"
+            style={{ marginTop: 14 }}
+            href={data.task.material.url ?? "#"}
+            target={data.task.material.url?.startsWith("http") ? "_blank" : undefined}
+            rel="noreferrer"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="5" y="3" width="14" height="18" rx="2.5" />
+              <path d="M9 3.5V2h6v1.5" />
+              <path d="m8.6 12.4 2 2 4-4" />
+            </svg>
+            Lampiran: {data.task.material.title}
+          </a>
+        ) : null}
       </div>
 
       <StudentTaskSubmission

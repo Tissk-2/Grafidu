@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Add, People } from "iconsax-reactjs";
 import { LogOut } from "lucide-react";
 import { logout, avatarSrc } from "@/lib/auth";
+import { ThemeMenuItem } from "@/components/theme-toggle";
 import { id as idLocale } from "date-fns/locale/id";
 
 // react-day-picker + date-fns cukup berat untuk masuk chunk bersama semua
@@ -161,7 +162,7 @@ function SidebarImpl({
         modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
         classNames={{
           today:
-            "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] font-semibold data-[selected-single=true]:bg-primary",
+            "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] dark:text-[#A78BFA] font-semibold data-[selected-single=true]:bg-primary",
         }}
       />
 
@@ -226,6 +227,7 @@ function SidebarImpl({
       <div className="side-user-wrap" ref={userWrapRef}>
         {menuOpen && (
           <div className="side-user-menu" role="menu" aria-label="Menu akun">
+            <ThemeMenuItem />
             <Link role="menuitem" href={settingsHref} onClick={() => setMenuOpen(false)}>
               {GEAR_ICON}
               Pengaturan

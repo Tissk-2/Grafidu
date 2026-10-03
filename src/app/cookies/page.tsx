@@ -4,7 +4,10 @@ import BodySync from "@/components/body-sync";
 import SiteFooter from "@/components/landing/footer";
 
 export const metadata = {
-  title: "Kebijakan Cookie — Grafidu",
+  title: "Kebijakan Cookie",
+  description:
+    "Cookie yang digunakan Grafidu: satu cookie sesi esensial, tanpa cookie pelacak atau iklan.",
+  alternates: { canonical: "/cookies" },
 };
 
 export default function CookiesPage() {
@@ -20,8 +23,8 @@ export default function CookiesPage() {
             <span>GRAFIDU</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link className="signin" href="/login">Sign in</Link>
-            <Link className="btn btn-primary btn-sm" href="/signup">Try Grafidu</Link>
+            <Link className="signin" href="/login">Masuk</Link>
+            <Link className="btn btn-primary btn-sm" href="/#contact">Coba Grafidu</Link>
           </div>
         </div>
       </header>
@@ -35,14 +38,14 @@ export default function CookiesPage() {
             Beranda
           </Link>
           <span className="sep">/</span>
-          <b>Cookie Notice</b>
+          <b>Kebijakan Cookie</b>
         </div>
 
         <h1 style={{ fontSize: 36, fontWeight: 700, margin: "0 0 12px", color: "var(--ink-1)" }}>
           Kebijakan Cookie
         </h1>
         <p style={{ color: "var(--gray-3)", fontSize: 14, margin: "0 0 40px" }}>
-          Terakhir diperbarui: 22 September 2026
+          Terakhir diperbarui: 3 Oktober 2026
         </p>
 
         <article className="legal-content" style={{ display: "grid", gap: 28, lineHeight: 1.7, color: "var(--ink-2)", fontSize: 15 }}>
@@ -57,22 +60,35 @@ export default function CookiesPage() {
 
           <section>
             <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink-1)", margin: "0 0 10px" }}>
-              2. Cookie pada Versi Demo Ini
+              2. Cookie yang Kami Gunakan
             </h2>
             <p>
-              Grafidu memakai <b>satu cookie wajib</b> (<code>grafidu_session</code>) untuk menjaga sesi login Anda — httpOnly, sehingga tidak bisa dibaca JavaScript. Cookie ini hilang otomatis saat Anda logout atau sesi kedaluwarsa (30 hari).
+              Grafidu memakai <b>satu cookie wajib</b> (<code>grafidu_session</code>) untuk menjaga
+              sesi login Anda — berbentuk httpOnly sehingga tidak bisa dibaca JavaScript, dan hanya
+              dikirim bersama permintaan menuju server Grafidu. Cookie ini hilang otomatis saat Anda
+              logout atau sesi kedaluwarsa (30 hari).
             </p>
             <p style={{ marginTop: 8 }}>
-              Seluruh data yang Anda lihat (akun demo, nilai, tugas, kuis, dan preferensi) hanya berada di memori peramban selama sesi berlangsung. Memuat ulang halaman akan mengembalikan aplikasi ke kondisi awal, dan tidak ada data yang meninggalkan perangkat Anda.
+              Cookie ini bersifat esensial: tanpanya Anda tidak dapat tetap masuk ke dashboard.
+              Data akademik (nilai, tugas, kuis, dan materi) tersimpan pada basis data Grafidu di
+              sisi server — bukan pada cookie.
             </p>
           </section>
 
           <section>
             <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--ink-1)", margin: "0 0 10px" }}>
-              3. Pengelolaan Cookie
+              3. Cookie Lainnya dan Pengelolaan
             </h2>
             <p>
-              Karena versi demo ini tidak menempatkan cookie apa pun, tidak ada preferensi cookie yang perlu Anda kelola. Apabila versi produksi nantinya memerlukan cookie untuk autentikasi sesi, kebijakan ini akan diperbarui sebelum fitur tersebut aktif.
+              Kami tidak menggunakan cookie pelacak, cookie iklan, ataupun cookie pihak ketiga,
+              sehingga tidak ada preferensi cookie yang perlu Anda kelola dan tidak ada banner
+              persetujuan yang diperlukan. Apabila kelak kami menambahkan cookie non-esensial
+              (misalnya analitik), kebijakan ini akan diperbarui dan persetujuan akan diminta
+              sebelum fitur tersebut aktif.
+            </p>
+            <p style={{ marginTop: 8 }}>
+              Anda tetap dapat menghapus cookie <code>grafidu_session</code> kapan pun melalui
+              pengaturan peramban — efeknya sama dengan logout.
             </p>
           </section>
 

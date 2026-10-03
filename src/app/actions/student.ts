@@ -9,6 +9,7 @@ import type {
   ClassTeacher,
   SchoolTask,
   SidebarTask,
+  StudentMaterial,
   SubjectScore,
   TaskDetail,
   TaskStatus,
@@ -114,14 +115,31 @@ export async function fetchSubjectScores(): Promise<SubjectScore[]> {
 
 // pill & relativeWhen diimpor dari student-model (helper murni bersama client).
 
+/**
+ * Scope pengumuman untuk siswa: pengumuman sekolah (class_id NULL) atau
+ * yang ditujukan ke kelas siswa itu sendiri. Penulis ikut diambil agar
+ * tampil "dari siapa" di UI.
+ */
+async function scopedAnnouncements(limit: number | null) {
+  const user = await getSessionUser();
+  if (!user) return [];
+  const classId = await classIdByName(user.className);
+  const rows = await sql<
+    { title: string; body: string; created_at: Date; author: string | null }[]
+  >`
+    SELECT a.title, a.body, a.created_at, p.name AS author
+    FROM public.announcements a
+    LEFT JOIN public.profiles p ON p.id = a.created_by
+    WHERE a.class_id IS NULL OR a.class_id = ${classId}
+    ORDER BY a.created_at DESC
+    ${limit ? sql`LIMIT ${limit}` : sql``}
+  `;
+  return rows;
+}
+
 export async function fetchAnnouncements(limit = 3): Promise<AnnouncementItem[]> {
   try {
-    const rows = await sql<{ title: string; body: string; created_at: Date }[]>`
-      SELECT title, body, created_at
-      FROM public.announcements
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-    `;
+    const rows = await scopedAnnouncements(limit);
     return rows.map((a, i) => {
       const iso = a.created_at.toISOString();
       return {
@@ -129,6 +147,7 @@ export async function fetchAnnouncements(limit = 3): Promise<AnnouncementItem[]>
         body: a.body.length > 120 ? a.body.slice(0, 120) + "..." : a.body,
         when: relativeWhen(iso),
         hl: i === 0,
+        author: a.author ?? "Sekolah",
       };
     });
   } catch {
@@ -136,14 +155,10 @@ export async function fetchAnnouncements(limit = 3): Promise<AnnouncementItem[]>
   }
 }
 
-/** Semua pengumuman tanpa dipotong, plus ISO date untuk filter & sort halaman. */
+/** Semua pengumuman ter-scope kelas, plus ISO date untuk filter & sort halaman. */
 export async function fetchAllAnnouncements(): Promise<AnnouncementPageItem[]> {
   try {
-    const rows = await sql<{ title: string; body: string; created_at: Date }[]>`
-      SELECT title, body, created_at
-      FROM public.announcements
-      ORDER BY created_at DESC
-    `;
+    const rows = await scopedAnnouncements(null);
     return rows.map((a) => {
       const iso = a.created_at.toISOString();
       return {
@@ -151,11 +166,69 @@ export async function fetchAllAnnouncements(): Promise<AnnouncementPageItem[]> {
         body: a.body,
         when: relativeWhen(iso),
         date: iso,
+        author: a.author ?? "Sekolah",
       };
     });
   } catch {
     return [];
   }
+}
+
+/**
+ * Materi terbit untuk kelas siswa — target akhirnya dari materi yang
+ * diunggah guru di /teacher/materi (status = published).
+ */
+export async function fetchStudentMaterials(): Promise<StudentMaterial[]> {
+  try {
+    const user = await getSessionUser();
+    if (!user) return [];
+    const classId = await classIdByName(user.className);
+    if (!classId) return [];
+    const rows = await sql<
+      {
+        id: string;
+        title: string;
+        description: string;
+        attachments: unknown;
+        views: number | null;
+        created_at: Date;
+        teacher_name: string | null;
+      }[]
+    >`
+      SELECT m.id, m.title, m.description, m.attachments, m.views, m.created_at,
+             p.name AS teacher_name
+      FROM public.materials m
+      LEFT JOIN public.profiles p ON p.id = m.teacher_id
+      WHERE m.class_id = ${classId}
+        AND m.status = 'published'
+      ORDER BY m.created_at DESC
+    `;
+    return rows.map((m) => ({
+      id: m.id,
+      title: m.title ?? "",
+      description: m.description ?? "",
+      attachments: Array.isArray(m.attachments) ? (m.attachments as string[]) : [],
+      teacherName: m.teacher_name ?? "Guru",
+      views: m.views ?? 0,
+      createdAt: m.created_at.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Tambah satu view saat siswa membuka kartu materi (idempotent per klik). */
+export async function markMaterialViewed(id: string): Promise<void> {
+  const user = await getSessionUser();
+  if (!user) return;
+  const classId = await classIdByName(user.className);
+  await sql`
+    UPDATE public.materials
+    SET views = COALESCE(views, 0) + 1
+    WHERE id = ${id}
+      AND status = 'published'
+      AND class_id = ${classId}
+  `;
 }
 
 export async function fetchTodos(): Promise<TodoItem[]> {
@@ -238,11 +311,17 @@ export async function fetchTaskDetail(taskId: string): Promise<TaskDetail | null
         assigned_at: Date;
         due_at: Date;
         creator_name: string | null;
+        material_id: string | null;
+        material_title: string | null;
+        material_url: string | null;
       }[]
     >`
-      SELECT t.id, t.title, t.description, t.subject, t.assigned_at, t.due_at, p.name AS creator_name
+      SELECT t.id, t.title, t.description, t.subject, t.assigned_at, t.due_at,
+             p.name AS creator_name,
+             m.id AS material_id, m.title AS material_title, m.attachments[1] AS material_url
       FROM public.tasks t
       LEFT JOIN public.profiles p ON p.id = t.created_by
+      LEFT JOIN public.materials m ON m.id = t.material_id
       WHERE t.id = ${taskId}
       LIMIT 1
     `;
@@ -256,6 +335,13 @@ export async function fetchTaskDetail(taskId: string): Promise<TaskDetail | null
       assignedAt: t.assigned_at.toISOString(),
       dueAt: t.due_at.toISOString(),
       creatorName: t.creator_name ?? "Guru",
+      material: t.material_id
+        ? {
+            id: t.material_id,
+            title: t.material_title ?? "Materi",
+            url: t.material_url,
+          }
+        : null,
     };
   } catch {
     return null;

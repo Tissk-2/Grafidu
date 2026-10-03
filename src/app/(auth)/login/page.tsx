@@ -5,7 +5,10 @@ import ToastProvider from "@/components/ui/toast-provider";
 import { getSessionUser } from "@/lib/session";
 
 export const metadata = {
-  title: "Sign in — Grafidu",
+  title: "Masuk",
+  description:
+    "Masuk ke dashboard Grafidu untuk siswa, guru, dan admin sekolah — nilai, tugas, dan materi dalam satu tempat.",
+  alternates: { canonical: "/login" },
 };
 
 export const dynamic = "force-dynamic";

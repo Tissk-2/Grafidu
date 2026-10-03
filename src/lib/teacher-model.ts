@@ -47,6 +47,7 @@ export type TaskDetail = {
   assignedAt: string;
   dueAt: string;
   isCompleted: boolean;
+  material: { id: string; title: string; url: string | null } | null;
 };
 
 export type SubmissionRow = {
@@ -65,6 +66,7 @@ export type TaskInput = {
   description: string;
   subject: string;
   dueAt: string; // ISO
+  materialId?: string | null; // materi terkait dari halaman Materi
 };
 
 export type QuizRow = {

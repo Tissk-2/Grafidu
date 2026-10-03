@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict y5XNQstFwgf6wIeP9BBLt8HheE0zDMyc1i3UCFHHqtHrVQAWiBVIfXYiw6YHheB
+\restrict u3gKkPUgzwodNHEDorVf3RwL48J2p7adECmhIAXNtvhCfuAvWU9O2kxYHtro4VW
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -138,6 +138,7 @@ DROP INDEX IF EXISTS public.task_statuses_student_id_idx;
 DROP INDEX IF EXISTS public.sessions_user_id_idx;
 DROP INDEX IF EXISTS public.sessions_expires_at_idx;
 DROP INDEX IF EXISTS public.materials_class_id_idx;
+DROP INDEX IF EXISTS public.grades_task_student_uidx;
 DROP INDEX IF EXISTS public.grades_task_id_idx;
 DROP INDEX IF EXISTS public.grades_student_id_idx;
 DROP INDEX IF EXISTS public.grades_class_id_idx;
@@ -181,6 +182,7 @@ DROP TABLE IF EXISTS public.profiles;
 DROP TABLE IF EXISTS public.materials;
 DROP TABLE IF EXISTS public.grades;
 DROP TABLE IF EXISTS public.enrollments;
+DROP TABLE IF EXISTS public.contact_leads;
 DROP TABLE IF EXISTS public.classes;
 DROP TABLE IF EXISTS public.chat_messages;
 DROP TABLE IF EXISTS public.announcements;
@@ -703,6 +705,22 @@ CREATE TABLE public.classes (
 
 
 --
+-- Name: contact_leads; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.contact_leads (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    email text NOT NULL,
+    school text NOT NULL,
+    students_range text NOT NULL,
+    message text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT contact_leads_email_check CHECK ((email ~* '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'::text))
+);
+
+
+--
 -- Name: enrollments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -848,7 +866,8 @@ CREATE TABLE public.tasks (
     due_at timestamp with time zone NOT NULL,
     is_completed boolean DEFAULT false NOT NULL,
     "position" integer DEFAULT 0 NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    material_id uuid
 );
 
 
@@ -995,6 +1014,7 @@ b5118651-0ed2-c3bf-ae98-408d2baebcc0	Brief Proyek Poster	Brief proyek poster unt
 95bebab2-9369-89f3-e1ff-6f37ef137e8c	Ujian Akhir Semester	Akan dilaksanakan pada tanggal 10 Oktober 2026	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	2026-09-29 14:00:00+07
 179cd3cb-171d-250e-785b-021fcd376ca9	Jadwal remedial	Remedial bagi siswa dengan nilai di bawah KKM 80 dilaksanakan Sabtu, 05.00 WIB.	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	2026-09-25 14:00:00+07
 a5cb7510-1946-5318-a7a6-65b94b24534b	Pengumpulan Tugas	Kumpulkan tugas sebelum 1 September 2026	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	2026-09-27 14:00:00+07
+eecee767-4f0b-46b9-a31e-bddf330c70a0	Remedial Fisika	Remedial Fisika bab 3 dilaksanakan Jumat pukul 09.00 di lab. Bawa kalkulator.	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	2026-10-03 09:58:32.184331+07
 \.
 
 
@@ -1014,6 +1034,14 @@ COPY public.classes (id, name, ordinal, created_at) FROM stdin;
 46a5ee71-767e-778d-e2a9-334eb0845e73	XI RPL B	1	2026-10-01 14:38:54.527876+07
 3535d275-b4c6-9601-e4b4-b57981176c39	XI DKV A	2	2026-10-01 14:38:54.527876+07
 407a66ba-e691-c373-c7fd-d40671b6596b	XI RPL C	3	2026-10-01 14:38:54.527876+07
+\.
+
+
+--
+-- Data for Name: contact_leads; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.contact_leads (id, name, email, school, students_range, message, created_at) FROM stdin;
 \.
 
 
@@ -1173,6 +1201,7 @@ f95d4399-e238-4c0e-b278-539ae8a6011d	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4
 02c27e4f-0ef9-496b-9dc0-80cc0de23a3a	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	467a114f-d73f-4556-89c2-3c794e1aaecd	Bahasa Indonesia	Analisis Unsur Intrinsik Cerpen	94	2026-08-12	2026-10-01 14:38:54.527876+07
 32d67743-a928-4265-8643-379ad5174001	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	ac155231-ae3d-4d88-9394-8883411cf7d8	Bahasa Indonesia	Analisis Unsur Intrinsik Cerpen	81	2026-08-12	2026-10-01 14:38:54.527876+07
 67979986-63ed-4c10-bbb3-fafa25fe6057	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	e6f10eeb-feee-41dd-8429-c8a938bee48e	Bahasa Indonesia	Analisis Unsur Intrinsik Cerpen	84	2026-08-12	2026-10-01 14:38:54.527876+07
+8b9a3a69-773d-430e-81cd-4b30e0d6699f	46a5ee71-767e-778d-e2a9-334eb0845e73	683fc447-a093-5855-e3e1-c0eb75edce03	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	Bahasa Indonesia	Tugas	88	2026-10-03	2026-10-03 10:04:23.335388+07
 e028cc7b-c3bd-43ce-b6dc-fb5c7d696ee2	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	442d2d6b-e9a4-4088-8089-8029475879e7	Bahasa Indonesia	Analisis Unsur Intrinsik Cerpen	92	2026-08-12	2026-10-01 14:38:54.527876+07
 70dbf67f-f995-430d-b5ab-8689b5910de6	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	5e0a6ea9-3634-4320-b0b1-00bf441cfe00	Bahasa Indonesia	Analisis Unsur Intrinsik Cerpen	79	2026-08-12	2026-10-01 14:38:54.527876+07
 a3ea9823-6b4b-4167-9236-e0f614d60e38	46a5ee71-767e-778d-e2a9-334eb0845e73	70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	9bc5b210-8492-4e5d-9121-232f65386b56	Bahasa Indonesia	Analisis Unsur Intrinsik Cerpen	87	2026-08-12	2026-10-01 14:38:54.527876+07
@@ -1489,7 +1518,6 @@ ca66663d-c67a-4fc9-90fe-aa5f591b0078	407a66ba-e691-c373-c7fd-d40671b6596b	a1382e
 --
 
 COPY public.materials (id, teacher_id, class_id, title, description, attachments, pages, status, views, "position", created_at) FROM stdin;
-dbbd2405-810b-1b14-40ae-749808f5a2be	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	46a5ee71-767e-778d-e2a9-334eb0845e73	Belajar Teks Eksposisi	Mengenal teks eksposisi sebagai teks yang bertujuan menjelaskan suatu peristiwa atau gagasan secara sistematis. Materi ini membahas tesis, rangkaian argumen, dan penegasan ulang, disertai contoh teks tentang isu lingkungan di sekitar sekolah.	{/materi/eksposisi-modul.pdf,https://kemdikbud.go.id/teks-eksposisi}	0	published	0	1	2026-10-01 14:38:54.527876+07
 feca82f4-ac59-5530-bd8c-88da340046dd	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	46a5ee71-767e-778d-e2a9-334eb0845e73	Unsur Intrinsik Cerpen	Mempelajari lima unsur intrinsik cerpen — tokoh, penokohan, latar, konflik, dan amanat — beserta cara mengidentifikasi setiap unsur pada kutipan cerita pendek.	{/materi/cerpen-unsur.pdf,/materi/cerpen-kisah-di-sekolah.docx}	0	published	0	2	2026-10-01 14:38:54.527876+07
 67c02dba-a922-5aef-42ee-66ef4cc0d7a5	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	46a5ee71-767e-778d-e2a9-334eb0845e73	Teks Pidato Persuasif	Struktur pembuka, isi, dan penutup teks pidato persuasif, disertai teknik kebahasaan persuasif dan cara menyusun data yang kuat untuk membahas isu lingkungan.	{https://id.wikipedia.org/wiki/Pidato_persuasif}	0	published	0	3	2026-10-01 14:38:54.527876+07
 d72b283b-13a3-42c7-21f8-fe4589a67c73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	46a5ee71-767e-778d-e2a9-334eb0845e73	Membuat Resensi Buku	Panduan menulis resensi: identitas buku, sinopsis, kelebihan, dan kekurangan, serta cara memberi rekomendasi yang jujur berdasarkan pembacaan utuh.	{/materi/resensi-panduan.pdf,/materi/contoh-resensi.pdf}	0	published	0	4	2026-10-01 14:38:54.527876+07
@@ -1501,6 +1529,7 @@ e281575f-38ab-ae0f-3cdc-61a55ee6c5e8	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	3535d2
 b6b0f4c6-f223-cdd2-95f7-219ccab6e925	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	407a66ba-e691-c373-c7fd-d40671b6596b	Unsur Intrinsik Cerpen	Mempelajari lima unsur intrinsik cerpen — tokoh, penokohan, latar, konflik, dan amanat — beserta cara mengidentifikasi setiap unsur pada kutipan cerita pendek.	{/materi/cerpen-unsur.pdf,/materi/cerpen-kisah-di-sekolah.docx}	0	published	0	2	2026-10-01 14:38:54.527876+07
 0c840d7d-76eb-25d9-e83d-1b8377575668	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	407a66ba-e691-c373-c7fd-d40671b6596b	Teks Pidato Persuasif	Struktur pembuka, isi, dan penutup teks pidato persuasif, disertai teknik kebahasaan persuasif dan cara menyusun data yang kuat untuk membahas isu lingkungan.	{https://id.wikipedia.org/wiki/Pidato_persuasif}	0	published	0	3	2026-10-01 14:38:54.527876+07
 eda8f03d-42f0-9aaf-b6e7-f50096c4eef0	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	407a66ba-e691-c373-c7fd-d40671b6596b	Membuat Resensi Buku	Panduan menulis resensi: identitas buku, sinopsis, kelebihan, dan kekurangan, serta cara memberi rekomendasi yang jujur berdasarkan pembacaan utuh.	{/materi/resensi-panduan.pdf,/materi/contoh-resensi.pdf}	0	published	0	4	2026-10-01 14:38:54.527876+07
+dbbd2405-810b-1b14-40ae-749808f5a2be	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	46a5ee71-767e-778d-e2a9-334eb0845e73	Belajar Teks Eksposisi	Mengenal teks eksposisi sebagai teks yang bertujuan menjelaskan suatu peristiwa atau gagasan secara sistematis. Materi ini membahas tesis, rangkaian argumen, dan penegasan ulang, disertai contoh teks tentang isu lingkungan di sekitar sekolah.	{/materi/eksposisi-modul.pdf}	0	published	0	1	2026-10-01 14:38:54.527876+07
 \.
 
 
@@ -1626,7 +1655,8 @@ COPY public.quizzes (id, class_id, created_by, title, topic, difficulty, num_que
 --
 
 COPY public.sessions (id, user_id, token_hash, user_agent, created_at, last_seen_at, expires_at) FROM stdin;
-af9f9203-28bc-4b64-8dbe-1024c8e57f95	e94384ff-fcf2-434a-b0e2-6c71a16e5529	3616b56f78dec51de8f9c292b332d1b0ea9650f62c1391630f1f2b1a786c1ba3	\N	2026-10-02 19:04:40.217163+07	2026-10-02 20:04:29.432148+07	2026-11-01 19:04:40.217163+07
+41892764-f467-47da-a0d5-44216297eaab	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	adbfdb6e01dbf7a2006b767830c5789a52f6ac0530da75fdbd22eaf6045a9bf5	\N	2026-10-03 10:39:27.773552+07	2026-10-03 10:43:26.384871+07	2026-11-02 10:39:27.773552+07
+a98f9b37-fd8c-4adb-8547-7c688f9bb8f8	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	cb89308ee40c9fd51ac6cb061a799b9fddb4ef654d5e95a398c1229d7c400469	\N	2026-10-03 10:12:14.143054+07	2026-10-03 10:49:09.077806+07	2026-11-02 10:12:14.143054+07
 \.
 
 
@@ -1635,7 +1665,6 @@ af9f9203-28bc-4b64-8dbe-1024c8e57f95	e94384ff-fcf2-434a-b0e2-6c71a16e5529	3616b5
 --
 
 COPY public.task_statuses (id, task_id, student_id, done, submitted_at, grade, feedback, created_at) FROM stdin;
-197aa1d7-703e-4836-ac96-57d1dddd6040	683fc447-a093-5855-e3e1-c0eb75edce03	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	t	2026-10-01 15:53:52.394+07	\N		2026-10-01 15:53:52.450439+07
 d4212bc3-c37f-40c3-b033-6b3e6b636473	683fc447-a093-5855-e3e1-c0eb75edce03	7bbcadb5-c73a-444e-a09b-ab8187e35f9e	t	2026-09-03 14:00:00+07	97		2026-10-01 14:38:54.527876+07
 3bff8bc7-ecd0-4399-bb53-818192cc48ca	683fc447-a093-5855-e3e1-c0eb75edce03	2f0e1e72-cb41-4924-82cc-7e9e82e434bf	t	2026-08-20 14:00:00+07	83		2026-10-01 14:38:54.527876+07
 44313b95-9996-4f99-af7e-3adcb42fb18b	683fc447-a093-5855-e3e1-c0eb75edce03	11996aad-e3bc-430d-a961-0868a4cffe9c	t	2026-08-21 14:00:00+07	91		2026-10-01 14:38:54.527876+07
@@ -1935,6 +1964,7 @@ fde9808d-c48f-48da-a3bd-9db679ad7bd9	a1382eca-43a1-c1f5-4baa-fc2972675d66	fc7378
 5423cdb4-c16e-415f-a9c4-f0786f0420e2	a1382eca-43a1-c1f5-4baa-fc2972675d66	faf442a3-95c4-40c3-9a5c-292d2c328f4e	t	2026-08-29 14:00:00+07	84		2026-10-01 14:38:54.527876+07
 944fd7bc-47ff-4922-9db9-97bca69de7c6	a1382eca-43a1-c1f5-4baa-fc2972675d66	3eee6182-1bba-46e0-9146-9116a260773c	t	2026-08-29 14:00:00+07	92		2026-10-01 14:38:54.527876+07
 95c3d738-c92b-4815-a7f2-e6f2cf7e5829	a1382eca-43a1-c1f5-4baa-fc2972675d66	c860ee43-a393-421f-8e98-114fc699c7e7	t	2026-08-30 14:00:00+07	72		2026-10-01 14:38:54.527876+07
+197aa1d7-703e-4836-ac96-57d1dddd6040	683fc447-a093-5855-e3e1-c0eb75edce03	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	t	2026-10-01 15:53:52.394+07	88	Analisisnya bagus, perjelas kesimpulan.	2026-10-01 15:53:52.450439+07
 \.
 
 
@@ -1942,19 +1972,20 @@ fde9808d-c48f-48da-a3bd-9db679ad7bd9	a1382eca-43a1-c1f5-4baa-fc2972675d66	fc7378
 -- Data for Name: tasks; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.tasks (id, class_id, created_by, title, description, subject, assigned_at, due_at, is_completed, "position", created_at) FROM stdin;
-683fc447-a093-5855-e3e1-c0eb75edce03	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Menulis Teks Eksposisi	Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	f	1	2026-10-01 14:38:54.527876+07
-70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Analisis Unsur Intrinsik Cerpen	Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.	Bahasa Indonesia	2026-07-22 14:00:00+07	2026-08-12 14:00:00+07	t	2	2026-10-01 14:38:54.527876+07
-4a4037e7-ea3b-6093-cbf8-88f131d9d8e0	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Teks Pidato Persuasif	Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	t	3	2026-10-01 14:38:54.527876+07
-d2eeff0e-4100-4fec-4310-8726f09d1f4c	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Resensi Buku	Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.	Bahasa Indonesia	2026-08-18 14:00:00+07	2026-09-01 14:00:00+07	t	4	2026-10-01 14:38:54.527876+07
-d62d4825-66ac-31eb-182e-f3b2c4d17c36	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Caption Poster	Buat tiga variasi caption untuk poster kegiatan sekolah. Setiap caption harus memiliki panjang maksimal 60 karakter, menggunakan kalimat ajakan, dan memuat satu kata kunci yang relevan. Jelaskan alasan pemilihan kata pada setiap variasi. Kumpulkan dalam format dokumen (.pdf), minimal 150 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	f	1	2026-10-01 14:38:54.527876+07
-0b1e4cb9-0998-79c8-73c6-65d9410c748f	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Analisis Unsur Intrinsik Cerpen	Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.	Bahasa Indonesia	2026-07-22 14:00:00+07	2026-08-12 14:00:00+07	t	2	2026-10-01 14:38:54.527876+07
-358c57fc-4c82-50e7-8980-91d2a7199f23	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Copywriting Poster	Tulis naskah copy untuk poster kegiatan sekolah. Naskah terdiri dari headline, sub-headline, dan body copy yang memuat ajakan bertindak. Gunakan gaya bahasa yang jelas dan jangan membuat klaim yang tidak terbukti. Kumpulkan dalam format dokumen (.pdf), minimal 250 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-08-24 14:00:00+07	t	3	2026-10-01 14:38:54.527876+07
-2cf3965b-df9c-438a-1977-f495a9108ef9	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Laporan Proyek Desain	Tulis laporan hasil proyek desain yang kamu kerjakan. Laporan memuat latar belakang, tujuan, proses pengerjaan yang dilakukan, hasil akhir, dan evaluasi diri. Sertakan dokumentasi berupa foto atau tangkapan layar dari proses pengerjaan. Minimal 400 kata.	Bahasa Indonesia	2026-08-18 14:00:00+07	2026-09-01 14:00:00+07	t	4	2026-10-01 14:38:54.527876+07
-f0c572fc-e0ea-bb01-f20b-1cdae608a584	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Teks Pidato Persuasif	Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	t	3	2026-10-01 14:38:54.527876+07
-da421492-9d40-5925-7892-22b47fdc7445	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Menulis Teks Eksposisi	Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	f	1	2026-10-01 14:38:54.527876+07
-a672ee27-6c81-085a-b74e-0c9b57211f58	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Analisis Unsur Intrinsik Cerpen	Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.	Bahasa Indonesia	2026-07-22 14:00:00+07	2026-08-12 14:00:00+07	t	2	2026-10-01 14:38:54.527876+07
-a1382eca-43a1-c1f5-4baa-fc2972675d66	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Resensi Buku	Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.	Bahasa Indonesia	2026-08-18 14:00:00+07	2026-09-01 14:00:00+07	t	4	2026-10-01 14:38:54.527876+07
+COPY public.tasks (id, class_id, created_by, title, description, subject, assigned_at, due_at, is_completed, "position", created_at, material_id) FROM stdin;
+683fc447-a093-5855-e3e1-c0eb75edce03	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Menulis Teks Eksposisi	Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	f	1	2026-10-01 14:38:54.527876+07	\N
+70f9d4e0-e188-6f4c-9d8c-4ed985c2e358	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Analisis Unsur Intrinsik Cerpen	Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.	Bahasa Indonesia	2026-07-22 14:00:00+07	2026-08-12 14:00:00+07	t	2	2026-10-01 14:38:54.527876+07	\N
+4a4037e7-ea3b-6093-cbf8-88f131d9d8e0	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Teks Pidato Persuasif	Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	t	3	2026-10-01 14:38:54.527876+07	\N
+d2eeff0e-4100-4fec-4310-8726f09d1f4c	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Resensi Buku	Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.	Bahasa Indonesia	2026-08-18 14:00:00+07	2026-09-01 14:00:00+07	t	4	2026-10-01 14:38:54.527876+07	\N
+d62d4825-66ac-31eb-182e-f3b2c4d17c36	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Caption Poster	Buat tiga variasi caption untuk poster kegiatan sekolah. Setiap caption harus memiliki panjang maksimal 60 karakter, menggunakan kalimat ajakan, dan memuat satu kata kunci yang relevan. Jelaskan alasan pemilihan kata pada setiap variasi. Kumpulkan dalam format dokumen (.pdf), minimal 150 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	f	1	2026-10-01 14:38:54.527876+07	\N
+0b1e4cb9-0998-79c8-73c6-65d9410c748f	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Analisis Unsur Intrinsik Cerpen	Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.	Bahasa Indonesia	2026-07-22 14:00:00+07	2026-08-12 14:00:00+07	t	2	2026-10-01 14:38:54.527876+07	\N
+358c57fc-4c82-50e7-8980-91d2a7199f23	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Copywriting Poster	Tulis naskah copy untuk poster kegiatan sekolah. Naskah terdiri dari headline, sub-headline, dan body copy yang memuat ajakan bertindak. Gunakan gaya bahasa yang jelas dan jangan membuat klaim yang tidak terbukti. Kumpulkan dalam format dokumen (.pdf), minimal 250 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-08-24 14:00:00+07	t	3	2026-10-01 14:38:54.527876+07	\N
+2cf3965b-df9c-438a-1977-f495a9108ef9	3535d275-b4c6-9601-e4b4-b57981176c39	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Laporan Proyek Desain	Tulis laporan hasil proyek desain yang kamu kerjakan. Laporan memuat latar belakang, tujuan, proses pengerjaan yang dilakukan, hasil akhir, dan evaluasi diri. Sertakan dokumentasi berupa foto atau tangkapan layar dari proses pengerjaan. Minimal 400 kata.	Bahasa Indonesia	2026-08-18 14:00:00+07	2026-09-01 14:00:00+07	t	4	2026-10-01 14:38:54.527876+07	\N
+f0c572fc-e0ea-bb01-f20b-1cdae608a584	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Teks Pidato Persuasif	Siswa membuat teks pidato persuasif dengan tema bebas yang berkaitan dengan isu lingkungan di sekitar sekolah. Pidato harus memuat struktur pembuka, isi, dan penutup, serta minimal tiga argumen yang didukung data atau fakta. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 400 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	t	3	2026-10-01 14:38:54.527876+07	\N
+da421492-9d40-5925-7892-22b47fdc7445	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Menulis Teks Eksposisi	Susun sebuah teks eksposisi dengan tema bebas yang berkaitan dengan isu pendidikan di sekitar sekolah. Teks harus memuat tesis di paragraf pembuka, rangkaian argumen yang tersusun logis, dan penegasan ulang di paragraf penutup. Gunakan kalimat efektif dan kutipan dari sumber yang kredibel, minimal tiga sumber berbeda. Kumpulkan dalam format dokumen (.pdf atau .docx), minimal 350 kata.	Bahasa Indonesia	2026-08-20 14:00:00+07	2026-09-10 14:00:00+07	f	1	2026-10-01 14:38:54.527876+07	\N
+a672ee27-6c81-085a-b74e-0c9b57211f58	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Analisis Unsur Intrinsik Cerpen	Baca satu cerpen yang ditentukan guru, lalu identifikasi kelima unsur intrinsik - tokoh, penokohan, latar, konflik, dan amanat. Untuk setiap unsur, sertakan kutipan kalimat dari cerpen sebagai bukti dan satu kalimat penjelasan. Tulis analisis dalam bentuk paragraf, bukan poin-poin, minimal 300 kata.	Bahasa Indonesia	2026-07-22 14:00:00+07	2026-08-12 14:00:00+07	t	2	2026-10-01 14:38:54.527876+07	\N
+a1382eca-43a1-c1f5-4baa-fc2972675d66	407a66ba-e691-c373-c7fd-d40671b6596b	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Membuat Resensi Buku	Tulis resensi terhadap buku fiksi pilihanmu. Resensi wajib memuat identitas buku, sinopsis, penilaian atas isi dan kegunaan, serta komentar evaluatif terhadap kebahasaan dan penerbit. Sertakan minimal tiga kutipan dari buku yang kamu kutip beserta nomor halaman. Minimal 400 kata.	Bahasa Indonesia	2026-08-18 14:00:00+07	2026-09-01 14:00:00+07	t	4	2026-10-01 14:38:54.527876+07	\N
+c00db07f-3f50-4f2e-8087-a036eb8210e8	46a5ee71-767e-778d-e2a9-334eb0845e73	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	Latihan Teks Pidato	Tulis pidato persuasif satu halaman menggunakan materi yang dilampirkan.	Bahasa Indonesia	2026-10-03 10:37:32.407665+07	2026-10-10 07:00:00+07	f	0	2026-10-03 10:37:32.407665+07	67c02dba-a922-5aef-42ee-66ef4cc0d7a5
 \.
 
 
@@ -2224,6 +2255,13 @@ CREATE INDEX grades_student_id_idx ON public.grades USING btree (student_id);
 --
 
 CREATE INDEX grades_task_id_idx ON public.grades USING btree (task_id);
+
+
+--
+-- Name: grades_task_student_uidx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX grades_task_student_uidx ON public.grades USING btree (task_id, student_id);
 
 
 --
@@ -3361,6 +3399,15 @@ GRANT ALL ON TABLE public.classes TO service_role;
 
 
 --
+-- Name: TABLE contact_leads; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.contact_leads TO authenticated;
+GRANT ALL ON TABLE public.contact_leads TO anon;
+GRANT ALL ON TABLE public.contact_leads TO service_role;
+
+
+--
 -- Name: TABLE enrollments; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3544,5 +3591,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict y5XNQstFwgf6wIeP9BBLt8HheE0zDMyc1i3UCFHHqtHrVQAWiBVIfXYiw6YHheB
+\unrestrict u3gKkPUgzwodNHEDorVf3RwL48J2p7adECmhIAXNtvhCfuAvWU9O2kxYHtro4VW
 
