@@ -123,7 +123,7 @@ export default function NavHeader() {
             )}
             <button
               className="nav-burger"
-              aria-label="Open menu"
+              aria-label="Buka menu"
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
               onClick={() => setMobileOpen(true)}
@@ -150,7 +150,7 @@ export default function NavHeader() {
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ThemeToggle />
-            <button className="nav-sheet-close" aria-label="Close menu" onClick={() => setMobileOpen(false)}>
+            <button className="nav-sheet-close" aria-label="Tutup menu" onClick={() => setMobileOpen(false)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>

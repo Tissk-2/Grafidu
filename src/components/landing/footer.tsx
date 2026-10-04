@@ -3,13 +3,21 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 
 function FooterArt() {
+  const { resolvedTheme } = useTheme();
   const [markup, setMarkup] = useState<string | null>(null);
 
   useEffect(() => {
+    // Tunggu tema ter-resolve (undefined saat SSR + render pertama) supaya
+    // versi yang di-fetch selalu sesuai; markup lama dipertahankan saat
+    // transisi agar tidak flicker kosong.
+    if (!resolvedTheme) return;
     let cancelled = false;
-    fetch("/assets/footer-bg.svg")
+    const src =
+      resolvedTheme === "dark" ? "/assets/footer-bg-dark.svg" : "/assets/footer-bg.svg";
+    fetch(src)
       .then((res) => (res.ok ? res.text() : ""))
       .then((text) => {
         if (!cancelled && text) setMarkup(text);
@@ -18,7 +26,7 @@ function FooterArt() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [resolvedTheme]);
 
   if (!markup) return <div className="footer-media" aria-hidden="true" />;
   return (

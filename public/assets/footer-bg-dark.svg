@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   class="footer-bg"
+   viewBox="0 0 1600 900"
+   preserveAspectRatio="xMidYMax slice"
+   aria-hidden="true"
+   version="1.1"
+   id="svg29"
+   sodipodi:docname="footer-bg-dark.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview29"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.64"
+     inkscape:cx="742.96875"
+     inkscape:cy="550"
+     inkscape:window-width="1856"
+     inkscape:window-height="984"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg29" />
+  <defs
+     id="defs7">
+    <linearGradient
+       id="lake"
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="1">
+      <stop
+         offset="0"
+         stop-color="#1A1820"
+         id="stop1" />
+      <stop
+         offset="1"
+         stop-color="#221E30"
+         id="stop2" />
+    </linearGradient>
+    <linearGradient
+       id="topwash"
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="1">
+      <stop
+         offset="0"
+         stop-color="#171519"
+         id="stop3" />
+      <stop
+         offset="1"
+         stop-color="#1B1726"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       id="mist"
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="1">
+      <stop
+         offset="0"
+         stop-color="#1B1726"
+         stop-opacity="0"
+         id="stop5" />
+      <stop
+         offset=".5"
+         stop-color="#1B1726"
+         stop-opacity=".55"
+         id="stop6" />
+      <stop
+         offset="1"
+         stop-color="#1B1726"
+         stop-opacity="0"
+         id="stop7" />
+    </linearGradient>
+  </defs>
+  <rect
+     x="0"
+     y="0"
+     width="1600"
+     height="500"
+     fill="url(#topwash)"
+     id="rect7" />
+  <!-- sky sparkles -->
+  <g
+     stroke="#751EF8"
+     stroke-width="2.5"
+     stroke-linecap="round"
+     fill="none"
+     id="g11">
+    <g
+       class="art-twinkle"
+       id="g7" />
+    <g
+       class="art-twinkle t3"
+       id="g9">
+      <path
+         d="M92 470v12M86 476h12"
+         id="path9" />
+    </g>
+    <g
+       class="art-twinkle t4"
+       id="g10">
+      <path
+         d="M1330 600v10M1325 605h10"
+         id="path10" />
+    </g>
+    <path
+       sodipodi:type="star"
+       style="fill:#7f2ef9;fill-opacity:1;stroke:none;stroke-width:3.72661;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke fill markers"
+       id="path30"
+       inkscape:flatsided="false"
+       sodipodi:sides="4"
+       sodipodi:cx="1283.9844"
+       sodipodi:cy="349.51172"
+       sodipodi:r1="9.7734346"
+       sodipodi:r2="2.4433587"
+       sodipodi:arg1="-1.5707963"
+       sodipodi:arg2="-0.78539816"
+       inkscape:rounded="-0.01"
+       inkscape:randomized="0"
+       d="m 1283.9844,339.73828 c -0.082,0 1.7859,8.10391 1.7277,8.04572 -0.058,-0.0582 8.0457,1.81001 8.0457,1.72772 0,-0.0823 -8.1039,1.7859 -8.0457,1.72771 0.058,-0.0582 -1.81,8.04572 -1.7277,8.04572 0.082,0 -1.7859,-8.1039 -1.7277,-8.04572 0.058,0.0582 -8.0458,-1.81 -8.0458,-1.72771 0,0.0823 8.1039,-1.78591 8.0458,-1.72772 -0.058,0.0582 1.81,-8.04572 1.7277,-8.04572 z" />
+    <path
+       sodipodi:type="star"
+       style="fill:#7f2ef9;fill-opacity:1;stroke:none;stroke-width:3.72661;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke fill markers"
+       id="path31"
+       inkscape:flatsided="false"
+       sodipodi:sides="4"
+       sodipodi:cx="1283.9844"
+       sodipodi:cy="349.51172"
+       sodipodi:r1="9.7734346"
+       sodipodi:r2="2.4433587"
+       sodipodi:arg1="-1.5707963"
+       sodipodi:arg2="-0.78539816"
+       inkscape:rounded="-0.01"
+       inkscape:randomized="0"
+       d="m 1283.9844,339.73828 c -0.082,0 1.7859,8.10391 1.7277,8.04572 -0.058,-0.0582 8.0457,1.81001 8.0457,1.72772 0,-0.0823 -8.1039,1.7859 -8.0457,1.72771 0.058,-0.0582 -1.81,8.04572 -1.7277,8.04572 0.082,0 -1.7859,-8.1039 -1.7277,-8.04572 0.058,0.0582 -8.0458,-1.81 -8.0458,-1.72771 0,0.0823 8.1039,-1.78591 8.0458,-1.72772 -0.058,0.0582 1.81,-8.04572 1.7277,-8.04572 z"
+       transform="translate(-644.55323,82.352882)" />
+  </g>
+  <!-- open book, drifting -->
+  <g
+     transform="translate(700 470) rotate(-8)"
+     id="g13">
+    <g
+       class="art-bob-slow"
+       id="g12">
+      <path
+         d="m -42,4 c 12,-7 31,-8 42,-3 11,-5 30,-4 42,3 l 0.342572,49.303662 c -12,-7 -31,-8 -42.00000035,-3 -10.99999965,-5 -29.99999965,-4 -41.99999965,3 z"
+         fill="#1C1A24"
+         stroke="#5b2ee0"
+         stroke-width="2.4"
+         stroke-linejoin="round"
+         id="path11"
+         sodipodi:nodetypes="ccccccc" />
+      <path
+         d="M 0,1 0.69418385,49.934946"
+         stroke="#5b2ee0"
+         stroke-width="2"
+         stroke-linecap="round"
+         id="path12"
+         sodipodi:nodetypes="cc" />
+    </g>
+  </g>
+  <!-- paper plane, gliding right -->
+  <g
+     transform="translate(0 415)"
+     id="g16">
+    <g
+       class="art-plane-a"
+       id="g15">
+      <g
+         class="art-bob"
+         id="g14">
+        <path
+           d="M0 15 52 0 36 25 26 18 21 31Z"
+           fill="#1C1A24"
+           stroke="#5B2EE0"
+           stroke-width="2.2"
+           stroke-linejoin="round"
+           id="path13" />
+        <path
+           d="M26 18 52 0"
+           stroke="#5B2EE0"
+           stroke-width="1.6"
+           opacity=".55"
+           id="path14" />
+      </g>
+    </g>
+  </g>
+  <!-- paper plane, gliding left -->
+  <g
+     transform="translate(0 440) scale(-.78 .78)"
+     id="g19">
+    <g
+       class="art-plane-b"
+       id="g18">
+      <g
+         class="art-bob"
+         id="g17">
+        <path
+           d="M0 15 52 0 36 25 26 18 21 31Z"
+           fill="#1C1A24"
+           stroke="#5B2EE0"
+           stroke-width="2.2"
+           stroke-linejoin="round"
+           id="path16" />
+        <path
+           d="M26 18 52 0"
+           stroke="#5B2EE0"
+           stroke-width="1.6"
+           opacity=".55"
+           id="path17" />
+      </g>
+    </g>
+  </g>
+  <!-- ridges -->
+  <path
+     d="M0 486 120 452 240 478 390 430 520 470 660 442 800 476 950 448 1090 480 1230 452 1370 482 1500 460 1600 476V900H0Z"
+     fill="#221E2E"
+     opacity=".85"
+     id="path19" />
+  <rect
+     x="0"
+     y="452"
+     width="1600"
+     height="92"
+     fill="url(#mist)"
+     id="rect19" />
+  <path
+     d="M0 560 140 516 300 552 460 506 620 550 780 516 940 556 1100 522 1260 558 1420 528 1600 556V900H0Z"
+     fill="#262136"
+     opacity=".85"
+     id="path20" />
+  <rect
+     x="0"
+     y="510"
+     width="1600"
+     height="92"
+     fill="url(#mist)"
+     id="rect20" />
+  <path
+     d="M0 640 180 606 360 636 540 598 720 634 900 606 1080 638 1260 610 1440 640 1600 618V900H0Z"
+     fill="#2B2542"
+     opacity=".8"
+     id="path21" />
+  <rect
+     x="0"
+     y="600"
+     width="1600"
+     height="88"
+     fill="url(#mist)"
+     id="rect21" />
+  <!-- pine outcrops -->
+  <path
+     d="M0 604 62 636 92 700 62 780 112 858 66 900H0Z"
+     fill="#2E2748"
+     opacity=".85"
+     id="path22" />
+  <g
+     fill="#751EF8"
+     id="g25">
+    <path
+       d="M64 536l24 40h-13l20 34h-14l22 36H27l22-36h-14l20-34H42Z"
+       id="path23" />
+    <path
+       d="M 118.05631,588.82864 148,622 h -11 l 17,28 h -12 l 19,31 H 75 L 94,650 H 82 L 99,622 H 88 Z"
+       opacity="0.92"
+       id="path24"
+       sodipodi:nodetypes="cccccccccccc" />
+    <path
+       d="M22 646l18 30h-10l15 25h-11l17 28H-8l17-28h-11l15-25H4Z"
+       opacity=".9"
+       id="path25" />
+  </g>
+  <path
+     d="M1600 596 1538 630 1508 696 1540 778 1492 856 1540 900H1600Z"
+     fill="#2E2748"
+     opacity=".85"
+     id="path26" />
+  <g
+     fill="#751EF8"
+     id="g29">
+    <path
+       d="M1536 528l24 40h-13l20 34h-14l22 36h-76l22-36h-14l20-34h-13Z"
+       id="path27" />
+    <path
+       d="M 1467.8568,582 1492,616 h -11 l 17,28 h -12 l 19,31 h -70 l 19,-31 h -12 l 17,-28 h -13 z"
+       opacity="0.92"
+       id="path28"
+       sodipodi:nodetypes="cccccccccccc" />
+    <path
+       d="M 1574.6854,642.82864 1596,672 h -10 l 15,25 h -11 l 17,28 h -64 l 17,-28 h -11 l 15,-25 h -10 z"
+       opacity="0.9"
+       id="path29"
+       sodipodi:nodetypes="cccccccccccc" />
+  </g>
+  <!-- still lake -->
+  <!-- <rect x="0" y="700" width="1600" height="200" fill="url(#lake)" /> -->
+  <!-- <path d="M470 714l64 42H406Z" fill="#262136" opacity=".32" /> -->
+  <!-- <path d="M980 718l74 48H906Z" fill="#262136" opacity=".26" /> -->
+  <!-- <path d="M1300 760l50 32h-100Z" fill="#262136" opacity=".22" /> -->
+  <!-- <g stroke="#B49EEC" stroke-width="2" stroke-linecap="round" opacity=".28"> -->
+  <!--   <path d="M180 762H420" /> -->
+  <!--   <path d="M700 792H980" /> -->
+  <!--   <path d="M1150 758H1420" /> -->
+  <!--   <path d="M320 822H560" /> -->
+  <!--   <path d="M900 842H1240" /> -->
+  <!--   <path d="M560 868H760" /> -->
+  <!-- </g> -->
+</svg>
