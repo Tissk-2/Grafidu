@@ -51,7 +51,7 @@ export type TaskDetail = {
 };
 
 export type SubmissionRow = {
-  id: string;
+  id: string | null; // id task_statuses — null saat siswa belum punya baris status
   studentId: string;
   name: string;
   avatar: string;
@@ -59,6 +59,8 @@ export type SubmissionRow = {
   submittedAt: string | null;
   grade: number | null;
   feedback: string;
+  answer: string;
+  attachmentUrl: string | null;
 };
 
 export type TaskInput = {
@@ -69,14 +71,22 @@ export type TaskInput = {
   materialId?: string | null; // materi terkait dari halaman Materi
 };
 
+export type QuizQuestion = {
+  text: string;
+  options: string[]; // pilihan ganda; panjang bebas (umumnya 4)
+  answerIdx: number; // indeks jawaban benar (0-based) — hanya untuk guru
+};
+
 export type QuizRow = {
   id: string;
   title: string;
   topic: string;
+  subject: string;
   difficulty: string;
   numQuestions: number;
   durationMin: number;
   status: string; // "draft" | "published"
   createdAt: string;
-  questions: string[];
+  questions: QuizQuestion[];
+  attempts: number; // berapa siswa yang sudah mengerjakan
 };
