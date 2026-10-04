@@ -146,6 +146,7 @@ export default function StudentTaskDetailPage() {
         submittedAtStr={submittedAtStr}
         grade={data.status?.grade}
         feedback={data.status?.feedback}
+        attachmentUrl={data.status?.attachmentUrl}
       />
 
     </>

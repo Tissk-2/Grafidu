@@ -8,9 +8,11 @@ import type {
   AnnouncementItem,
   AnnouncementPageItem,
   ClassTeacher,
+  QuizPlayData,
   SchoolTask,
   SidebarTask,
   StudentMaterial,
+  StudentQuiz,
   SubjectScore,
   TaskDetail,
   TaskStatus,
@@ -92,7 +94,7 @@ export async function fetchSubjectScores(): Promise<SubjectScore[]> {
       SELECT subject, score, grade_date
       FROM public.grades
       WHERE student_id = ${user.id}
-      ORDER BY subject, grade_date
+      ORDER BY subject, grade_date, created_at
     `;
     const by = new Map<string, number[]>();
     for (const r of rows) {
@@ -361,9 +363,9 @@ export async function fetchTaskStatus(taskId: string): Promise<TaskStatus | null
     const user = await getSessionUser();
     if (!user) return null;
     const rows = await sql<
-      { done: boolean; submitted_at: Date | null; grade: number | null; feedback: string }[]
+      { done: boolean; submitted_at: Date | null; grade: number | null; feedback: string; attachment_url: string | null }[]
     >`
-      SELECT done, submitted_at, grade, feedback
+      SELECT done, submitted_at, grade, feedback, attachment_url
       FROM public.task_statuses
       WHERE task_id = ${taskId} AND student_id = ${user.id}
       LIMIT 1
@@ -375,13 +377,18 @@ export async function fetchTaskStatus(taskId: string): Promise<TaskStatus | null
       submittedAt: s.submitted_at ? s.submitted_at.toISOString() : null,
       grade: s.grade,
       feedback: s.feedback,
+      attachmentUrl: s.attachment_url,
     };
   } catch {
     return null;
   }
 }
 
-export async function submitTask(taskId: string): Promise<void> {
+export async function submitTask(
+  taskId: string,
+  answer = "",
+  attachmentUrl: string | null = null,
+): Promise<void> {
   const user = await getSessionUser();
   if (!user) throw new Error("Sesi berakhir. Silakan login ulang.");
 
@@ -396,10 +403,11 @@ export async function submitTask(taskId: string): Promise<void> {
   if (!allowed[0]) throw new Error("Tugas tidak ditemukan di kelasmu.");
 
   await sql`
-    INSERT INTO public.task_statuses (task_id, student_id, done, submitted_at)
-    VALUES (${taskId}, ${user.id}, true, now())
+    INSERT INTO public.task_statuses (task_id, student_id, done, submitted_at, answer, attachment_url)
+    VALUES (${taskId}, ${user.id}, true, now(), ${answer.slice(0, 4000)}, ${attachmentUrl})
     ON CONFLICT (task_id, student_id)
-    DO UPDATE SET done = true, submitted_at = EXCLUDED.submitted_at
+    DO UPDATE SET done = true, submitted_at = EXCLUDED.submitted_at,
+                  answer = EXCLUDED.answer, attachment_url = EXCLUDED.attachment_url
   `;
 }
 
@@ -422,7 +430,7 @@ export async function fetchClassTeachers(): Promise<ClassTeacher[]> {
     const out: ClassTeacher[] = rows.map((r) => ({
       teacher: r.teacher_name ?? "Guru",
       subject: r.subject || "Umum",
-      avatar: r.avatar || "/assets/logo.png",
+      avatar: r.avatar || "/assets/defaultpfp.jpg",
     }));
     out.sort((a, b) => a.subject.localeCompare(b.subject));
     return out;
@@ -477,4 +485,253 @@ export async function fetchAiNote(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Kuis siswa (#6): daftar kuis tayang kelasnya, pemain, dan penilaian otomatis.
+// ---------------------------------------------------------------------------
+
+/** Kuis tayang untuk kelas siswa + status percobaannya (satu per siswa). */
+export async function fetchStudentQuizzes(): Promise<StudentQuiz[]> {
+  try {
+    const user = await getSessionUser();
+    if (!user) return [];
+    const classId = await classIdByName(user.className);
+    if (!classId) return [];
+    const rows = await sql<
+      {
+        id: string;
+        title: string;
+        topic: string;
+        subject: string;
+        difficulty: string | null;
+        num_questions: number | null;
+        duration_min: number | null;
+        created_at: Date;
+        attempt_score: number | null;
+        attempt_at: Date | null;
+      }[]
+    >`
+      SELECT q.id, q.title, q.topic, q.subject, q.difficulty, q.num_questions,
+             q.duration_min, q.created_at,
+             qa.score AS attempt_score, qa.submitted_at AS attempt_at
+      FROM public.quizzes q
+      LEFT JOIN public.quiz_attempts qa
+        ON qa.quiz_id = q.id AND qa.student_id = ${user.id}
+      WHERE q.class_id = ${classId}
+        AND q.status = 'published'
+      ORDER BY q.created_at DESC
+    `;
+    return rows.map((q) => ({
+      id: q.id,
+      title: q.title ?? "",
+      topic: q.topic ?? "",
+      subject: q.subject || "Umum",
+      difficulty: q.difficulty ?? "Sedang",
+      numQuestions: q.num_questions ?? 0,
+      durationMin: q.duration_min ?? 20,
+      createdAt: q.created_at.toISOString(),
+      attempt:
+        q.attempt_score != null && q.attempt_at
+          ? { score: q.attempt_score, submittedAt: q.attempt_at.toISOString() }
+          : null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Data pemain kuis: meta + soal TANPA kunci jawaban; kalau sudah dikerjakan,
+ *  kembalikan hasil lengkap (review kunci jawaban) dan blok pengerjaan ulang. */
+export async function fetchQuizPlay(quizId: string): Promise<QuizPlayData | null> {
+  try {
+    const user = await getSessionUser();
+    if (!user) return null;
+    const classId = await classIdByName(user.className);
+
+    const quizzes = await sql<
+      {
+        id: string;
+        title: string;
+        topic: string;
+        subject: string;
+        difficulty: string | null;
+        duration_min: number | null;
+        class_id: string;
+        teacher_name: string | null;
+      }[]
+    >`
+      SELECT q.id, q.title, q.topic, q.subject, q.difficulty, q.duration_min,
+             q.class_id, p.name AS teacher_name
+      FROM public.quizzes q
+      LEFT JOIN public.profiles p ON p.id = q.created_by
+      WHERE q.id = ${quizId}
+        AND q.status = 'published'
+      LIMIT 1
+    `;
+    const q = quizzes[0];
+    if (!q || q.class_id !== classId) return null;
+
+    const [questionRows, attempts] = await Promise.all([
+      sql<{ text: string; options: unknown }[]>`
+        SELECT text, options
+        FROM public.quiz_questions
+        WHERE quiz_id = ${quizId}
+        ORDER BY idx ASC
+      `,
+      sql<{ score: number; submitted_at: Date; answers: unknown }[]>`
+        SELECT score, submitted_at, answers
+        FROM public.quiz_attempts
+        WHERE quiz_id = ${quizId} AND student_id = ${user.id}
+        LIMIT 1
+      `,
+    ]);
+
+    const questions = questionRows.map((r) => ({
+      text: r.text,
+      options: Array.isArray(r.options) ? (r.options as string[]) : [],
+    }));
+
+    const attemptRow = attempts[0];
+    if (attemptRow) {
+      // Sudah dikerjakan: ambil kunci jawaban untuk review.
+      const keys = await sql<{ idx: number; text: string; options: unknown; answer_idx: number | null }[]>`
+        SELECT idx, text, options, answer_idx
+        FROM public.quiz_questions
+        WHERE quiz_id = ${quizId}
+        ORDER BY idx ASC
+      `;
+      const rawAnswers = Array.isArray(attemptRow.answers)
+        ? (attemptRow.answers as (number | null)[])
+        : [];
+      const review = keys.map((k, i) => ({
+        text: k.text,
+        options: Array.isArray(k.options) ? (k.options as string[]) : [],
+        chosen: rawAnswers[i] ?? null,
+        answerIdx: k.answer_idx ?? 0,
+      }));
+      return {
+        id: q.id,
+        title: q.title,
+        topic: q.topic,
+        subject: q.subject || "Umum",
+        difficulty: q.difficulty ?? "Sedang",
+        durationMin: q.duration_min ?? 20,
+        teacherName: q.teacher_name ?? "Guru",
+        questions,
+        attempt: {
+          score: attemptRow.score,
+          submittedAt: attemptRow.submitted_at.toISOString(),
+          answers: questions.map((_, i) => rawAnswers[i] ?? null),
+          review,
+        },
+      };
+    }
+
+    return {
+      id: q.id,
+      title: q.title,
+      topic: q.topic,
+      subject: q.subject || "Umum",
+      difficulty: q.difficulty ?? "Sedang",
+      durationMin: q.duration_min ?? 20,
+      teacherName: q.teacher_name ?? "Guru",
+      questions,
+      attempt: null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type QuizSubmitResult = {
+  score: number;
+  correct: number;
+  total: number;
+  review: {
+    text: string;
+    options: string[];
+    chosen: number | null;
+    answerIdx: number;
+  }[];
+};
+
+/** Kumpulkan jawaban kuis: dinilai di server (kunci tak pernah ke klien),
+ *  disimpan ke quiz_attempts, dan masuk ke tabel grades untuk halaman Grades. */
+export async function submitQuizAttempt(
+  quizId: string,
+  answers: (number | null)[],
+): Promise<QuizSubmitResult> {
+  const user = await getSessionUser();
+  if (!user) throw new Error("Sesi berakhir. Silakan login ulang.");
+  const classId = await classIdByName(user.className);
+
+  const quizzes = await sql<
+    { id: string; class_id: string; subject: string; title: string }[]
+  >`
+    SELECT id, class_id, subject, title
+    FROM public.quizzes
+    WHERE id = ${quizId} AND status = 'published'
+    LIMIT 1
+  `;
+  const quiz = quizzes[0];
+  if (!quiz) throw new Error("Kuis tidak ditemukan atau belum tayang.");
+  if (quiz.class_id !== classId) throw new Error("Kuis ini bukan untuk kelasmu.");
+
+  const keys = await sql<{ idx: number; answer_idx: number | null }[]>`
+    SELECT idx, answer_idx FROM public.quiz_questions
+    WHERE quiz_id = ${quizId}
+    ORDER BY idx ASC
+  `;
+  if (keys.length === 0) throw new Error("Kuis belum punya soal.");
+
+  const already = await sql<{ id: string }[]>`
+    SELECT id FROM public.quiz_attempts
+    WHERE quiz_id = ${quizId} AND student_id = ${user.id}
+    LIMIT 1
+  `;
+  if (already[0]) throw new Error("Kamu sudah mengerjakan kuis ini.");
+
+  const clean = keys.map((_, i) => {
+    const v = answers[i];
+    return typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null;
+  });
+  const correct = keys.reduce(
+    (acc, k, i) => acc + (k.answer_idx != null && clean[i] === k.answer_idx ? 1 : 0),
+    0,
+  );
+  const score = Math.round((correct / keys.length) * 100);
+
+  await sql.begin(async (tx) => {
+    await tx`
+      INSERT INTO public.quiz_attempts (quiz_id, student_id, answers, score)
+      VALUES (${quizId}, ${user.id}, ${JSON.stringify(clean)}, ${score})
+    `;
+    // Nilai kuis ikut tabel grades (task_id NULL) — muncul di rata-rata mapel
+    // siswa dan matriks nilai guru pembuat kuis.
+    await tx`
+      INSERT INTO public.grades (class_id, task_id, student_id, subject, kind, score, created_by)
+      VALUES (${quiz.class_id}, NULL, ${user.id}, ${quiz.subject || "Umum"}, 'Kuis', ${score},
+              (SELECT created_by FROM public.quizzes WHERE id = ${quizId}))
+    `;
+  });
+
+  // Kunci jawaban untuk layar review — dikirim HANYA setelah pengumpulan.
+  const keyRows = await sql<{ idx: number; text: string; options: unknown; answer_idx: number | null }[]>`
+    SELECT idx, text, options, answer_idx
+    FROM public.quiz_questions
+    WHERE quiz_id = ${quizId}
+    ORDER BY idx ASC
+  `;
+  return {
+    score,
+    correct,
+    total: keys.length,
+    review: keyRows.map((k, i) => ({
+      text: k.text,
+      options: Array.isArray(k.options) ? (k.options as string[]) : [],
+      chosen: clean[i] ?? null,
+      answerIdx: k.answer_idx ?? 0,
+    })),
+  };
 }

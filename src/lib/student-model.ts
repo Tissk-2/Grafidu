@@ -62,11 +62,53 @@ export type TaskStatus = {
   submittedAt: string | null;
   grade: number | null;
   feedback: string;
+  attachmentUrl: string | null;
 };
 
 export type ClassTeacher = { teacher: string; subject: string; avatar: string };
 
 export type AnnouncementPageItem = { title: string; body: string; when: string; date: string; author: string };
+
+// ---------------------------------------------------------------------------
+// Kuis siswa
+// ---------------------------------------------------------------------------
+
+/** Soal untuk pemain kuis — TANPA kunci jawaban (kunci hanya dinilai di server). */
+export type PlayQuestion = { text: string; options: string[] };
+
+/** Satu butir review setelah pengumpulan: pilihan siswa vs kunci jawaban. */
+export type ReviewQuestion = PlayQuestion & { chosen: number | null; answerIdx: number };
+
+export type StudentQuiz = {
+  id: string;
+  title: string;
+  topic: string;
+  subject: string;
+  difficulty: string;
+  numQuestions: number;
+  durationMin: number;
+  createdAt: string;
+  /** null = belum dikerjakan; else hasil percobaan (satu percobaan per kuis). */
+  attempt: { score: number; submittedAt: string } | null;
+};
+
+export type QuizPlayData = {
+  id: string;
+  title: string;
+  topic: string;
+  subject: string;
+  difficulty: string;
+  durationMin: number;
+  teacherName: string;
+  questions: PlayQuestion[];
+  /** Sudah dikerjakan → tampilkan hasil, blok pengerjaan ulang. */
+  attempt: {
+    score: number;
+    submittedAt: string;
+    answers: (number | null)[];
+    review: ReviewQuestion[];
+  } | null;
+};
 
 export function pill(score: number): "Atas Rata Rata" | "Bawah Rata Rata" {
   return score >= 70 ? "Atas Rata Rata" : "Bawah Rata Rata";
