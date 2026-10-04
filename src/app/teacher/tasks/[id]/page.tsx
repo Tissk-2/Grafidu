@@ -241,7 +241,8 @@ export default function TeacherTaskDetailPage() {
 
         <SearchField value={qDone} onChange={setQDone} placeholder="Cari Siswa…" />
 
-        <table className="mt-3.5 w-full table-fixed border border-[#DDD] dark:border-[#2D2B30] rounded border-separate border-spacing-0">
+        <div className="mt-3.5 overflow-x-auto">
+        <table className="w-full min-w-[640px] table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
@@ -289,6 +290,7 @@ export default function TeacherTaskDetailPage() {
             )}
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* 3.7 not submitted */}
@@ -303,7 +305,8 @@ export default function TeacherTaskDetailPage() {
 
         <SearchField value={qMiss} onChange={setQMiss} placeholder="Cari Siswa…" />
 
-        <table className="mt-3.5 w-full table-fixed border border-[#DDD] dark:border-[#2D2B30] rounded border-separate border-spacing-0">
+        <div className="mt-3.5 overflow-x-auto">
+        <table className="w-full min-w-[640px] table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
@@ -338,6 +341,7 @@ export default function TeacherTaskDetailPage() {
             )}
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* Grade dialog */}

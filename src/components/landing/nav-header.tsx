@@ -37,6 +37,26 @@ export default function NavHeader() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Burger menu: kunci scroll body saat terbuka, tutup dengan Escape, dan
+  // tutup otomatis kalau layar dilebarkan melewati breakpoint burger (760px).
+  useEffect(() => {
+    document.body.classList.toggle("sheet-open", mobileOpen);
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth > 760) setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
+      document.body.classList.remove("sheet-open");
+    };
+  }, [mobileOpen]);
+
   // Kalau sudah login, nav kanan jadi tombol Dashboard (auto auth UX).
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +137,12 @@ export default function NavHeader() {
       </header>
 
       {/* ============ MOBILE NAV SHEET ============ */}
-      <div className={"nav-sheet" + (mobileOpen ? " in" : "")} id="mobile-nav">
+      <div
+        className={"nav-sheet" + (mobileOpen ? " open" : "")}
+        id="mobile-nav"
+        aria-hidden={!mobileOpen}
+        inert={!mobileOpen}
+      >
         <div className="nav-sheet-head">
           <Link className="brand" href="/" onClick={() => setMobileOpen(false)}>
             <Image src="/assets/logo.png" alt="Grafidu" width={20} height={20} />

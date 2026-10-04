@@ -10,6 +10,7 @@ import { LogOut } from "lucide-react";
 import { logout, avatarSrc } from "@/lib/auth";
 import { ThemeMenuItem } from "@/components/theme-toggle";
 import { id as idLocale } from "date-fns/locale/id";
+import SidebarTodo from "@/components/client/sidebar-todo";
 
 // react-day-picker + date-fns cukup berat untuk masuk chunk bersama semua
 // halaman dashboard — muat terpisah setelah shell tampil.
@@ -223,6 +224,9 @@ function SidebarImpl({
           ))}
         </>
       )}
+
+      {/* To-Do pribadi: hanya tampil di panel HP (CSS .m-only), siswa saja. */}
+      {role === "student" ? <SidebarTodo /> : null}
 
       <div className="side-user-wrap" ref={userWrapRef}>
         {menuOpen && (

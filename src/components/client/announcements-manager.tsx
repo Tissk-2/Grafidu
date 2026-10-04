@@ -22,6 +22,9 @@ export default function AnnouncementsManager({
   const [body, setBody] = useState("");
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
+  // Pengumuman yang sedang dipilih (diklik). null = belum ada pilihan, jadi
+  // yang terbaru (paling atas) yang menyala seperti tampilan awal.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const canManage = role === "teacher" || role === "admin";
 
   const reload = useCallback(async () => {
@@ -42,6 +45,8 @@ export default function AnnouncementsManager({
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.body.toLowerCase().includes(search.toLowerCase())
   );
+
+  const activeId = filtered.some((a) => a.id === selectedId) ? selectedId : filtered[0]?.id;
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -136,13 +141,29 @@ export default function AnnouncementsManager({
       ) : null}
 
       <div style={{ display: "grid", gap: 14, marginTop: 20 }}>
-        {filtered.map((a, i) => (
+        {filtered.map((a, i) => {
+          const active = a.id === activeId;
+          return (
           <div
             key={a.id}
             className="detail-card hover-lift"
+            aria-current={active ? "true" : undefined}
+            tabIndex={0}
+            onClick={() => setSelectedId(a.id)}
+            onKeyDown={(e) => {
+              if (e.target !== e.currentTarget) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setSelectedId(a.id);
+              }
+            }}
             style={{
               padding: "20px 24px",
-              borderLeft: i === 0 ? "4px solid var(--purple)" : undefined,
+              // Border kiri 4px menggeser isi 3px; padding kiri dikurangi di kartu aktif
+              // supaya teks semua kartu tetap lurus.
+              paddingLeft: active ? 24 : 27,
+              borderLeft: active ? "4px solid var(--purple)" : undefined,
+              cursor: "pointer",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
@@ -164,7 +185,10 @@ export default function AnnouncementsManager({
               {canManage && (
                 <button
                   type="button"
-                  onClick={() => handleDelete(a.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(a.id);
+                  }}
                   className="btn-mini btn-mini-danger"
                   style={{ flexShrink: 0 }}
                 >
@@ -177,7 +201,8 @@ export default function AnnouncementsManager({
               {a.body || "Tidak ada rincian tambahan."}
             </p>
           </div>
-        ))}
+          );
+        })}
 
         {filtered.length === 0 && !loadError && (
           <div className="empty-state" style={{ display: "block" }}>

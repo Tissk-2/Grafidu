@@ -4181,42 +4181,6 @@
   }
 
   @media (max-width: 940px) {
-    .sidebar {
-      width: 76px;
-      padding: 20px 12px;
-      align-items: center;
-    }
-    .sidebar .brand span,
-    .side-sec-title,
-    .cal-head b,
-    .cal-dow,
-    .cal-grid,
-    .side-list-head,
-    .task-card span:not(.tbox),
-    .class-card span:not(.cic),
-    .side-user span:not(.side-user-txt),
-    .link-underline,
-    .class-plus {
-      display: none !important;
-    }
-    .sidebar .brand img {
-      width: 34px;
-      height: 34px;
-    }
-    .task-card {
-      justify-content: center;
-      padding: 10px;
-    }
-    .class-card {
-      justify-content: center;
-    }
-    .side-user {
-      justify-content: center;
-      padding: 9px;
-    }
-    .side-user-chev {
-      display: none;
-    }
     .main {
       padding: 22px 20px 130px;
     }
@@ -5363,7 +5327,263 @@
     --radius-4xl: calc(var(--radius) * 2.6);
   }
 
+  .dark {
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.21 0.006 285.885);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.21 0.006 285.885);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.432 0.232 292.759);
+    --primary-foreground: oklch(0.969 0.016 293.756);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --accent: oklch(0.274 0.006 286.033);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.552 0.016 285.938);
+    --chart-1: oklch(0.811 0.111 293.571);
+    --chart-2: oklch(0.606 0.25 292.717);
+    --chart-3: oklch(0.541 0.281 293.009);
+    --chart-4: oklch(0.491 0.27 292.581);
+    --chart-5: oklch(0.432 0.232 292.759);
+    --sidebar: oklch(0.21 0.006 285.885);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.606 0.25 292.717);
+    --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
+    --sidebar-accent: oklch(0.274 0.006 286.033);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.552 0.016 285.938);
+  }
 
+  /* ============================================================
+     RESPONSIVE PATCH (v3) — hanya aktif di layar kecil.
+     Tampilan desktop (> 1180px) tidak berubah sama sekali.
+     Disisipkan di AKHIR blok "@layer components", sebelum kurung
+     kurawal penutupnya (baris ~4872).
+     ============================================================ */
+
+  /* pembungkus tabel rightbar: geser ke samping kalau sempit */
+  .rb-table-wrap {
+    overflow-x: auto;
+  }
+
+  /* elemen khusus layar kecil: disembunyikan di desktop */
+  .m-topbar,
+  .m-backdrop,
+  .m-only {
+    display: none;
+  }
+
+  /* ---------- <= 1180px: rightbar turun ke bawah konten ---------- */
+  @media (max-width: 1180px) {
+    .app {
+      flex-wrap: wrap;
+    }
+    .rightbar {
+      position: static;
+      transform: none;
+      flex: 0 0 100%;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      z-index: auto;
+      box-shadow: none;
+      border-left: 0;
+      border-top: 1px solid var(--line-soft);
+      padding: 24px 24px 120px;
+    }
+    .panel-toggle,
+    .rightbar-backdrop,
+    .rb-close {
+      display: none;
+    }
+    /* halaman chat AI: rightbar tetap disembunyikan seperti sebelumnya */
+    body[data-page$="-ai"] .rightbar {
+      display: none;
+    }
+  }
+
+  /* ---------- <= 940px: sidebar jadi panel geser + top bar ---------- */
+  @media (max-width: 940px) {
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: min(360px, 88vw);
+      height: 100dvh;
+      z-index: calc(var(--z-dialog) - 1);
+      background: #fff;
+      box-shadow: 18px 0 48px rgba(24, 21, 22, 0.12);
+      transform: translateX(-100%);
+      visibility: hidden;
+      transition:
+        transform 0.25s ease,
+        visibility 0s linear 0.25s;
+    }
+    .m-nav-open .sidebar {
+      transform: none;
+      visibility: visible;
+      transition: transform 0.25s ease;
+    }
+    .m-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: calc(var(--z-dialog) - 2);
+      border: 0;
+      padding: 0;
+      background: rgba(24, 21, 22, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .m-nav-open .m-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .m-only {
+      display: block;
+      margin-top: 18px;
+    }
+    .m-topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 0 0 100%;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      background: #fff;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 10px 20px;
+    }
+    .m-topbar .brand {
+      flex: none;
+    }
+    .m-classes {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .m-classes::-webkit-scrollbar {
+      display: none;
+    }
+    .m-classes a,
+    .m-classes button {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      padding: 6px 12px;
+      font: inherit;
+      font-size: 13px;
+      white-space: nowrap;
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .m-classes a.on {
+      border-color: var(--purple);
+      color: var(--purple);
+      background: #f4edff;
+    }
+    .m-menu,
+    .m-gear {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: inherit;
+      cursor: pointer;
+    }
+    .m-gear {
+      margin-left: auto;
+    }
+  }
+
+  /* ---------- <= 760px: tabel nilai ---------- */
+  @media (max-width: 760px) {
+    .grade-table-wrap {
+      overflow-x: auto;
+    }
+    .grade-table-wrap .sub-table {
+      min-width: 560px;
+    }
+  }
+
+  /* ---------- <= 600px: HP ---------- */
+  @media (max-width: 600px) {
+    /* dashboard */
+    .m-topbar {
+      padding: 10px 16px;
+    }
+    .main {
+      padding: 18px 16px 120px;
+    }
+    .rightbar {
+      padding: 20px 16px 120px;
+    }
+    .profile-head {
+      gap: 14px;
+    }
+    .profile-head > img {
+      width: 72px;
+      height: 72px;
+    }
+    .profile-head > div {
+      min-width: 0;
+    }
+    .profile-name {
+      font-size: 22px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* halaman login */
+    .auth-left {
+      padding: 24px 20px 110px;
+    }
+    .auth-hero {
+      margin-top: 32px;
+    }
+    .auth-hero h1 {
+      font-size: 32px;
+    }
+    .auth-float-score {
+      display: none;
+    }
+    .auth-float-grades {
+      left: 20px;
+      width: min(192px, calc(100% - 40px));
+    }
+    .auth-right {
+      padding: 32px 20px;
+    }
+  }
+
+  /* form login jangan pernah lebih lebar dari layar (min 300px dari clamp) */
+  .auth-box {
+    max-width: 100%;
+  }
+}
 
 @layer base {
   * {

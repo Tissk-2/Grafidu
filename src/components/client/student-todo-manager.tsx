@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchTodos, addTodo, toggleTodo } from "@/app/actions/student";
-import type { TodoItem } from "@/lib/student-model";
+import { useState } from "react";
+import { useStudentTodos } from "@/app/student/student-shell-data";
 
 const CHECK = (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
@@ -11,42 +10,20 @@ const CHECK = (
 );
 
 export default function StudentTodoManager() {
-  const [todos, setTodos] = useState<TodoItem[]>([]);
+  // Data dibagi dengan rightbar, panel HP, dan halaman Tasks lewat shell.
+  const { todos: shared, toggle, add } = useStudentTodos();
+  const ready = shared !== null;
+  const todos = shared ?? [];
   const [input, setInput] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchTodos().then((rows) => {
-      if (!cancelled) setTodos(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const doneCount = todos.filter((t) => t.done).length;
   const pct = todos.length ? Math.round((doneCount / todos.length) * 100) : 0;
-
-  async function toggle(id: string, done: boolean) {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !done } : t)));
-    try {
-      await toggleTodo(id, !done);
-    } catch (err) {
-      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: done } : t)));
-      window.gtoast?.((err as Error).message, "error");
-    }
-  }
 
   async function handleAdd() {
     const v = input.trim();
     if (!v) return;
     setInput("");
-    try {
-      const row = await addTodo(v);
-      if (row) setTodos((prev) => [...prev, row]);
-    } catch (err) {
-      window.gtoast?.((err as Error).message, "error");
-    }
+    await add(v);
   }
 
   return (
@@ -120,7 +97,7 @@ export default function StudentTodoManager() {
       <div
         className="empty-state"
         id="todo-empty"
-        style={{ display: todos.length === 0 ? "block" : "none", maxWidth: 640 }}
+        style={{ display: ready && todos.length === 0 ? "block" : "none", maxWidth: 640 }}
       >
         <span className="es-ic">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

@@ -19,7 +19,7 @@ export function BottomCards({
   perluDinilai: TeacherTask[];
 }) {
   return (
-    <div className="mt-6 grid grid-cols-2 items-start gap-[13px]">
+    <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 items-start gap-[13px]">
       {/* Aktivitas Terbaru */}
       <section className="min-w-0 rounded border border-[#DDD] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] px-4 pt-3.5 pb-1.5">
         <div className="mb-1.5 flex items-center justify-between">
