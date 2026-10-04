@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { submitLead } from "@/app/actions/contact";
+import CustomSelect from "@/components/ui/custom-select";
 
 const EMPTY = { name: "", email: "", school: "", students: "", message: "" };
 
@@ -84,16 +85,17 @@ export default function ContactForm() {
         <label htmlFor="cf-students">
           Perkiraan jumlah siswa <span className="opt">(seluruh sekolah)</span>
         </label>
-        <select id="cf-students" name="students" required value={form.students} onChange={update("students")}>
-          <option value="" disabled>
-            Pilih rentang
-          </option>
-          {STUDENT_RANGES.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
+        <CustomSelect
+          id="cf-students"
+          value={form.students}
+          onChange={(students) => {
+            setForm((f) => ({ ...f, students }));
+            setSent(false);
+          }}
+          options={STUDENT_RANGES.map((r) => ({ value: r, label: r }))}
+          placeholder="Pilih rentang"
+          ariaLabel="Perkiraan jumlah siswa"
+        />
       </div>
       <div className="contact-field">
         <label htmlFor="cf-message">Apa kebutuhan sekolah Anda?</label>

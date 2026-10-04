@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, ClipboardCheck, Search } from "lucide-react";
+import { ClipboardCheck, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { useRoutedClass } from "@/lib/guru";
@@ -11,6 +11,7 @@ import TaskDialog, { type TaskFormValue } from "../task-dialog";
 import { fmtDate } from "@/lib/format";
 import TasksSkeleton from "@/components/ui/tasks-skeleton";
 import TaskCard from "@/components/ui/task-card";
+import CustomSelect from "@/components/ui/custom-select";
 import BodySync from "@/components/body-sync";
 
 type Sort = "newest" | "oldest";
@@ -113,23 +114,13 @@ export default function TeacherTasksPage() {
           />
         </div>
 
-        <div className="relative">
-          <select
+        <div style={{ minWidth: 150 }}>
+          <CustomSelect
             value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            aria-label="Urutkan tugas"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
-          >
-            {SORTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={15}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
+            onChange={(v) => setSort(v as Sort)}
+            options={SORTS}
+            ariaLabel="Urutkan tugas"
+            placeholder="Urutkan"
           />
         </div>
       </div>

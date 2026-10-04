@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, FileText, Plus, Search, Trash2, Pencil } from "lucide-react";
+import { FileText, Plus, Search, Trash2, Pencil } from "lucide-react";
 import { Book } from "iconsax-reactjs";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
@@ -10,6 +10,7 @@ import { createMaterial, deleteMaterial, updateMaterial } from "@/app/actions/te
 import { useTeacherShellData } from "../teacher-shell-data";
 import type { MaterialRow } from "@/lib/teacher-model";
 import MainSkeleton from "@/components/ui/main-skeleton";
+import CustomSelect from "@/components/ui/custom-select";
 import BodySync from "@/components/body-sync";
 import MateriFormDialog, {
   fileLabel,
@@ -130,20 +131,16 @@ export default function TeacherMateriPage() {
           />
         </div>
 
-        <div className="relative">
-          <select
+        <div style={{ minWidth: 150 }}>
+          <CustomSelect
             value={sort}
-            onChange={(e) => setSort(e.target.value as "terbaru" | "nama")}
-            aria-label="Urutkan materi"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
-          >
-            <option value="terbaru">Terbaru</option>
-            <option value="nama">Nama A–Z</option>
-          </select>
-          <ChevronDown
-            size={15}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
+            onChange={(v) => setSort(v as "terbaru" | "nama")}
+            options={[
+              { value: "terbaru", label: "Terbaru" },
+              { value: "nama", label: "Nama A–Z" },
+            ]}
+            ariaLabel="Urutkan materi"
+            placeholder="Urutkan"
           />
         </div>
       </div>

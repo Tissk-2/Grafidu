@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronDown, Megaphone, Search } from "lucide-react";
+import { CalendarDays, Megaphone, Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { fetchAllAnnouncements } from "@/app/actions/student";
 import type { AnnouncementPageItem } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
+import CustomSelect from "@/components/ui/custom-select";
 import PageSkeleton from "@/components/ui/page-skeleton";
 
 type Range = "semua" | "7" | "30";
@@ -99,43 +100,23 @@ export default function AnnouncementsView() {
           />
         </div>
 
-        <div className="relative">
-          <select
+        <div style={{ minWidth: 170 }}>
+          <CustomSelect
             value={range}
-            onChange={(e) => setRange(e.target.value as Range)}
-            aria-label="Filter waktu"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
-          >
-            {RANGES.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={15}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
+            onChange={(v) => setRange(v as Range)}
+            options={RANGES}
+            ariaLabel="Filter waktu"
+            placeholder="Semua Waktu"
           />
         </div>
 
-        <div className="relative">
-          <select
+        <div style={{ minWidth: 150 }}>
+          <CustomSelect
             value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            aria-label="Urutkan pengumuman"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
-          >
-            {SORTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={15}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
+            onChange={(v) => setSort(v as Sort)}
+            options={SORTS}
+            ariaLabel="Urutkan pengumuman"
+            placeholder="Terbaru"
           />
         </div>
       </div>

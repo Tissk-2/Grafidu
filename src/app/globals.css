@@ -5658,3 +5658,58 @@
   --base-color: #26242a;
   --highlight-color: #312f36;
 }
+
+/* ---------- CustomSelect (dropdown custom ala form akun admin) ----------
+   Dipakai di seluruh app pengganti <select> bawaan: trigger + panel portal
+   dengan pencarian opsional. Posisi panel di-inline dari JS (viewport coords)
+   karena panel dirender via portal ke <dialog>/body. */
+/* ---------- combobox kelas (cari di dalam panel) ---------- */
+.adm-combo { position: relative; }
+/* Trigger error (field "Kelas" wajib diisi) — warna sama dengan .adm-inline-error. */
+.adm-combo-trigger.is-invalid { border-color: #D93843; }
+.adm-combo-trigger {
+  width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  padding: 0 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+  font-size: 14px; color: var(--ink); text-align: left;
+}
+.adm-combo-trigger:focus-visible, .adm-combo.open .adm-combo-trigger { border-color: var(--purple); }
+.adm-combo-trigger .val { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-combo-trigger .val.placeholder { color: var(--gray-4); }
+.adm-combo-trigger svg { flex: none; color: #AFAFAF; transition: transform .12s; }
+.adm-combo.open .adm-combo-trigger svg { transform: rotate(180deg); }
+/* Panel dropdown — di-render via portal ke <dialog>, jadi posisinya fixing ke
+   viewport (left/top/bottom/width di-inline dari JS). Tidak lagi in-flow:
+   tidak mendorong field lain dan tidak terpotong overflow form/dialog.
+   z-index ekstrem karena panel adalah anak <dialog> top-layer. */
+.adm-combo-panel {
+  position: fixed;
+  z-index: 2147483000;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 12px 32px rgba(24, 21, 22, 0.14);
+}
+.adm-combo-panel input {
+  width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 8px;
+  padding: 0 10px; outline: none; font-size: 13.5px; color: var(--ink);
+}
+.adm-combo-panel input:focus { border-color: var(--purple); }
+.adm-combo-list { margin-top: 6px; max-height: 180px; overflow-y: auto; display: grid; gap: 2px; }
+.adm-combo-opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  padding: 9px 10px; border-radius: 8px; font-size: 13.5px; text-align: left;
+  background: none; border: none; cursor: pointer; color: var(--ink);
+}
+.adm-combo-opt:hover, .adm-combo-opt.hi { background: var(--purple-soft); }
+.adm-combo-opt.on { color: var(--purple); font-weight: 600; }
+.adm-combo-empty { padding: 10px; font-size: 13px; color: var(--gray-3); text-align: center; }
+
+/* Foto profil default: terang/gelap. Semua akun tanpa avatar unggahan
+   memakai /assets/defaultpfp.jpg; di dark mode CSS menukarnya ke
+   defaultpfp-dark.jpg lewat selector src — tanpa JS, ikut ganti instan
+   saat .dark toggle. next/image tidak dipakai untuk avatar agar src
+   selalu path asli (bukan /_next/image?url=...). */
+.dark img[src="/assets/defaultpfp.jpg"] {
+  content: url("/assets/defaultpfp-dark.jpg");
+}

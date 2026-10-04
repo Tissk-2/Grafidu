@@ -1,12 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import CustomSelect from "@/components/ui/custom-select";
 
 export type TeacherClass = {
   teacher: string;
   subject: string;
   avatar: string;
 };
+
+const FILTERS = [
+  { value: "all", label: "Semua Mapel" },
+  { value: "Matematika", label: "Matematika" },
+  { value: "Fisika", label: "Fisika" },
+  { value: "Informatika", label: "Informatika" },
+  { value: "Bahasa Indonesia", label: "B. Indonesia" },
+  { value: "Seni Budaya", label: "Seni" },
+];
 
 export default function StudentClassSearch({ classes }: { classes: TeacherClass[] }) {
   const [q, setQ] = useState("");
@@ -44,25 +54,14 @@ export default function StudentClassSearch({ classes }: { classes: TeacherClass[
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
-        <div className="select-box">
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">Semua Mapel</option>
-            <option value="Matematika">Matematika</option>
-            <option value="Fisika">Fisika</option>
-            <option value="Informatika">Informatika</option>
-            <option value="Bahasa Indonesia">B. Indonesia</option>
-            <option value="Seni Budaya">Seni</option>
-          </select>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+        <div className="select-box" style={{ minWidth: 170 }}>
+          <CustomSelect
+            value={filter}
+            onChange={setFilter}
+            options={FILTERS}
+            ariaLabel="Filter mapel"
+            placeholder="Semua Mapel"
+          />
         </div>
       </div>
 

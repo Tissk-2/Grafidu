@@ -12,6 +12,7 @@ import {
 } from "@/app/actions/teacher";
 import type { TeacherAnnouncement } from "@/lib/student-model";
 import type { TeacherClass } from "@/lib/teacher-model";
+import CustomSelect from "@/components/ui/custom-select";
 import PageSkeleton from "@/components/ui/page-skeleton";
 
 /**
@@ -110,19 +111,16 @@ export default function TeacherAnnouncementsManager() {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2.5">
-          <select
+        <div style={{ minWidth: 190 }}>
+          <CustomSelect
             value={classId}
-            onChange={(e) => setClassId(e.target.value)}
-            aria-label="Kelas tujuan"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] px-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
-          >
-            {classes.length === 0 ? <option value="">Belum mengampu kelas</option> : null}
-            {classes.map((c) => (
-              <option key={c.id} value={String(c.id)}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            onChange={setClassId}
+            options={classes.map((c) => ({ value: String(c.id), label: c.name }))}
+            ariaLabel="Kelas tujuan"
+            placeholder={classes.length === 0 ? "Belum mengampu kelas" : "Pilih kelas…"}
+            disabled={classes.length === 0}
+          />
+        </div>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}

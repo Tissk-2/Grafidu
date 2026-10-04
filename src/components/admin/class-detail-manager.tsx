@@ -10,6 +10,7 @@ import {
   renameClass,
 } from "@/app/actions/admin";
 import type { ClassDetailData } from "@/lib/admin-model";
+import CustomSelect from "@/components/ui/custom-select";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 /**
@@ -236,18 +237,18 @@ export default function ClassDetailManager({ classId }: { classId: string }) {
         <form onSubmit={handleMove} className="adm-transfer" noValidate>
           <div className="field-d">
             <label htmlFor="move-student">Pindahkan siswa ke kelas ini</label>
-            <select
+            <CustomSelect
               id="move-student"
               value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-            >
-              <option value="">Pilih siswa…</option>
-              {moveCandidates.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} — {s.className ?? "tanpa kelas"}
-                </option>
-              ))}
-            </select>
+              onChange={setStudentId}
+              options={moveCandidates.map((s) => ({
+                value: s.id,
+                label: `${s.name} — ${s.className ?? "tanpa kelas"}`,
+              }))}
+              placeholder="Pilih siswa…"
+              searchPlaceholder="Cari siswa…"
+              ariaLabel="Pindahkan siswa ke kelas ini"
+            />
             {moveError ? <span className="adm-inline-error" role="alert">{moveError}</span> : null}
           </div>
           <button type="submit" className={"btn btn-primary btn-sm" + (moveBusy ? " is-loading" : "")} disabled={moveBusy || !studentId} style={{ height: 42 }}>
@@ -293,15 +294,18 @@ export default function ClassDetailManager({ classId }: { classId: string }) {
         <form onSubmit={handleAssign} className="adm-transfer" noValidate>
           <div className="field-d">
             <label htmlFor="assign-teacher">Guru</label>
-            <select id="assign-teacher" value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
-              <option value="">Pilih guru aktif…</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                  {t.subject ? ` — ${t.subject}` : ""}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              id="assign-teacher"
+              value={teacherId}
+              onChange={setTeacherId}
+              options={teachers.map((t) => ({
+                value: t.id,
+                label: t.subject ? `${t.name} — ${t.subject}` : t.name,
+              }))}
+              placeholder="Pilih guru aktif…"
+              searchPlaceholder="Cari guru…"
+              ariaLabel="Guru"
+            />
           </div>
           <div className="field-d">
             <label htmlFor="assign-subject">Mata pelajaran</label>

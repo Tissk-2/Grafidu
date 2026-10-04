@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import CustomSelect from "@/components/ui/custom-select";
 
 /**
  * Teacher tasks page: class cards (left sidebar) + search + task list.
@@ -13,8 +14,15 @@ export function TeacherTaskFilter({
   tasks: { id: number; title: string; due: string; submitted: number; total: number; status: string }[];
 }) {
   const [q, setQ] = useState("");
+  const [sort, setSort] = useState("Terbaru");
 
-  const filtered = tasks.filter((t) => t.title.toLowerCase().includes(q.toLowerCase()));
+  const filtered = tasks
+    .filter((t) => t.title.toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => {
+      if (sort === "Terlama") return a.due.localeCompare(b.due);
+      if (sort === "Tenggat Terdekat") return a.due.localeCompare(b.due);
+      return b.due.localeCompare(a.due);
+    });
 
   return (
     <>
@@ -26,15 +34,18 @@ export function TeacherTaskFilter({
           </svg>
           <input type="text" placeholder="Cari tugas...." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="select-box">
-          <select>
-            <option>Terbaru</option>
-            <option>Terlama</option>
-            <option>Tenggat Terdekat</option>
-          </select>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+        <div className="select-box" style={{ minWidth: 170 }}>
+          <CustomSelect
+            value={sort}
+            onChange={setSort}
+            options={[
+              { value: "Terbaru", label: "Terbaru" },
+              { value: "Terlama", label: "Terlama" },
+              { value: "Tenggat Terdekat", label: "Tenggat Terdekat" },
+            ]}
+            ariaLabel="Urutkan tugas"
+            placeholder="Terbaru"
+          />
         </div>
       </div>
 

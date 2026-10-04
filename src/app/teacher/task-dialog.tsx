@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import CustomSelect from "@/components/ui/custom-select";
 
 export type TaskFormValue = {
   title: string;
@@ -101,18 +102,17 @@ export default function TaskDialog({
           <div className="field-d">
             <label htmlFor="task-material">Lampiran (materi)</label>
             <div className="control">
-              <select
+              <CustomSelect
                 id="task-material"
                 value={value.materialId}
-                onChange={(e) => setValue((v) => ({ ...v, materialId: e.target.value }))}
-              >
-                <option value="">Tanpa lampiran</option>
-                {materials.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.title}
-                  </option>
-                ))}
-              </select>
+                onChange={(materialId) => setValue((v) => ({ ...v, materialId }))}
+                options={[
+                  { value: "", label: "Tanpa lampiran" },
+                  ...materials.map((m) => ({ value: m.id, label: m.title })),
+                ]}
+                placeholder="Tanpa lampiran"
+                searchPlaceholder="Cari materi…"
+              />
             </div>
           </div>
           <div className="field-d">

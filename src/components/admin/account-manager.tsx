@@ -5,6 +5,7 @@ import { listAccounts } from "@/app/actions/admin";
 import type { AdminAccount } from "@/lib/admin-model";
 import { generateTemporaryPassword } from "@/lib/password";
 import AccountForm, { emptyAccountValues, type AccountFormValues } from "./account-form";
+import CustomSelect from "@/components/ui/custom-select";
 import AdminSkeleton from "@/components/admin/admin-skeleton";
 
 type ListState = {
@@ -318,33 +319,38 @@ export default function AccountManager({ role }: { role: "student" | "teacher" }
             }}
           />
         </div>
-        <select
-          aria-label="Filter kelas"
-          value={classId}
-          onChange={(e) => {
-            setClassId(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">Semua kelas</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Filter status"
-          value={active}
-          onChange={(e) => {
-            setActive(e.target.value as "" | "true" | "false");
-            setPage(1);
-          }}
-        >
-          <option value="">Semua status</option>
-          <option value="true">Aktif</option>
-          <option value="false">Nonaktif</option>
-        </select>
+        <div style={{ minWidth: 160 }}>
+          <CustomSelect
+            value={classId}
+            onChange={(v) => {
+              setClassId(v);
+              setPage(1);
+            }}
+            options={[
+              { value: "", label: "Semua kelas" },
+              ...classes.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+            ariaLabel="Filter kelas"
+            placeholder="Semua kelas"
+            searchPlaceholder="Cari kelas…"
+          />
+        </div>
+        <div style={{ minWidth: 150 }}>
+          <CustomSelect
+            value={active}
+            onChange={(v) => {
+              setActive(v as "" | "true" | "false");
+              setPage(1);
+            }}
+            options={[
+              { value: "", label: "Semua status" },
+              { value: "true", label: "Aktif" },
+              { value: "false", label: "Nonaktif" },
+            ]}
+            ariaLabel="Filter status"
+            placeholder="Semua status"
+          />
+        </div>
         <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
             <path d="M12 5v14M5 12h14" />

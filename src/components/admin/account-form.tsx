@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ClassCombobox from "./class-combobox";
+import CustomSelect from "@/components/ui/custom-select";
 
 export type ClassOption = { id: string; name: string };
 
@@ -91,14 +92,17 @@ export default function AccountForm({
         <div className="field-d" style={{ marginTop: 0 }}>
           <label htmlFor={`${formId}-role`}>Peran Akun</label>
           <div className="control">
-            <select
+            <CustomSelect
               id={`${formId}-role`}
               value={values.role}
-              onChange={(e) => set("role", e.target.value as "student" | "teacher")}
-            >
-              <option value="student">Siswa</option>
-              <option value="teacher">Guru</option>
-            </select>
+              onChange={(v) => set("role", v as "student" | "teacher")}
+              options={[
+                { value: "student", label: "Siswa" },
+                { value: "teacher", label: "Guru" },
+              ]}
+              ariaLabel="Peran akun"
+              placeholder="Pilih peran…"
+            />
           </div>
         </div>
       ) : null}
