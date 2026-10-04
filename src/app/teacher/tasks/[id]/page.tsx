@@ -199,7 +199,7 @@ export default function TeacherTaskDetailPage() {
         <div className="text-[14px] font-medium text-[#222] dark:text-[#EDEBF0]">Progres Pengumpulan</div>
         <div className="flex items-center gap-5">
           <div className="flex-1">
-            <div className="mt-2 h-[7px] w-full overflow-hidden rounded-full bg-[#E6E3F8]">
+            <div className="mt-2 h-[7px] w-full overflow-hidden rounded-full bg-[#E6E3F8] dark:bg-[#333136]">
               <div className="h-full rounded-full bg-[#5B3FD6]" style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function TeacherTaskDetailPage() {
         <SearchField value={qDone} onChange={setQDone} placeholder="Cari Siswa…" />
 
         <div className="mt-3.5 overflow-x-auto">
-        <table className="w-full min-w-[640px] table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
+        <table className="w-full min-w-[640px] table-fixed border border-[#DDD] dark:border-[#2D2B30] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
@@ -306,7 +306,7 @@ export default function TeacherTaskDetailPage() {
         <SearchField value={qMiss} onChange={setQMiss} placeholder="Cari Siswa…" />
 
         <div className="mt-3.5 overflow-x-auto">
-        <table className="w-full min-w-[640px] table-fixed border border-[#DDD] rounded border-separate border-spacing-0">
+        <table className="w-full min-w-[640px] table-fixed border border-[#DDD] dark:border-[#2D2B30] rounded border-separate border-spacing-0">
           <colgroup>
             <col className={cols.split(" ")[0]} />
             <col className={cols.split(" ")[1]} />
