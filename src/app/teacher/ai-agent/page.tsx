@@ -6,16 +6,18 @@ import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { useRoutedClass } from "@/lib/guru";
 import { useTeacherShellData } from "../teacher-shell-data";
+import { createQuiz } from "@/app/actions/teacher";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
 
 type Msg = { role: "user" | "ai"; text: string };
+type QuizDraft = { title: string; topic: string; difficulty: string; questions: string[] };
 
 const SUGGESTIONS = [
   "Siswa mana yang perlu perhatian?",
   "Ringkas nilai kelas saya",
   "Apa tenggat tugas ke depan?",
-  "Buatkan rencana belajar kelas ini",
+  "Buatkan kuis 5 soal dari materi terbaru",
 ];
 
 const AI_UNAVAILABLE = "Layanan AI sedang tidak terjangkau. Coba kirim ulang sebentar lagi.";
@@ -26,7 +28,7 @@ export default function TeacherAiAgentPage() {
   // sebagai guru. Kembalikan `useRequireUser("teacher")` sebelum production.
   const u = useRequireUser("teacher");
   const { kelas } = useRoutedClass();
-  const { tasks, roster, materials } = useTeacherShellData();
+  const { tasks, roster, materials, refresh } = useTeacherShellData();
   useTitle("AI Agent — Grafidu");
 
   const [messages, setMessages] = useState<Msg[]>([
@@ -57,6 +59,7 @@ export default function TeacherAiAgentPage() {
     setMessages((prev) => [...prev, { role: "user", text: t }]);
 
     let answer: string | null = null;
+    let quizDraft: QuizDraft | null = null;
     try {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -85,11 +88,42 @@ export default function TeacherAiAgentPage() {
         throw new Error("ai-unavailable");
       }
       answer = data.reply.trim();
+      if (data.type === "create_quiz" && data.quiz && Array.isArray(data.quiz.questions)) {
+        quizDraft = data.quiz as QuizDraft;
+      }
     } catch {
       answer = null;
     }
 
-    setMessages((prev) => [...prev, { role: "ai", text: answer ?? AI_UNAVAILABLE }]);
+    if (answer == null) {
+      setMessages((prev) => [...prev, { role: "ai", text: AI_UNAVAILABLE }]);
+      setBusy(false);
+      return;
+    }
+
+    // Kuis dari chat langsung disimpan sebagai draft kelas aktif, sama seperti
+    // yang dibuat lewat form Quiz Maker — muncul di Kuis Saya untuk ditinjau.
+    let finalText = answer;
+    if (quizDraft) {
+      try {
+        await createQuiz({
+          classId: activeKelas.id,
+          title: quizDraft.title,
+          topic: quizDraft.topic || t,
+          difficulty: quizDraft.difficulty,
+          durationMin: Math.max(10, quizDraft.questions.length * 2),
+          questions: quizDraft.questions,
+        });
+        refresh();
+        finalText = `${answer}\n\n✅ ${quizDraft.questions.length} soal tersimpan sebagai draft di Quiz Maker — tinjau lalu tayangkan dari sana.`;
+        window.gtoast?.("Kuis dari chat tersimpan sebagai draft ✨");
+      } catch {
+        finalText = `${answer}\n\n⚠️ Soalnya gagal disimpan. Coba kirim ulang, atau buat lewat halaman Quiz Maker ya.`;
+        window.gtoast?.("Kuis dari chat gagal disimpan.", "error");
+      }
+    }
+
+    setMessages((prev) => [...prev, { role: "ai", text: finalText }]);
     setBusy(false);
   }
 
@@ -103,7 +137,7 @@ export default function TeacherAiAgentPage() {
         </span>
         <div>
           <h2>AI Agent</h2>
-          <div className="sub">Asisten belajar pribadimu — berbasis nilai dan tugasmu</div>
+          <div className="sub">Asisten pengajar — berbasis nilai, tugas, dan materi kelasmu</div>
         </div>
         <span className="ai-online">
           <span className="d" />
@@ -145,7 +179,7 @@ export default function TeacherAiAgentPage() {
           <div className="chat-input">
             <input
               type="text"
-              placeholder="Tanya apa saja soal belajarmu..."
+              placeholder="Tanya apa saja soal kelasmu..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {

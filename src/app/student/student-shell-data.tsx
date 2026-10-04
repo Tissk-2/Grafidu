@@ -45,9 +45,15 @@ export type StudentShellData = {
 type StudentShellContext = StudentShellData & {
   /** Ubah daftar to-do di data bersama, supaya semua tampilan ikut berubah. */
   setTodos: (fn: (prev: TodoItem[]) => TodoItem[]) => void;
+  /** false di dalam shell siswa; true saat hook dipakai di luar shell (mis. guru). */
+  standalone: boolean;
 };
 
-const Ctx = createContext<StudentShellContext>({ data: null, setTodos: () => {} });
+const Ctx = createContext<StudentShellContext>({
+  data: null,
+  setTodos: () => {},
+  standalone: true,
+});
 
 export function StudentShellDataProvider({
   user,
@@ -60,7 +66,7 @@ export function StudentShellDataProvider({
   const setTodos = useCallback((fn: (prev: TodoItem[]) => TodoItem[]) => {
     setData((d) => (d ? { ...d, todos: fn(d.todos) } : d));
   }, []);
-  const value = useMemo(() => ({ data, setTodos }), [data, setTodos]);
+  const value = useMemo(() => ({ data, setTodos, standalone: false }), [data, setTodos]);
 
   useEffect(() => {
     if (!user) return;
@@ -102,38 +108,61 @@ export function useStudentShellData() {
  * To-do pribadi dari data bersama + aksi centang/tambah. Dipakai oleh rightbar,
  * halaman To-Do, dan panel To-Do di HP, jadi progres di halaman Tasks langsung
  * ikut berubah begitu satu item dicentang di mana pun.
+ *
+ * Di luar StudentShellDataProvider (halaman To-Do guru) hook bersifat mandiri:
+ * daftar diambil sendiri ke database dan disimpan di state lokal.
  */
 export function useStudentTodos() {
-  const { data, setTodos } = useContext(Ctx);
+  const { data, setTodos, standalone } = useContext(Ctx);
+  const [local, setLocal] = useState<TodoItem[] | null>(null);
+
+  useEffect(() => {
+    if (!standalone) return;
+    let cancelled = false;
+    fetchTodos().then((rows) => {
+      if (!cancelled) setLocal(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [standalone]);
+
+  const apply = useCallback(
+    (fn: (prev: TodoItem[]) => TodoItem[]) => {
+      if (standalone) setLocal((prev) => (prev ? fn(prev) : prev));
+      else setTodos(fn);
+    },
+    [standalone, setTodos],
+  );
 
   const toggle = useCallback(
     async (id: string, done: boolean) => {
-      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !done } : t)));
+      apply((prev) => prev.map((t) => (t.id === id ? { ...t, done: !done } : t)));
       try {
         await toggleTodo(id, !done);
       } catch (err) {
-        setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done } : t)));
+        apply((prev) => prev.map((t) => (t.id === id ? { ...t, done } : t)));
         window.gtoast?.((err as Error).message, "error");
       }
     },
-    [setTodos],
+    [apply],
   );
 
   const add = useCallback(
     async (title: string, subtitle?: string) => {
       try {
         const row = await addTodo(title, subtitle);
-        if (row) setTodos((prev) => [...prev, row]);
+        if (row) apply((prev) => [...prev, row]);
         return row;
       } catch (err) {
         window.gtoast?.((err as Error).message, "error");
         return null;
       }
     },
-    [setTodos],
+    [apply],
   );
 
-  return { todos: data?.todos ?? null, toggle, add };
+  return { todos: standalone ? local : (data?.todos ?? null), toggle, add };
 }
 
 export default StudentShellDataProvider;

@@ -19,9 +19,20 @@ type IncomingTurn = { role: "user" | "assistant"; content: string };
 
 type TodoDraft = { title: string; subtitle?: string };
 
+type QuizDraft = {
+  title: string;
+  topic: string;
+  difficulty: string;
+  questions: string[];
+};
+
 type ChatSuccess =
   | { ok: true; type: "reply"; reply: string }
-  | { ok: true; type: "create_todos"; reply: string; items: TodoDraft[] };
+  | { ok: true; type: "create_todos"; reply: string; items: TodoDraft[] }
+  | { ok: true; type: "create_quiz"; reply: string; quiz: QuizDraft };
+
+const QUIZ_DIFFICULTIES = ["Mudah", "Sedang", "Sulit"];
+const MAX_CHAT_QUESTIONS = 10;
 
 export async function POST(request: Request) {
   const user = await getSessionUser();
@@ -85,7 +96,7 @@ export async function POST(request: Request) {
           {
             role: "user",
             content:
-              'Balasanmu tadi bukan JSON yang valid. Ulangi jawaban yang sama dengan format PERSIS satu objek JSON tanpa teks lain: {"type":"reply","text":"..."} — atau, jika pengguna meminta dibuatkan to-do list, {"type":"create_todos","items":[{"title":"...","subtitle":"..."}],"reply":"..."}.',
+              'Balasanmu tadi bukan JSON yang valid. Ulangi jawaban yang sama dengan format PERSIS satu objek JSON tanpa teks lain: {"type":"reply","text":"..."} — atau aksi yang diminta pengguna: to-do list → {"type":"create_todos","items":[{"title":"...","subtitle":"..."}],"reply":"..."}, kuis → {"type":"create_quiz","title":"...","topic":"...","difficulty":"Mudah|Sedang|Sulit","questions":["..."],"reply":"..."}.',
           },
         ],
         { maxTokens: 1400 }
@@ -173,7 +184,9 @@ function systemPrompt(role: string, name: string, context: string): string {
           "- Pertanyaan tentang nilai kelas, siswa, tugas, tenggat, atau materi WAJIB dijawab hanya dari DATA di atas. Jangan pernah mengarang angka, nama, atau tanggal.",
           "- Kalau data yang dibutuhkan tidak ada di DATA, katakan apa adanya dan sarankan langkah berikutnya (misal buka Quiz Maker).",
           "- Pertanyaan pedagogis umum boleh dijawab dari pengetahuanmu.",
-          '- Selalu balas dengan JSON {"type":"reply","text":"..."} berisi jawabanmu. Jangan pernah mengusulkan aksi otomatis — saran untuk guru hanya berupa teks.',
+          '- Jika guru meminta dibuatkan kuis / soal latihan, balas dengan JSON {"type":"create_quiz","title":"judul kuis singkat","topic":"topik kuis","difficulty":"Mudah|Sedang|Sulit","questions":["soal 1","soal 2"],"reply":"kalimat penjelasan untuk guru"} — maksimal 10 soal essay (maks 200 huruf per soal), tanpa pilihan ganda, tanpa kunci jawaban, susun dari materi kelas di DATA bila ada.',
+          '- Contoh: guru minta "buatkan kuis teks eksposisi" → {"type":"create_quiz","title":"Kuis Teks Eksposisi","topic":"Teks Eksposisi","difficulty":"Sedang","questions":["Jelaskan pengertian teks eksposisi dan tujuannya.","..."],"reply":"Siap, kuisnya sudah kusimpan sebagai draft."}',
+          '- Selain itu balas dengan JSON {"type":"reply","text":"..."} berisi jawabanmu. Saran lain untuk guru hanya berupa teks, bukan aksi.',
         ].join("\n");
 
   return (
@@ -193,6 +206,10 @@ function parseModelReply(role: string, raw: string): ChatSuccess | null {
     text?: unknown;
     reply?: unknown;
     items?: unknown;
+    title?: unknown;
+    topic?: unknown;
+    difficulty?: unknown;
+    questions?: unknown;
   }>(raw);
 
   if (parsed && typeof parsed === "object") {
@@ -216,6 +233,33 @@ function parseModelReply(role: string, raw: string): ChatSuccess | null {
             text ||
             `Beres! Aku buatkan ${items.length} to-do untukmu — cek halaman To-Do List ya.`,
           items,
+        };
+      }
+    }
+    if (role === "teacher" && parsed.type === "create_quiz" && Array.isArray(parsed.questions)) {
+      const questions = (parsed.questions as unknown[])
+        .map((q) => clip(q, 300))
+        .filter((q) => q.length > 0)
+        .slice(0, MAX_CHAT_QUESTIONS);
+      if (questions.length) {
+        const title = clip(parsed.title, 120);
+        const topic = clip(parsed.topic, 200) || title;
+        const difficulty = QUIZ_DIFFICULTIES.includes(clip(parsed.difficulty, 10))
+          ? clip(parsed.difficulty, 10)
+          : "Sedang";
+        return {
+          ok: true,
+          type: "create_quiz",
+          reply:
+            clip(parsed.reply, 2000) ||
+            `Beres! ${questions.length} soal kusimpan sebagai draft di Quiz Maker.`,
+          quiz: {
+            title: title || (topic ? `Kuis: ${topic.slice(0, 80)}` : "Kuis dari AI Agent"),
+            // Topik kosong diisi klien dengan pesan guru sebagai fallback.
+            topic,
+            difficulty,
+            questions,
+          },
         };
       }
     }
