@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict uHp72UZKszSPoJZRyEUzIsr15b1T24enG5IU7ebV2FVd4PkeBnjcrkQDSJyzOFz
+\restrict ojmG5lLIB8mSisWk5t1jElx0Lc6azmBWzkX9ar3g7jpUIvYanfmsH77Cfxfzad9
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -1042,7 +1042,6 @@ COPY public.classes (id, name, ordinal, created_at) FROM stdin;
 --
 
 COPY public.contact_leads (id, name, email, school, students_range, message, created_at) FROM stdin;
-695513fc-3d63-4a77-9391-625572539df1	Uji QA Kontak	uji.qa@sekolah.sch.id	SMA Uji Coba QA	100 – 300	Pesan uji otomatis QA — mohon abaikan.	2026-10-04 21:34:15.281745+07
 \.
 
 
@@ -1656,7 +1655,6 @@ COPY public.quizzes (id, class_id, created_by, title, topic, difficulty, num_que
 --
 
 COPY public.sessions (id, user_id, token_hash, user_agent, created_at, last_seen_at, expires_at) FROM stdin;
-79ef2cfd-7d06-4e2a-9ec3-e6d8b8da5fc8	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	31213fdd3a1655a29a22e26e4d10afd0ef72e2e6e97620994a1e754e2dc8f287	\N	2026-10-04 21:41:37.961928+07	2026-10-04 21:41:38.005864+07	2026-11-03 21:41:37.961928+07
 \.
 
 
@@ -3591,5 +3589,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uHp72UZKszSPoJZRyEUzIsr15b1T24enG5IU7ebV2FVd4PkeBnjcrkQDSJyzOFz
+\unrestrict ojmG5lLIB8mSisWk5t1jElx0Lc6azmBWzkX9ar3g7jpUIvYanfmsH77Cfxfzad9
 
