@@ -4,11 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
-import { type SchoolTask, type SubjectScore } from "@/lib/student-model";
+import { type SchoolTask, type SubjectScore, type TodoItem } from "@/lib/student-model";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import BodySync from "@/components/body-sync";
-import { useStudentShellData } from "../student-shell-data";
-import { addTodo } from "@/app/actions/student";
+import { useStudentShellData, useStudentTodos } from "../student-shell-data";
 
 type Msg = { role: "user" | "ai"; text: string };
 type PageData = { tasks: SchoolTask[]; subjects: SubjectScore[] };
@@ -26,6 +25,7 @@ const AI_UNAVAILABLE = "Layanan AI sedang tidak terjangkau. Coba kirim ulang seb
 export default function StudentAiAgentPage() {
   const u = useRequireUser("student");
   const shell = useStudentShellData();
+  const { add: addTodoShared } = useStudentTodos();
   useTitle("AI Agent — Grafidu");
 
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -107,16 +107,27 @@ export default function StudentAiAgentPage() {
       return;
     }
 
-    // Aksi create_todos dieksekusi langsung via server action milik siswa.
+    // Aksi create_todos dieksekusi via server action milik siswa, lalu hasilnya
+    // masuk data bersama supaya sidebar & halaman To-Do ikut ter-update.
+    const created: TodoItem[] = [];
     for (const item of todoItems) {
-      try {
-        await addTodo(item.title, item.subtitle);
-      } catch {
-        // Satu item gagal tidak menggagalkan sisanya.
+      const row = await addTodoShared(item.title, item.subtitle);
+      if (row) created.push(row);
+    }
+
+    let finalText = answer;
+    if (todoItems.length > 0) {
+      if (created.length) {
+        const lines = created.map((t) => `• ${t.title}`).join("\n");
+        finalText = `${answer}\n\n✅ ${created.length} to-do masuk ke daftarmu:\n${lines}`;
+        window.gtoast?.(`${created.length} to-do ditambahkan ke daftar To-Do-mu ✨`);
+      } else {
+        finalText = `${answer}\n\n⚠️ To-do-nya gagal disimpan. Coba kirim ulang, atau tambahkan manual di halaman To-Do List ya.`;
+        window.gtoast?.("To-do dari AI gagal disimpan.", "error");
       }
     }
 
-    setMessages((prev) => [...prev, { role: "ai", text: answer }]);
+    setMessages((prev) => [...prev, { role: "ai", text: finalText }]);
     setBusy(false);
   }
 

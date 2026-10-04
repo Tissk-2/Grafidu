@@ -72,7 +72,33 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json(shapeReply(user.role, raw));
+  let reply = parseModelReply(user.role, raw);
+
+  // Model kadang membalas percakapan biasa padahal diminta satu objek JSON —
+  // coba perbaiki sekali dengan meminta format ulang sebelum fallback ke teks.
+  if (!reply) {
+    try {
+      const retry = await chatComplete(
+        [
+          ...messages,
+          { role: "assistant", content: clip(raw, 800) },
+          {
+            role: "user",
+            content:
+              'Balasanmu tadi bukan JSON yang valid. Ulangi jawaban yang sama dengan format PERSIS satu objek JSON tanpa teks lain: {"type":"reply","text":"..."} — atau, jika pengguna meminta dibuatkan to-do list, {"type":"create_todos","items":[{"title":"...","subtitle":"..."}],"reply":"..."}.',
+          },
+        ],
+        { maxTokens: 1400 }
+      );
+      reply = parseModelReply(user.role, retry);
+    } catch {
+      // Router tidak reachable saat retry — pakai teks mentah panggilan pertama.
+    }
+  }
+
+  return NextResponse.json(
+    reply ?? { ok: true, type: "reply", reply: raw.trim().slice(0, 2000) }
+  );
 }
 
 /** Konteks JSON dari klien dinormalisasi ulang di server (batas ukuran per field). */
@@ -139,6 +165,8 @@ function systemPrompt(role: string, name: string, context: string): string {
           "- Kalau data yang dibutuhkan tidak ada di DATA, katakan apa adanya dan sarankan langkah berikutnya.",
           "- Pertanyaan belajar umum (menjelaskan konsep, cara mengerjakan) boleh dijawab dari pengetahuanmu.",
           '- Jika siswa meminta dibuatkan to-do list / rencana berupa daftar kegiatan, balas dengan JSON {"type":"create_todos","items":[{"title":"...","subtitle":"..."}],"reply":"..."} — maksimal 5 item, title singkat (maks 80 huruf), subtitle alasan singkat, dan reply berisi kalimat penjelasan untuk siswa.',
+      '- Contoh: siswa minta "buatkan rencana belajar matematika" → {"type":"create_todos","items":[{"title":"Kerjakan 10 soal trigonometri","subtitle":"Latihan mandiri matematika"}],"reply":"Siap! Aku sudah buatkan to-do belajarmu."}',
+      '- Contoh: siswa tanya "kapan tenggat tugasku?" → {"type":"reply","text":"Tenggat terdekatmu adalah ..."}',
           '- Selain itu balas dengan JSON {"type":"reply","text":"..."} berisi jawabanmu.',
         ].join("\n")
       : [
@@ -158,8 +186,8 @@ function systemPrompt(role: string, name: string, context: string): string {
   );
 }
 
-/** Balasan model → bentuk aman untuk UI; JSON rusak dialihkan ke teks biasa. */
-function shapeReply(role: string, raw: string): ChatSuccess {
+/** Balasan model → bentuk aman untuk UI; null berarti model tidak ikut format. */
+function parseModelReply(role: string, raw: string): ChatSuccess | null {
   const parsed = extractJson<{
     type?: unknown;
     text?: unknown;
@@ -196,6 +224,5 @@ function shapeReply(role: string, raw: string): ChatSuccess {
     }
   }
 
-  // Model tidak mengikuti format JSON — kirim teks mentahnya saja.
-  return { ok: true, type: "reply", reply: raw.trim().slice(0, 2000) };
+  return null;
 }

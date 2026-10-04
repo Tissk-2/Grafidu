@@ -120,12 +120,14 @@ export function useStudentTodos() {
   );
 
   const add = useCallback(
-    async (title: string) => {
+    async (title: string, subtitle?: string) => {
       try {
-        const row = await addTodo(title);
+        const row = await addTodo(title, subtitle);
         if (row) setTodos((prev) => [...prev, row]);
+        return row;
       } catch (err) {
         window.gtoast?.((err as Error).message, "error");
+        return null;
       }
     },
     [setTodos],
