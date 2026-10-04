@@ -46,3 +46,6 @@ gui-test-screenshots/
 
 # sementara dari auto-export dev.mjs
 setup/exports/.dump-in-progress.sql
+
+# User uploads (runtime data, not source)
+public/uploads/
