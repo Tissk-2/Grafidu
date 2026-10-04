@@ -55,7 +55,7 @@ export default function TeacherShell({ children }: { children: React.ReactNode }
       user: {
         name: u?.name ?? "Guru",
         sub: mapel,
-        avatar: u?.avatar ?? "/assets/logo.png",
+        avatar: u?.avatar ?? "/assets/defaultpfp.jpg",
       },
       tasksToday: [],
       classes: sidebarClasses,

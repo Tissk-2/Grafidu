@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRequireUser } from "@/lib/auth";
 import { fetchClassTeachers } from "@/app/actions/student";
 import type { ClassTeacher } from "@/lib/student-model";
@@ -46,7 +45,8 @@ export default function StudentHomePage() {
     <>
       <BodySync dataPage="student-home" />
       <div className="profile-head">
-        <Image src={u.avatar} alt={u.name} width={96} height={96} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={u.avatar} alt={u.name} width={96} height={96} />
         <div>
           <div className="profile-name">
             {u.name} <span className="dot"></span>

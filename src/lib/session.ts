@@ -134,7 +134,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     email,
     className: row.class_name ?? null,
     subject: null,
-    avatar: row.avatar || "/assets/logo.png",
+    avatar: row.avatar || "/assets/defaultpfp.jpg",
     phone: "",
     prefs: "{}",
     mustChangePassword: row.must_change_password === true,

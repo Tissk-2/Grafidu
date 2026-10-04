@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
@@ -60,7 +59,8 @@ export default function TeacherClassHome() {
     <>
       <BodySync dataPage="teacher-home" />
       <div className="profile-head">
-        <Image src={u.avatar} alt={u.name} width={96} height={96} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={u.avatar} alt={u.name} width={96} height={96} />
         <div>
           <div className="profile-name">
             {u.name} <span className="dot"></span>
