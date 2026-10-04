@@ -173,7 +173,7 @@ export default function TeacherTaskDetailPage() {
 
       {/* 3.2 header */}
       <header className="mt-4.5 flex items-center gap-3.5">
-        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#E9DDFB] text-[#5B3FD6] dark:text-[#A78BFA]">
+        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#E9DDFB] text-[#5B3FD6] dark:bg-[#2b2148] dark:text-[#A78BFA]">
           <ClipboardCheck size={22} aria-hidden />
         </span>
         <h1 className="text-[32px] leading-tight font-medium tracking-[-0.01em] text-[#111] dark:text-[#F2F0F2]">

@@ -1873,6 +1873,10 @@
     place-items: center;
     color: #2f9e5b;
   }
+  .dark .auth-float-score .ic {
+    background: var(--green-soft);
+    color: var(--green);
+  }
   .auth-float-score span {
     display: block;
     font-size: 12.5px;

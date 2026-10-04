@@ -163,7 +163,7 @@ function SidebarImpl({
         modifiersClassNames={{ sunday: "text-[#ff3b30]" }}
         classNames={{
           today:
-            "rounded-(--cell-radius) bg-[#eee7ff] text-[#751ef8] dark:text-[#A78BFA] font-semibold data-[selected-single=true]:bg-primary",
+            "rounded-(--cell-radius) bg-(--purple-soft) text-[#751ef8] dark:text-[#A78BFA] font-semibold data-[selected-single=true]:bg-primary",
         }}
       />
 

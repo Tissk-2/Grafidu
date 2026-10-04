@@ -247,3 +247,6 @@
 @media (prefers-reduced-motion: reduce) {
   .adm-nav a, .btn-mini, .adm-logout { transition: none; }
 }
+/* Dark mode: permukaan yang sebelumnya hardcode terang */
+.dark .adm-table th { background: var(--surface-2); }
+.dark .adm-sidebar { background: var(--surface); }

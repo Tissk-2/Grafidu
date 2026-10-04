@@ -240,7 +240,7 @@ export default function AnnouncementsManager({
         >
           <div
             style={{
-              background: "#fff",
+              background: "var(--surface)",
               borderRadius: 14,
               padding: "24px 28px",
               width: "min(480px, 100%)",

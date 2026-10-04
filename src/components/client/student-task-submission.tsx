@@ -84,7 +84,7 @@ export default function StudentTaskSubmission({
       )}
 
       {submitted && !isEditing ? (
-        <div style={{ background: "#F9FAFB", border: "1px solid var(--line)", borderRadius: 10, padding: 18 }}>
+        <div style={{ background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 10, padding: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <span
               style={{

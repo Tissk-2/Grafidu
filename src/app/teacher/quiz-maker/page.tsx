@@ -163,7 +163,7 @@ export default function TeacherQuizMakerPage() {
             <span
               className="task-ic"
               style={{
-                background: "#fff",
+                background: "var(--surface)",
                 border: "1.4px solid var(--purple)",
                 color: "var(--purple)",
               }}

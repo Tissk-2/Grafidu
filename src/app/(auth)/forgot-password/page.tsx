@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
           </p>
 
           {submitted ? (
-            <div style={{ background: "#F9FAFB", border: "1px solid var(--line)", borderRadius: 12, padding: 22, marginTop: 20, textAlign: "center" }}>
+            <div style={{ background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 12, padding: 22, marginTop: 20, textAlign: "center" }}>
               <span
                 style={{
                   width: 44,

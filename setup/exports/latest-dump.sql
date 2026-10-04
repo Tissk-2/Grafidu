@@ -58,7 +58,7 @@ GRANT anon, authenticated, service_role TO authenticator;
 -- PostgreSQL database dump
 --
 
-\restrict u3gKkPUgzwodNHEDorVf3RwL48J2p7adECmhIAXNtvhCfuAvWU9O2kxYHtro4VW
+\restrict uHp72UZKszSPoJZRyEUzIsr15b1T24enG5IU7ebV2FVd4PkeBnjcrkQDSJyzOFz
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -626,7 +626,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE auth.users (
     instance_id uuid,
-    id uuid NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     aud character varying(255),
     role character varying(255),
     email character varying(255),
@@ -1042,6 +1042,7 @@ COPY public.classes (id, name, ordinal, created_at) FROM stdin;
 --
 
 COPY public.contact_leads (id, name, email, school, students_range, message, created_at) FROM stdin;
+695513fc-3d63-4a77-9391-625572539df1	Uji QA Kontak	uji.qa@sekolah.sch.id	SMA Uji Coba QA	100 – 300	Pesan uji otomatis QA — mohon abaikan.	2026-10-04 21:34:15.281745+07
 \.
 
 
@@ -1655,8 +1656,7 @@ COPY public.quizzes (id, class_id, created_by, title, topic, difficulty, num_que
 --
 
 COPY public.sessions (id, user_id, token_hash, user_agent, created_at, last_seen_at, expires_at) FROM stdin;
-41892764-f467-47da-a0d5-44216297eaab	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	adbfdb6e01dbf7a2006b767830c5789a52f6ac0530da75fdbd22eaf6045a9bf5	\N	2026-10-03 10:39:27.773552+07	2026-10-03 10:43:26.384871+07	2026-11-02 10:39:27.773552+07
-a98f9b37-fd8c-4adb-8547-7c688f9bb8f8	ccfba53a-4a6a-4b67-bd87-d5bb00535bf0	cb89308ee40c9fd51ac6cb061a799b9fddb4ef654d5e95a398c1229d7c400469	\N	2026-10-03 10:12:14.143054+07	2026-10-03 10:49:09.077806+07	2026-11-02 10:12:14.143054+07
+79ef2cfd-7d06-4e2a-9ec3-e6d8b8da5fc8	77db7bd6-e1c5-47b4-a6bf-56af65ea21d7	31213fdd3a1655a29a22e26e4d10afd0ef72e2e6e97620994a1e754e2dc8f287	\N	2026-10-04 21:41:37.961928+07	2026-10-04 21:41:38.005864+07	2026-11-03 21:41:37.961928+07
 \.
 
 
@@ -3591,5 +3591,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict u3gKkPUgzwodNHEDorVf3RwL48J2p7adECmhIAXNtvhCfuAvWU9O2kxYHtro4VW
+\unrestrict uHp72UZKszSPoJZRyEUzIsr15b1T24enG5IU7ebV2FVd4PkeBnjcrkQDSJyzOFz
 

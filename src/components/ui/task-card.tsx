@@ -17,7 +17,7 @@ export type TaskCardTask = {
  */
 export function taskStatus(muridSelesai: number, total: number, completed: boolean) {
   if (muridSelesai >= total)
-    return { label: "Selesai", dot: "bg-[#16A34A]", chip: "bg-[#EAF7EF] text-[#15803D] dark:text-[#5BD98A]" };
+    return { label: "Selesai", dot: "bg-[#16A34A]", chip: "bg-[#EAF7EF] text-[#15803D] dark:bg-[#16301F] dark:text-[#5BD98A]" };
   if (completed)
     return { label: "Ditutup", dot: "bg-[#8A8A8A]", chip: "bg-[#F2F2F2] dark:bg-[#2A282D] text-[#5F5B5D] dark:text-[#A9A5AB]" };
   return { label: "Berjalan", dot: "bg-[#CA8A04]", chip: "bg-[#FDF6E3] dark:bg-[#382C14] text-[#96650A] dark:text-[#E5B85C]" };

@@ -87,20 +87,21 @@ export async function POST(request: Request) {
 
   try {
     const userId = await sql.begin(async (tx) => {
-      const inserted = await tx<{ id: string }[]>`
+      // id dibuat di sini, bukan mengandalkan default kolom — dump restore
+      // bisa saja tanpa DEFAULT gen_random_uuid() pada auth.users.id.
+      const id = crypto.randomUUID();
+      await tx`
         INSERT INTO auth.users (
-          aud, role, email, encrypted_password, email_confirmed_at,
+          id, aud, role, email, encrypted_password, email_confirmed_at,
           raw_app_meta_data, raw_user_meta_data,
           created_at, updated_at, is_sso_user, is_anonymous
         ) VALUES (
-          'authenticated', 'authenticated', ${email}, ${passwordHash}, now(),
+          ${id}, 'authenticated', 'authenticated', ${email}, ${passwordHash}, now(),
           ${sql.json({ provider: "email", providers: ["email"] })},
           ${sql.json({ name, role })},
           now(), now(), false, false
         )
-        RETURNING id
       `;
-      const id = inserted[0].id;
 
       await tx`
         INSERT INTO public.profiles (
