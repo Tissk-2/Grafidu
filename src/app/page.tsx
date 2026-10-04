@@ -41,6 +41,14 @@ const FAQ_ITEMS = [
   },
 ];
 
+const PARTNER_LOGOS = [
+  { src: "/assets/partners/jhic-2026.png", alt: "Jagoan Hosting Innovation Competition 2026", w: 83, h: 44 },
+  { src: "/assets/partners/jagoan-hosting.png", alt: "Jagoan Hosting", w: 81, h: 24 },
+  { src: "/assets/partners/komdigi.png", alt: "KOMDIGI", w: 48, h: 34 },
+  { src: "/assets/partners/garuda-spark.png", alt: "Garuda Spark — Innovation Hub by KOMDIGI", w: 61, h: 32 },
+  { src: "/assets/partners/ngalup.png", alt: "Ngalup.co", w: 126, h: 20 },
+];
+
 export default async function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -130,6 +138,20 @@ export default async function LandingPage() {
             <span className="r">
               Grafidu mengubah &ldquo;nilaiku jelek&rdquo; menjadi langkah nyata berikutnya.
             </span>
+          </div>
+        </div>
+
+        {/* ============ DIDUKUNG OLEH ============ */}
+        <div className="partners reveal">
+          <div className="container partners-inner">
+            <span className="label-caps">Didukung oleh</span>
+            <ul className="partners-row">
+              {PARTNER_LOGOS.map((logo) => (
+                <li className="partner-chip" key={logo.src}>
+                  <Image src={logo.src} alt={logo.alt} width={logo.w} height={logo.h} />
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
