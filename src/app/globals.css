@@ -1979,6 +1979,17 @@
     color: var(--gray-3);
     margin-top: 6px;
   }
+  /* Banner pesan error form (login, ganti sandi) — selalu tampil. Berbeda
+     dari .field-error yang tersembunyi sampai field .invalid menyertainya. */
+  .form-alert {
+    border: 1px solid rgba(192, 80, 77, 0.35);
+    background: rgba(192, 80, 77, 0.07);
+    color: var(--red);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
   .field {
     margin-top: 18px;
   }

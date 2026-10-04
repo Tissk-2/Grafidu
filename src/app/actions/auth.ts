@@ -27,54 +27,63 @@ export async function signIn(
   const em = email.trim().toLowerCase();
   if (!em || !password) return { ok: false, error: GENERIC_LOGIN_ERROR };
 
-  const users = await sql<{ id: string; encrypted_password: string | null }[]>`
-    SELECT id, encrypted_password
-    FROM auth.users
-    WHERE email = ${em}
-      AND deleted_at IS NULL
-    LIMIT 1
-  `;
-  const user = users[0];
-  const hash = user?.encrypted_password ?? null;
-  const valid =
-    hash !== null && (await bcrypt.compare(password, hash));
-  if (!user || !valid) return { ok: false, error: GENERIC_LOGIN_ERROR };
+  // Error dari server action disamarkan Next.js di production — tangkap di
+  // sini agar pengguna selalu melihat pesan yang bisa dimengerti.
+  try {
+    const users = await sql<{ id: string; encrypted_password: string | null }[]>`
+      SELECT id, encrypted_password
+      FROM auth.users
+      WHERE email = ${em}
+        AND deleted_at IS NULL
+      LIMIT 1
+    `;
+    const user = users[0];
+    const hash = user?.encrypted_password ?? null;
+    const valid =
+      hash !== null && (await bcrypt.compare(password, hash));
+    if (!user || !valid) return { ok: false, error: GENERIC_LOGIN_ERROR };
 
-  const profiles = await sql<
-    {
-      role: Role | null;
-      is_active: boolean | null;
-      must_change_password: boolean | null;
-    }[]
-  >`
-    SELECT role, is_active, must_change_password
-    FROM public.profiles
-    WHERE id = ${user.id}
-    LIMIT 1
-  `;
-  const profile = profiles[0];
-  if (!profile) {
-    // User auth ada tapi baris profiles tidak — sama seperti alur lama:
-    // jangan biarkan masuk tanpa profil.
+    const profiles = await sql<
+      {
+        role: Role | null;
+        is_active: boolean | null;
+        must_change_password: boolean | null;
+      }[]
+    >`
+      SELECT role, is_active, must_change_password
+      FROM public.profiles
+      WHERE id = ${user.id}
+      LIMIT 1
+    `;
+    const profile = profiles[0];
+    if (!profile) {
+      // User auth ada tapi baris profiles tidak — sama seperti alur lama:
+      // jangan biarkan masuk tanpa profil.
+      return {
+        ok: false,
+        error:
+          "Akun ini belum terdaftar di database (tabel profiles). Hubungi admin sekolah untuk didaftarkan.",
+      };
+    }
+    if (profile.is_active === false) {
+      return {
+        ok: false,
+        error: "Akun dinonaktifkan. Hubungi admin sekolah.",
+      };
+    }
+
+    await createSession(user.id);
+    return {
+      ok: true,
+      role: profile.role ?? "student",
+      mustChangePassword: profile.must_change_password === true,
+    };
+  } catch {
     return {
       ok: false,
-      error:
-        "Akun ini belum terdaftar di database (tabel profiles). Hubungi admin sekolah untuk didaftarkan.",
+      error: "Gagal menghubungi server. Periksa koneksi lalu coba lagi.",
     };
   }
-  if (profile.is_active === false) {
-    return {
-      ok: false,
-      error: "Akun dinonaktifkan. Hubungi admin sekolah.",
-    };
-  }
-
-  await createSession(user.id);
-  return {
-    ok: true,
-    role: profile.role ?? "student",
-    mustChangePassword: profile.must_change_password === true,
-  };
 }
 
 /** Sign out: hapus baris session + cookie. */

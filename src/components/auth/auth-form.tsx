@@ -92,11 +92,7 @@ export default function AuthForm() {
       </p>
 
       {error ? (
-        <div
-          className="field-error"
-          role="alert"
-          style={{ color: "var(--red)", marginBottom: 12, fontSize: 13 }}
-        >
+        <div className="form-alert" role="alert">
           {error}
         </div>
       ) : null}
