@@ -6,9 +6,11 @@ import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { useRoutedClass } from "@/lib/guru";
 import { createQuiz, deleteQuiz, setQuizStatus } from "@/app/actions/teacher";
+import type { QuizQuestion } from "@/lib/teacher-model";
 import { useTeacherShellData } from "../teacher-shell-data";
 import { fmtDate } from "@/lib/format";
 import MainSkeleton from "@/components/ui/main-skeleton";
+import CustomSelect from "@/components/ui/custom-select";
 import BodySync from "@/components/body-sync";
 
 const SPARK = (
@@ -23,13 +25,23 @@ const CHEVRON = (
   </svg>
 );
 
-/** Contoh soal statis untuk panel Pratinjau Soal sebelum kuis dibuat. */
-const PREVIEW_SOAL = [
-  "Apa yang dimaksud dengan gagasan pokok dalam sebuah teks?",
-  "Pilihlah kalimat yang menggunakan ejaan baku dengan benar.",
-  "Tentukan struktur teks dari paragraf berikut.",
-  "Makna kata \"persuasif\" paling tepat adalah...",
-  "Cocokkan jenis teks dengan ciri-cirinya berikut.",
+/** Contoh bentuk soal pilihan ganda untuk panel Pratinjau sebelum generate. */
+const PREVIEW_SOAL: QuizQuestion[] = [
+  {
+    text: "Apa yang dimaksud dengan gagasan pokok dalam sebuah paragraf?",
+    options: ["Ide utama yang menjadi dasar paragraf", "Kalimat penutup paragraf", "Contoh konkret dalam paragraf", "Kata transisi antarparagraf"],
+    answerIdx: 0,
+  },
+  {
+    text: "Kalimat berikut yang menggunakan ejaan baku dengan benar adalah…",
+    options: ["Dia pergi kesekolah", "Dia pergi ke sekolah", "Dia pergi ke-sekolah", "Diaperigi sekolah"],
+    answerIdx: 1,
+  },
+  {
+    text: "Manakah yang termasuk ciri teks eksposisi?",
+    options: ["Berisi alur cerita fiksi", "Mengajak pembaca melakukan sesuatu", "Memaparkan informasi dan argumen", "Menghidupkan benda mati"],
+    answerIdx: 2,
+  },
 ];
 
 /** Middle column only — the sidebar and rightbar come from the teacher layout. */
@@ -97,24 +109,41 @@ export default function TeacherQuizMakerPage() {
         questions?: unknown;
         error?: string;
       } | null;
-      if (!res.ok || !data?.ok || !Array.isArray(data.questions) || !data.questions.length) {
+      type McRaw = { text?: unknown; options?: unknown; answer?: unknown };
+      const rawQuestions = (Array.isArray(data?.questions) ? data!.questions : []) as McRaw[];
+      const valid =
+        res.ok &&
+        data?.ok &&
+        rawQuestions.length > 0 &&
+        rawQuestions.every(
+          (q) =>
+            typeof q?.text === "string" &&
+            Array.isArray(q?.options) &&
+            q.options.length === 4,
+        );
+      if (!valid) {
         throw new Error(data?.error ?? "Layanan AI sedang tidak terjangkau. Coba lagi sebentar.");
       }
 
-      const soal = data.questions.map(String);
+      const soal: QuizQuestion[] = rawQuestions.map((q) => ({
+        text: String(q.text),
+        options: (q.options as unknown[]).map(String),
+        answerIdx: Math.min(3, Math.max(0, Math.round(Number(q.answer) || 0))),
+      }));
       const judul =
-        typeof data.title === "string" && data.title.trim() ? data.title.trim() : `Kuis: ${label}`;
+        typeof data!.title === "string" && data!.title.trim() ? data!.title.trim() : `Kuis: ${label}`;
 
       await createQuiz({
         classId: selectedClass.id,
         title: judul,
         topic: rawTopic,
+        subject: selectedClass.subject,
         difficulty,
         durationMin: Math.max(10, soal.length * 2),
         questions: soal,
       });
       refresh();
-      window.gtoast?.("Kuis berhasil dibuat oleh AI dan disimpan sebagai draft.");
+      window.gtoast?.("Kuis berhasil dibuat oleh AI dan disimpan sebagai draft. Tayangkan agar siswa bisa mengerjakan.");
     } catch (err) {
       window.gtoast?.((err as Error).message, "error");
     } finally {
@@ -126,7 +155,7 @@ export default function TeacherQuizMakerPage() {
     try {
       await setQuizStatus(id, "published");
       refresh();
-      window.gtoast?.("Kuis tayang ke siswa.");
+      window.gtoast?.("Kuis tayang ke siswa — pengumuman otomatis terkirim ke kelas.");
     } catch (err) {
       window.gtoast?.((err as Error).message, "error");
     }
@@ -176,26 +205,30 @@ export default function TeacherQuizMakerPage() {
             <div className="field-d">
               <label>Kelas</label>
               <div className="control">
-                <select
+                <CustomSelect
                   value={selectedClass.id}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                >
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedClassId}
+                  options={classes.map((c) => ({ value: c.id, label: c.name }))}
+                  ariaLabel="Kelas"
+                  placeholder="Pilih kelas…"
+                  searchPlaceholder="Cari kelas…"
+                />
               </div>
             </div>
             <div className="field-d">
               <label>Jumlah Soal</label>
               <div className="control">
-                <select value={numQuestions} onChange={(e) => setNumQuestions(Number(e.target.value))}>
-                  <option value={10}>10 soal</option>
-                  <option value={15}>15 soal</option>
-                  <option value={20}>20 soal</option>
-                </select>
+                <CustomSelect
+                  value={String(numQuestions)}
+                  onChange={(v) => setNumQuestions(Number(v))}
+                  options={[
+                    { value: "10", label: "10 soal" },
+                    { value: "15", label: "15 soal" },
+                    { value: "20", label: "20 soal" },
+                  ]}
+                  ariaLabel="Jumlah soal"
+                  placeholder="Jumlah soal"
+                />
               </div>
             </div>
           </div>
@@ -254,13 +287,22 @@ export default function TeacherQuizMakerPage() {
           </div>
           <div className="preview-list">
             {PREVIEW_SOAL.map((s, i) => (
-              <div key={i} className="preview-item">
-                <span className="n">{i + 1}</span>
-                <span>{s}</span>
+              <div key={i} className="preview-item" style={{ display: "block" }}>
+                <span style={{ display: "flex", gap: 8 }}>
+                  <span className="n">{i + 1}</span>
+                  <span>{s.text}</span>
+                </span>
+                <span style={{ display: "grid", gap: 3, margin: "8px 0 0 26px", fontSize: 13 }}>
+                  {s.options.map((opt, j) => (
+                    <span key={j} style={{ color: j === s.answerIdx ? "var(--purple)" : "inherit", fontWeight: j === s.answerIdx ? 600 : 400 }}>
+                      {String.fromCharCode(65 + j)}. {opt}{j === s.answerIdx ? " ✓" : ""}
+                    </span>
+                  ))}
+                </span>
               </div>
             ))}
           </div>
-          <div className="preview-note">Soal tersimpan otomatis sebagai draft — tinjau dulu sebelum ditayangkan ke siswa.</div>
+          <div className="preview-note">Contoh bentuk soal: pilihan ganda A–D dengan kunci jawaban. Soal asli dibuat AI dari topik & materimu, tersimpan otomatis sebagai draft — tinjau dulu sebelum ditayangkan ke siswa.</div>
         </div>
       </div>
 
@@ -313,10 +355,19 @@ export default function TeacherQuizMakerPage() {
                     <div className="acc-inner">
                       <div className="acc-title">Pratinjau Soal</div>
                       <ul className="acc-list">
-                        {qz.questions.map((s, i) => (
-                          <li key={i}>
-                            <span className="n">{i + 1}</span>
-                            <span>{s}</span>
+                        {qz.questions.map((qq, i) => (
+                          <li key={i} style={{ display: "block" }}>
+                            <span style={{ display: "flex", gap: 8 }}>
+                              <span className="n">{i + 1}</span>
+                              <span>{qq.text}</span>
+                            </span>
+                            <span style={{ display: "grid", gap: 3, margin: "6px 0 4px 26px", fontSize: 13 }}>
+                              {qq.options.map((opt, j) => (
+                                <span key={j} style={{ color: j === qq.answerIdx ? "var(--purple)" : "inherit", fontWeight: j === qq.answerIdx ? 600 : 400 }}>
+                                  {String.fromCharCode(65 + j)}. {opt}{j === qq.answerIdx ? " ✓" : ""}
+                                </span>
+                              ))}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -326,6 +377,9 @@ export default function TeacherQuizMakerPage() {
                         </span>
                         <span>
                           <b>Kelas:</b> {kelas.name}
+                        </span>
+                        <span>
+                          <b>Sudah mengerjakan:</b> {qz.attempts} siswa
                         </span>
                       </div>
                       <div className="acc-actions">

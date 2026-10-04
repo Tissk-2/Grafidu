@@ -17,6 +17,7 @@ const NAV_LABEL: Record<string, string> = {
   home: "Home",
   tasks: "Tasks",
   todo: "Tasks",
+  quizzes: "Kuis",
   materi: "Materi",
   grades: "Grades",
   "ai-agent": "AI Agent",
@@ -75,7 +76,7 @@ function StudentShellInner({ children }: { children: React.ReactNode }) {
       user: {
         name: u?.name ?? "Siswa",
         sub: u?.className ?? "Siswa",
-        avatar: u?.avatar ?? "/assets/logo.png",
+        avatar: u?.avatar ?? "/assets/defaultpfp.jpg",
       },
       tasksToday: data?.tasksToday ?? [],
     }),

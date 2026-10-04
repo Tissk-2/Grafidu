@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { useRequireUser } from "@/lib/auth";
 import { useTitle } from "@/lib/hooks";
 import { avgOf } from "@/lib/student-model";
+import { fetchStudentQuizzes } from "@/app/actions/student";
+import type { StudentQuiz } from "@/lib/student-model";
 import { fmtDate } from "@/lib/format";
 import { StatCard } from "@/components/ui/stat-card";
 import PageSkeleton from "@/components/ui/page-skeleton";
+import CustomSelect from "@/components/ui/custom-select";
 import BodySync from "@/components/body-sync";
 import { useStudentShellData } from "../student-shell-data";
 
@@ -36,7 +39,19 @@ export default function StudentGradesPage() {
   const shell = useStudentShellData();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("semua");
+  const [quizzes, setQuizzes] = useState<StudentQuiz[] | null>(null);
   useTitle("Grades — Grafidu");
+
+  useEffect(() => {
+    if (!u) return;
+    let cancelled = false;
+    fetchStudentQuizzes().then((rows) => {
+      if (!cancelled) setQuizzes(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [u]);
 
   const tasks = useMemo(() => shell?.schoolTasks ?? [], [shell]);
   const subjects = shell?.subjects ?? [];
@@ -97,23 +112,13 @@ export default function StudentGradesPage() {
           />
         </div>
 
-        <div className="relative">
-          <select
+        <div style={{ minWidth: 170 }}>
+          <CustomSelect
             value={filter}
-            onChange={(e) => setFilter(e.target.value as Filter)}
-            aria-label="Filter nilai"
-            className="h-11 appearance-none rounded-sm border border-[#E5E5E5] dark:border-[#2D2B30] bg-white dark:bg-[#1C1A1F] pr-9 pl-3.5 text-[14px] text-[#222] dark:text-[#EDEBF0] transition outline-none focus:border-[#5B3FD6] focus:ring-2 focus:ring-[#5B3FD6]/15"
-          >
-            {FILTERS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={15}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#AFAFAF] dark:text-[#6E6A73]"
+            onChange={(v) => setFilter(v as Filter)}
+            options={FILTERS}
+            ariaLabel="Filter nilai"
+            placeholder="Semua Tugas"
           />
         </div>
       </div>
@@ -199,6 +204,59 @@ export default function StudentGradesPage() {
           </div>
         </>
       )}
+
+      {/* quiz grades (#6): nilai kuis yang sudah dikerjakan */}
+      {quizzes === null ? null : quizzes.length > 0 ? (
+        <div style={{ marginTop: 26 }}>
+          <div className="sec-row" style={{ marginBottom: 12 }}>
+            <h2 className="h2" style={{ margin: 0 }}>Nilai Kuis</h2>
+            <span style={{ fontSize: 13, color: "var(--gray-4)" }}>
+              {quizzes.filter((q) => q.attempt).length} dari {quizzes.length} kuis dikerjakan
+            </span>
+          </div>
+          <div className="grade-table-wrap">
+            <table className="sub-table">
+              <thead>
+                <tr>
+                  <th className="c">No</th>
+                  <th>Kuis</th>
+                  <th>Mapel</th>
+                  <th className="c">Soal</th>
+                  <th className="c">Nilai</th>
+                  <th className="act">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quizzes.map((q, i) => (
+                  <tr key={q.id}>
+                    <td className="c">{i + 1}</td>
+                    <td className="font-medium">{q.title}</td>
+                    <td>{q.subject || "Umum"}</td>
+                    <td className="c tabular-nums">{q.numQuestions}</td>
+                    <td className="c">
+                      {q.attempt ? (
+                        <span className="inline-flex items-center gap-2">
+                          <b className="tabular-nums">{q.attempt.score}</b>
+                          <span className="score-bar" aria-hidden>
+                            <span style={{ width: `${Math.min(100, q.attempt.score)}%` }} />
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-[var(--gray-4)]">—</span>
+                      )}
+                    </td>
+                    <td className="act">
+                      <span className={"pill " + (q.attempt ? "pill-green" : "pill-gray")}>
+                        {q.attempt ? `Dikerjakan ${fmtDate(q.attempt.submittedAt)}` : "Belum Dikerjakan"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
 
       {/* subject averages */}
       {subjects.length > 0 && (

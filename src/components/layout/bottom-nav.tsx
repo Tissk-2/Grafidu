@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Home, TaskSquare, Chart1, Book, MessageQuestion, Graph } from "iconsax-reactjs";
-import { Sparkles } from "lucide-react";
+import { Sparkles} from "lucide-react";
 
 type Item = { label: string; href: string; icon: React.ReactNode };
 
@@ -10,6 +10,7 @@ export function BottomNav({ role, active }: { role: "student" | "teacher"; activ
       ? [
           { label: "Home", href: "/student/home", icon: <Home /> },
           { label: "Tasks", href: "/student/tasks", icon: <TaskSquare /> },
+          { label: "Quiz", href: "/student/quizzes", icon: <MessageQuestion /> },
           { label: "Grades", href: "/student/grades", icon: <Graph /> },
           { label: "AI Agent", href: "/student/ai-agent", icon: <Sparkles /> },
         ]

@@ -7,11 +7,17 @@ import { useTitle } from "@/lib/hooks";
 import { useRoutedClass } from "@/lib/guru";
 import { useTeacherShellData } from "../teacher-shell-data";
 import { createQuiz } from "@/app/actions/teacher";
+import type { QuizQuestion } from "@/lib/teacher-model";
 import MainSkeleton from "@/components/ui/main-skeleton";
 import BodySync from "@/components/body-sync";
 
 type Msg = { role: "user" | "ai"; text: string };
-type QuizDraft = { title: string; topic: string; difficulty: string; questions: string[] };
+type QuizDraft = {
+  title: string;
+  topic: string;
+  difficulty: string;
+  questions: { text: string; options: string[]; answer: number }[];
+};
 
 const SUGGESTIONS = [
   "Siswa mana yang perlu perhatian?",
@@ -106,16 +112,22 @@ export default function TeacherAiAgentPage() {
     let finalText = answer;
     if (quizDraft) {
       try {
+        const soal: QuizQuestion[] = quizDraft.questions.map((q) => ({
+          text: q.text,
+          options: q.options,
+          answerIdx: Math.min(3, Math.max(0, Math.round(Number(q.answer) || 0))),
+        }));
         await createQuiz({
           classId: activeKelas.id,
           title: quizDraft.title,
           topic: quizDraft.topic || t,
+          subject: activeKelas.subject,
           difficulty: quizDraft.difficulty,
-          durationMin: Math.max(10, quizDraft.questions.length * 2),
-          questions: quizDraft.questions,
+          durationMin: Math.max(10, soal.length * 2),
+          questions: soal,
         });
         refresh();
-        finalText = `${answer}\n\n✅ ${quizDraft.questions.length} soal tersimpan sebagai draft di Quiz Maker — tinjau lalu tayangkan dari sana.`;
+        finalText = `${answer}\n\n✅ ${soal.length} soal tersimpan sebagai draft di Quiz Maker — tinjau lalu tayangkan dari sana.`;
         window.gtoast?.("Kuis dari chat tersimpan sebagai draft ✨");
       } catch {
         finalText = `${answer}\n\n⚠️ Soalnya gagal disimpan. Coba kirim ulang, atau buat lewat halaman Quiz Maker ya.`;

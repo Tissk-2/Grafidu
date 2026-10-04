@@ -26,7 +26,7 @@ type QuizDraft = {
   title: string;
   topic: string;
   difficulty: string;
-  questions: string[];
+  questions: { text: string; options: string[]; answer: number }[];
 };
 
 type ChatSuccess =
@@ -200,8 +200,8 @@ function systemPrompt(role: string, name: string, context: string): string {
           "- Pertanyaan tentang nilai kelas, siswa, tugas, tenggat, atau materi WAJIB dijawab hanya dari DATA di atas. Jangan pernah mengarang angka, nama, atau tanggal.",
           "- Kalau data yang dibutuhkan tidak ada di DATA, katakan apa adanya dan sarankan langkah berikutnya (misal buka Quiz Maker).",
           "- Pertanyaan pedagogis umum boleh dijawab dari pengetahuanmu.",
-          '- Jika guru meminta dibuatkan kuis / soal latihan, balas dengan JSON {"type":"create_quiz","title":"judul kuis singkat","topic":"topik kuis","difficulty":"Mudah|Sedang|Sulit","questions":["soal 1","soal 2"],"reply":"kalimat penjelasan untuk guru"} — maksimal 10 soal essay (maks 200 huruf per soal), tanpa pilihan ganda, tanpa kunci jawaban, susun dari materi kelas di DATA bila ada.',
-          '- Contoh: guru minta "buatkan kuis teks eksposisi" → {"type":"create_quiz","title":"Kuis Teks Eksposisi","topic":"Teks Eksposisi","difficulty":"Sedang","questions":["Jelaskan pengertian teks eksposisi dan tujuannya.","..."],"reply":"Siap, kuisnya sudah kusimpan sebagai draft."}',
+          '- Jika guru meminta dibuatkan kuis / soal latihan, balas dengan JSON {"type":"create_quiz","title":"judul kuis singkat","topic":"topik kuis","difficulty":"Mudah|Sedang|Sulit","questions":[{"text":"pertanyaan","options":["A","B","C","D"],"answer":0}],"reply":"kalimat penjelasan untuk guru"} — maksimal 10 soal pilihan ganda: setiap soal punya 4 opsi dan "answer" berupa INDEKS opsi jawaban benar (0-3), hanya satu opsi benar, susun dari materi kelas di DATA bila ada.',
+          '- Contoh: guru minta "buatkan kuis teks eksposisi" → {"type":"create_quiz","title":"Kuis Teks Eksposisi","topic":"Teks Eksposisi","difficulty":"Sedang","questions":[{"text":"Pengertian teks eksposisi adalah...","options":["Teks yang memaparkan informasi","Teks cerita fiksi","Teks ajakan","Teks puisi"],"answer":0}],"reply":"Siap, kuisnya sudah kusimpan sebagai draft."}',
           '- Selain itu balas dengan JSON {"type":"reply","text":"..."} berisi jawabanmu. Saran lain untuk guru hanya berupa teks, bukan aksi.',
         ].join("\n");
 
@@ -253,9 +253,19 @@ function parseModelReply(role: string, raw: string): ChatSuccess | null {
       }
     }
     if (role === "teacher" && parsed.type === "create_quiz" && Array.isArray(parsed.questions)) {
+      // Soal pilihan ganda: teks + tepat 4 opsi + indeks kunci jawaban 0-3.
       const questions = (parsed.questions as unknown[])
-        .map((q) => clip(q, 300))
-        .filter((q) => q.length > 0)
+        .map((q) => {
+          const x = (q ?? {}) as Record<string, unknown>;
+          const text = clip(typeof x.text === "string" ? x.text : "", 300);
+          const options = (Array.isArray(x.options) ? x.options : [])
+            .map((o) => clip(String(o ?? ""), 160))
+            .filter((o) => o.length > 0)
+            .slice(0, 4);
+          const answer = Math.min(3, Math.max(0, Math.round(Number(x.answer) || 0)));
+          return { text, options, answer };
+        })
+        .filter((q) => q.text.length > 0 && q.options.length === 4)
         .slice(0, MAX_CHAT_QUESTIONS);
       if (questions.length) {
         const title = clip(parsed.title, 120);

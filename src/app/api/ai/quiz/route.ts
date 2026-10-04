@@ -66,14 +66,15 @@ export async function POST(request: Request) {
     .filter((m) => m.length > 4);
 
   const system =
-    "Kamu adalah penyusun soal ujian untuk guru SMK di platform Grafidu. " +
-    "Buat soal essay berbahasa Indonesia yang jelas, terukur, dan sesuai tingkat kesulitan.\n" +
+    "Kamu adalah penyusun soal ujian pilihan ganda untuk guru SMK di platform Grafidu. " +
+    "Buat soal berbahasa Indonesia yang jelas, terukur, dan sesuai tingkat kesulitan.\n" +
     (materiList.length
       ? `Materi kelas yang WAJIB dipakai sebagai dasar soal:\n${materiList.join("\n")}\n` +
         "Soal harus menguji pemahaman materi di atas (bukan pengetahuan umum semata).\n"
       : "Belum ada materi yang dibagikan guru untuk kelas ini — susun soal umum yang relevan dengan topik.\n") +
-    'Format output: SATU objek JSON tanpa teks lain: {"title":"judul kuis singkat","questions":["soal 1","soal 2",...]} — ' +
-    `tepat ${num} soal, setiap soal satu kalimat perintah (maks 200 huruf), tanpa pilihan ganda, tanpa kunci jawaban.`;
+    'Format output: SATU objek JSON tanpa teks lain: {"title":"judul kuis singkat","questions":[{"text":"pertanyaan","options":["A","B","C","D"],"answer":0}]} — ' +
+    `tepat ${num} soal, setiap soal punya 4 opsi dan "answer" berupa INDEKS opsi jawaban benar (0-3). ` +
+    "Hanya satu opsi yang benar; opsi pengecoh masuk akal dan sejenis panjang.";
 
   let raw: string;
   try {
@@ -82,10 +83,10 @@ export async function POST(request: Request) {
         { role: "system", content: system },
         {
           role: "user",
-          content: `Buatkan ${num} soal tingkat ${difficulty} tentang: ${topic}`,
+          content: `Buatkan ${num} soal pilihan ganda tingkat ${difficulty} tentang: ${topic}`,
         },
       ],
-      { maxTokens: 3000 }
+      { maxTokens: 6000 }
     );
   } catch {
     return NextResponse.json(
@@ -94,15 +95,27 @@ export async function POST(request: Request) {
     );
   }
 
+  type McQuestion = { text?: unknown; options?: unknown; answer?: unknown };
   const parsed = extractJson<{ title?: unknown; questions?: unknown }>(raw);
-  const questions = (Array.isArray(parsed?.questions) ? parsed!.questions : [])
-    .map((q) => clip(q, 300))
-    .filter((q) => q.length > 0)
+  const rawQuestions = (Array.isArray(parsed?.questions) ? parsed!.questions : []) as McQuestion[];
+
+  // Validasi + normalisasi: teks ≤300 huruf, tepat 4 opsi, jawaban 0-3.
+  const questions = rawQuestions
+    .map((q) => {
+      const text = clip(typeof q?.text === "string" ? q.text : "", 300);
+      const options = (Array.isArray(q?.options) ? q.options : [])
+        .map((o) => clip(String(o ?? ""), 160))
+        .filter((o) => o.length > 0)
+        .slice(0, 4);
+      const answer = Math.min(3, Math.max(0, Math.round(Number(q?.answer) || 0)));
+      return { text, options, answer };
+    })
+    .filter((q) => q.text.length > 0 && q.options.length === 4)
     .slice(0, 20);
 
   if (!questions.length) {
     return NextResponse.json(
-      { error: "AI tidak menghasilkan soal yang valid." },
+      { error: "AI tidak menghasilkan soal yang valid. Coba generate ulang." },
       { status: 502 }
     );
   }
