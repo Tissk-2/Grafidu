@@ -7,11 +7,13 @@ import {
   fetchClassMaterials,
   fetchClassQuizzes,
   fetchClassRoster,
+  fetchClassAiNote,
   fetchClassTasks,
   fetchClassTotals,
   fetchTeacherClasses,
 } from "@/app/actions/teacher";
 import { fetchAnnouncements } from "@/app/actions/student";
+import { studentsWithStatus } from "@/lib/guru";
 import type {
   MaterialRow,
   QuizRow,
@@ -35,6 +37,8 @@ export type TeacherShellData = {
   quizzes: QuizRow[];
   announcements: AnnouncementItem[];
   classLoading: boolean;
+  /** Rekomendasi AI untuk kelas aktif — fallback lokal, dinaikkan ke AI asli. */
+  aiNote: string;
   /** Panggil setelah CRUD agar data kelas diambil ulang. */
   refresh: () => void;
 };
@@ -52,6 +56,7 @@ const Ctx = createContext<TeacherShellData>({
   quizzes: [],
   announcements: [],
   classLoading: true,
+  aiNote: "",
   refresh: () => {},
 });
 
@@ -82,6 +87,7 @@ export function TeacherShellDataProvider({
     quizzes: QuizRow[];
   } | null>(null);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
+  const [aiNote, setAiNote] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
   const select = useCallback((id: string | number) => {
@@ -143,6 +149,16 @@ export function TeacherShellDataProvider({
       if (cancelled) return;
       setClassData({ tasks, roster, materials, quizzes });
       setAnnouncements(anns);
+
+      // Rekomendasi: fallback lokal dulu, lalu dinaikkan ke kalimat AI asli
+      // (server action di-cache 15 menit per guru+kelas).
+      const lowest = studentsWithStatus(roster)[0];
+      setAiNote(
+        `Nilai rata-rata ${lowest?.nama ?? "siswa"} masih paling rendah nih. Saya bakal siapin beberapa kuis tambahan buat bantu dia catch up.`
+      );
+      fetchClassAiNote(activeClassId).then((ai) => {
+        if (!cancelled && ai) setAiNote(ai);
+      });
     })();
     return () => {
       cancelled = true;
@@ -166,6 +182,7 @@ export function TeacherShellDataProvider({
       quizzes: classData?.quizzes ?? [],
       announcements,
       classLoading: classData === null,
+      aiNote,
       refresh,
     }),
     [
@@ -176,6 +193,7 @@ export function TeacherShellDataProvider({
       select,
       classData,
       announcements,
+      aiNote,
       refresh,
     ],
   );

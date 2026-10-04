@@ -2,6 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
+import { chatComplete, clip } from "@/lib/ai-router";
 import { pill, relativeWhen } from "@/lib/student-model";
 import type {
   AnnouncementItem,
@@ -427,5 +428,53 @@ export async function fetchClassTeachers(): Promise<ClassTeacher[]> {
     return out;
   } catch {
     return [];
+  }
+}
+
+// Rekomendasi AI di rightbar. Di-cache 15 menit per user agar router tidak
+// dipanggil setiap muat halaman; router gagal → null, UI memakai fallback.
+const aiNoteCache = new Map<string, { note: string; at: number }>();
+const AI_NOTE_TTL = 15 * 60_000;
+
+export async function fetchAiNote(): Promise<string | null> {
+  try {
+    const user = await getSessionUser();
+    if (!user) return null;
+    const key = `student:${user.id}`;
+    const hit = aiNoteCache.get(key);
+    if (hit && Date.now() - hit.at < AI_NOTE_TTL) return hit.note;
+
+    const [scores, tasks] = await Promise.all([fetchSubjectScores(), fetchTasksToday()]);
+    if (scores.length === 0) return null;
+
+    const raw = await chatComplete(
+      [
+        {
+          role: "system",
+          content:
+            "Kamu adalah AI Agent Grafidu, asisten belajar siswa SMK. Berdasarkan DATA nilai dan tugas berikut, tulis SATU kalimat rekomendasi belajar (maksimal 25 kata) dalam Bahasa Indonesia yang ramah dan memotivasi. Sebut mapel atau tugas secara spesifik bila relevan. Jawab HANYA kalimat rekomendasinya — tanpa sapaan, tanpa format, tanpa tanda kutip.",
+        },
+        {
+          role: "user",
+          content:
+            "DATA:\n" +
+            JSON.stringify({
+              subjects: scores.map((s) => ({ subject: s.subject, score: s.score })),
+              tasks: tasks.map((t) => ({ title: t.title, mapel: t.sub, done: t.done })),
+            }),
+        },
+      ],
+      { maxTokens: 120 }
+    );
+    const note = clip(raw, 220).replace(/^["']+|["']+$/g, "");
+    if (!note) return null;
+    aiNoteCache.set(key, { note, at: Date.now() });
+    if (aiNoteCache.size > 200) {
+      const oldest = aiNoteCache.keys().next().value;
+      if (oldest !== undefined) aiNoteCache.delete(oldest);
+    }
+    return note;
+  } catch {
+    return null;
   }
 }

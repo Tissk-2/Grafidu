@@ -2,6 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { getSessionUser, type SessionUser } from "@/lib/session";
+import { chatComplete, clip } from "@/lib/ai-router";
 import { relativeWhen, type TeacherAnnouncement } from "@/lib/student-model";
 import type {
   MaterialRow,
@@ -633,5 +634,56 @@ export async function fetchClassGradeRows(classId: string): Promise<GradeCell[]>
     `;
   } catch {
     return [];
+  }
+}
+
+// Rekomendasi AI per kelas di rightbar guru. Cache 15 menit per (guru, kelas)
+// agar router tidak dipanggil setiap muat halaman; gagal → null, UI fallback.
+const aiNoteCache = new Map<string, { note: string; at: number }>();
+const AI_NOTE_TTL = 15 * 60_000;
+
+export async function fetchClassAiNote(classId: string): Promise<string | null> {
+  try {
+    const user = await requireTeacher();
+    await requireTeaching(user, classId);
+    const key = `teacher:${user.id}:${classId}`;
+    const hit = aiNoteCache.get(key);
+    if (hit && Date.now() - hit.at < AI_NOTE_TTL) return hit.note;
+
+    const [roster, classRow] = await Promise.all([
+      fetchClassRoster(classId, 0),
+      sql<{ name: string | null }[]>`
+        SELECT name FROM public.classes WHERE id = ${classId} LIMIT 1
+      `,
+    ]);
+    const rows = roster.filter((r) => r.gradeCount > 0);
+    if (rows.length === 0) return null;
+
+    const raw = await chatComplete(
+      [
+        {
+          role: "system",
+          content:
+            "Kamu adalah AI Agent Grafidu, asisten guru pengampu kelas di platform Grafidu. Berdasarkan DATA rata-rata nilai siswa berikut, tulis SATU kalimat rekomendasi tindakan untuk guru (maksimal 25 kata) dalam Bahasa Indonesia. Sebut nama siswa yang paling perlu perhatian bila relevan. Jawab HANYA kalimatnya — tanpa sapaan, tanpa format, tanpa tanda kutip.",
+        },
+        {
+          role: "user",
+          content:
+            `Kelas: ${clip(classRow[0]?.name, 60)}\nDATA:\n` +
+            JSON.stringify(rows.map((r) => ({ nama: r.name, rata: r.avg }))),
+        },
+      ],
+      { maxTokens: 120 }
+    );
+    const note = clip(raw, 220).replace(/^["']+|["']+$/g, "");
+    if (!note) return null;
+    aiNoteCache.set(key, { note, at: Date.now() });
+    if (aiNoteCache.size > 200) {
+      const oldest = aiNoteCache.keys().next().value;
+      if (oldest !== undefined) aiNoteCache.delete(oldest);
+    }
+    return note;
+  } catch {
+    return null;
   }
 }

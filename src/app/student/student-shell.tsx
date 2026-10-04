@@ -37,7 +37,7 @@ function StudentShellRightbar() {
     return (
       <StudentTasksRightbar
         todos={data?.todos}
-        aiNote="Selesaikan tugas dengan tenggat terdekat dulu."
+        aiNote={data?.aiNote ?? "Selesaikan tugas dengan tenggat terdekat dulu."}
       />
     );
   }

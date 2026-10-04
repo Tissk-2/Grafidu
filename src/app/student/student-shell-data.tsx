@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   addTodo,
+  fetchAiNote,
   fetchAnnouncements,
   fetchSchoolTasks,
   fetchSubjectScores,
@@ -78,7 +79,7 @@ export function StudentShellDataProvider({
       fetchAnnouncements(3),
       fetchSchoolTasks(),
       fetchTodos(),
-    ]).then(([tasksToday, scores, announcements, schoolTasks, todos]) => {
+    ]).then(async ([tasksToday, scores, announcements, schoolTasks, todos]) => {
       if (cancelled) return;
       setData({
         tasksToday,
@@ -86,10 +87,15 @@ export function StudentShellDataProvider({
         subjects: scores,
         avg: avgOf(scores),
         announcements,
+        // Tampil dulu dengan tip lokal, lalu dinaikkan ke rekomendasi AI asli.
         aiNote: aiNoteFromScores(scores),
         schoolTasks,
         todos,
       });
+      const aiNote = await fetchAiNote();
+      if (!cancelled && aiNote) {
+        setData((d) => (d ? { ...d, aiNote } : d));
+      }
     });
 
     return () => {
