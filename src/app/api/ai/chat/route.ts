@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { chatComplete, clip, extractJson, type ChatMsg } from "@/lib/ai-router";
+import { tryAcquireAiSlot, releaseAiSlot } from "@/lib/ai-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ export const dynamic = "force-dynamic";
  * router; route ini yang memverifikasi sesi, menyusun system prompt berisi
  * konteks data nyata, lalu menerjemahkan balasan model ke bentuk yang aman
  * untuk UI (teks, atau aksi create_todos untuk siswa).
+ *
+ * Batas 1 permintaan AI paralel per user (ai-limiter) → 429 bila lewat.
  */
 
 const MAX_MESSAGE = 1000;
@@ -73,43 +76,56 @@ export async function POST(request: Request) {
     { role: "user", content: message },
   ];
 
-  let raw: string;
-  try {
-    raw = await chatComplete(messages, { maxTokens: 1400 });
-  } catch {
+  // Satu permintaan AI paralel per user (lihat ai-limiter.ts). Slot dilepas
+  // di finally — semua jalur keluar (502, retry, sukses) bebas slot.
+  if (!tryAcquireAiSlot(user.id)) {
     return NextResponse.json(
-      { error: "Layanan AI sedang tidak tersedia." },
-      { status: 502 }
+      { error: "Masih ada pertanyaanmu yang sedang diproses. Tunggu balasannya dulu ya." },
+      { status: 429 }
     );
   }
 
-  let reply = parseModelReply(user.role, raw);
-
-  // Model kadang membalas percakapan biasa padahal diminta satu objek JSON —
-  // coba perbaiki sekali dengan meminta format ulang sebelum fallback ke teks.
-  if (!reply) {
+  try {
+    let raw: string;
     try {
-      const retry = await chatComplete(
-        [
-          ...messages,
-          { role: "assistant", content: clip(raw, 800) },
-          {
-            role: "user",
-            content:
-              'Balasanmu tadi bukan JSON yang valid. Ulangi jawaban yang sama dengan format PERSIS satu objek JSON tanpa teks lain: {"type":"reply","text":"..."} — atau aksi yang diminta pengguna: to-do list → {"type":"create_todos","items":[{"title":"...","subtitle":"..."}],"reply":"..."}, kuis → {"type":"create_quiz","title":"...","topic":"...","difficulty":"Mudah|Sedang|Sulit","questions":["..."],"reply":"..."}.',
-          },
-        ],
-        { maxTokens: 1400 }
-      );
-      reply = parseModelReply(user.role, retry);
+      raw = await chatComplete(messages, { maxTokens: 1400 });
     } catch {
-      // Router tidak reachable saat retry — pakai teks mentah panggilan pertama.
+      return NextResponse.json(
+        { error: "Layanan AI sedang tidak tersedia." },
+        { status: 502 }
+      );
     }
-  }
 
-  return NextResponse.json(
-    reply ?? { ok: true, type: "reply", reply: raw.trim().slice(0, 2000) }
-  );
+    let reply = parseModelReply(user.role, raw);
+
+    // Model kadang membalas percakapan biasa padahal diminta satu objek JSON —
+    // coba perbaiki sekali dengan meminta format ulang sebelum fallback ke teks.
+    if (!reply) {
+      try {
+        const retry = await chatComplete(
+          [
+            ...messages,
+            { role: "assistant", content: clip(raw, 800) },
+            {
+              role: "user",
+              content:
+                'Balasanmu tadi bukan JSON yang valid. Ulangi jawaban yang sama dengan format PERSIS satu objek JSON tanpa teks lain: {"type":"reply","text":"..."} — atau aksi yang diminta pengguna: to-do list → {"type":"create_todos","items":[{"title":"...","subtitle":"..."}],"reply":"..."}, kuis → {"type":"create_quiz","title":"...","topic":"...","difficulty":"Mudah|Sedang|Sulit","questions":["..."],"reply":"..."}.',
+            },
+          ],
+          { maxTokens: 1400 }
+        );
+        reply = parseModelReply(user.role, retry);
+      } catch {
+        // Router tidak reachable saat retry — pakai teks mentah panggilan pertama.
+      }
+    }
+
+    return NextResponse.json(
+      reply ?? { ok: true, type: "reply", reply: raw.trim().slice(0, 2000) }
+    );
+  } finally {
+    releaseAiSlot(user.id);
+  }
 }
 
 /** Konteks JSON dari klien dinormalisasi ulang di server (batas ukuran per field). */

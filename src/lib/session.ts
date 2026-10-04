@@ -24,6 +24,13 @@ export type SessionUser = {
 export const SESSION_COOKIE = "grafidu_session";
 const SESSION_TTL_DAYS = 30;
 
+// Cache timestamp UPDATE last_seen_at terakhir, per token hash (in-process,
+// dipasang di globalThis agar selamat dari hot-reload dev — pola sama dgn db.ts).
+const globalForSession = globalThis as unknown as {
+  __grafiduLastSeen?: Map<string, number>;
+};
+globalForSession.__grafiduLastSeen ??= new Map();
+
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -103,12 +110,20 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!row) return null;
   if (row.is_active === false) return null;
 
-  // last_seen_at diperbarui terpisah — kegagalannya tidak boleh
-  // menggagalkan pembacaan session.
-  await sql`
-    UPDATE public.sessions SET last_seen_at = now()
-    WHERE token_hash = ${tokenHash}
-  `.catch(() => undefined);
+  // last_seen_at diperbarui terpisah — kegagalannya tidak boleh menggagalkan
+  // pembacaan session. Tulisannya di-throttle maks 1×/menit per session:
+  // tanpa throttle, tiap request authenticated berarti satu UPDATE ekstra.
+  const nowMs = Date.now();
+  const lastSeenMap = globalForSession.__grafiduLastSeen!;
+  const last = lastSeenMap.get(tokenHash) ?? 0;
+  if (nowMs - last > 60_000) {
+    if (lastSeenMap.size > 10_000) lastSeenMap.clear(); // jaga map tetap kecil
+    lastSeenMap.set(tokenHash, nowMs);
+    await sql`
+      UPDATE public.sessions SET last_seen_at = now()
+      WHERE token_hash = ${tokenHash}
+    `.catch(() => undefined);
+  }
 
   const role: Role = row.role ?? "student";
   const email = row.email_profile || row.email || "";

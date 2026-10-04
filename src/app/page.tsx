@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import BodySync from "@/components/body-sync";
 import NavHeader from "@/components/landing/nav-header";
 import ViewTabs from "@/components/landing/view-tabs";
@@ -7,16 +6,13 @@ import SiteFooter from "@/components/landing/footer";
 import ScrollReveal from "@/components/landing/scroll-reveal";
 import ContactForm from "@/components/landing/contact-form";
 import AutoRedirect from "@/components/auth/auto-redirect";
-import { getSessionUser } from "@/lib/session";
 
-// Pastikan redirect server jalan tiap request, bukan hasil prerender statis.
-export const dynamic = "force-dynamic";
-
-function dashboardPath(role?: string | null): string {
-  if (role === "teacher") return "/teacher/home";
-  if (role === "admin") return "/admin";
-  return "/student/home";
-}
+/**
+ * Landing sengaja TIDAK membaca cookie/session di server — tanpa itu halaman
+ * ini ter-prerender statis saat build dan dilayani dari memori (puluhan kali
+ * lebih cepat, titik terberat saat stress test). Redirect user yang sudah
+ * login ditangani <AutoRedirect/> di client per role.
+ */
 
 const FAQ_ITEMS = [
   {
@@ -46,15 +42,6 @@ const FAQ_ITEMS = [
 ];
 
 export default async function LandingPage() {
-  // Auto auth (server): user yang sudah login tidak perlu lihat landing.
-  // Kalau gagal di sini, <AutoRedirect/> di bawah tetap coba via client.
-  try {
-    const user = await getSessionUser();
-    if (user) redirect(dashboardPath(user.role));
-  } catch {
-    // Abaikan — tampilkan landing seperti biasa.
-  }
-
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
